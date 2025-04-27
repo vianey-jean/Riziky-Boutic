@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Créer une instance axios avec la configuration de base
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://riziky-boutic-server.onrender.com/api',
 });
 
 // Ajouter un intercepteur pour inclure le token d'authentification

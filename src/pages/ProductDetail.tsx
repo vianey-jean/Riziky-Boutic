@@ -10,7 +10,7 @@ import ProductGrid from '@/components/products/ProductGrid';
 const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
   const { products, addToCart, toggleFavorite, isFavorite } = useStore();
-  const baseImageUrl = "http://localhost:5000";
+  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
 
   const product = products.find(p => p.id === productId);
   

@@ -41,7 +41,7 @@ interface ExtendedProduct extends Product {
 
 const AdminProductsPage = () => {
   const queryClient = useQueryClient();
-  const baseImageUrl = "http://localhost:5000";
+  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPromotionDialogOpen, setIsPromotionDialogOpen] = useState(false);

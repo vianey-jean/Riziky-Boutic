@@ -13,7 +13,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart, toggleFavorite, isFavorite } = useStore();
   const isProductFavorite = isFavorite(product.id);
-  const baseImageUrl = "http://localhost:5000";
+  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
 
   return (
     <Card className="overflow-hidden h-full flex flex-col">

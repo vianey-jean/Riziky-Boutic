@@ -13,7 +13,7 @@ const Index = () => {
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const baseImageUrl = "http://localhost:5000";
+  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
 
   useEffect(() => {
     const fetchData = async () => {
