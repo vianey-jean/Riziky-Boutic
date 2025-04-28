@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -14,16 +13,15 @@ const CartPage = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({});
-  
+
   useEffect(() => {
-    // Par défaut, sélectionner tous les articles du panier
     const initialSelection = cart.reduce((acc, item) => {
       acc[item.product.id] = true;
       return acc;
     }, {} as Record<string, boolean>);
     setSelectedItems(initialSelection);
   }, [cart]);
-  
+
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     if (newQuantity >= 1) {
       updateQuantity(productId, newQuantity);
@@ -64,7 +62,7 @@ const CartPage = () => {
     <Layout>
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Votre Panier</h1>
-        
+
         {!isAuthenticated ? (
           <div className="text-center py-12 border rounded-lg bg-gray-50">
             <div className="mb-4">
@@ -90,13 +88,13 @@ const CartPage = () => {
                     />
                     <div className="sm:w-20">
                       <img 
-                        src={item.product.image} 
+                        src={`https://riziky-boutic-server.onrender.com/${item.product.image.startsWith('/') ? item.product.image.slice(1) : item.product.image}`} 
                         alt={item.product.name} 
                         className="w-full h-auto object-cover rounded" 
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex-1 sm:ml-6 flex flex-col sm:flex-row justify-between">
                     <div>
                       <h3 className="font-medium">
@@ -108,7 +106,7 @@ const CartPage = () => {
                         {item.product.price.toFixed(2)} € par unité
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center justify-between mt-4 sm:mt-0">
                       <div className="flex items-center">
                         <Button 
@@ -137,7 +135,7 @@ const CartPage = () => {
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
-                      
+
                       <div className="flex items-center ml-4 sm:ml-10">
                         <span className="font-medium mr-4">
                           {(item.product.price * item.quantity).toFixed(2)} €
@@ -154,13 +152,12 @@ const CartPage = () => {
                   </div>
                 </div>
               ))}
-              
+
               <div className="mt-4 flex justify-end">
                 <Button 
                   variant="outline" 
                   className="text-sm"
                   onClick={() => {
-                    // Sélectionner ou désélectionner tous les articles
                     const allSelected = cart.every(item => selectedItems[item.product.id]);
                     const newSelection = cart.reduce((acc, item) => {
                       acc[item.product.id] = !allSelected;
@@ -175,7 +172,7 @@ const CartPage = () => {
                 </Button>
               </div>
             </div>
-            
+
             <div className="bg-gray-50 p-6 rounded-lg">
               <div className="flex justify-between mb-4">
                 <span>Sous-total</span>
@@ -189,7 +186,7 @@ const CartPage = () => {
                 <span>Total</span>
                 <span>{getSelectedTotal().toFixed(2)} €</span>
               </div>
-              
+
               <div className="mt-6">
                 <Button 
                   className="w-full" 
