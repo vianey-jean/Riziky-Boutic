@@ -11,7 +11,7 @@ const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
   const { products, addToCart, toggleFavorite, isFavorite } = useStore();
   const baseImageUrl = "https://riziky-boutic-server.onrender.com";
-
+  
   const product = products.find(p => p.id === productId);
   
   // Related products
@@ -41,8 +41,6 @@ const ProductDetail = () => {
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Product Image */}
           <div className="flex-1">
-          
-
           <img src={`${baseImageUrl}${product.image}`} alt={product.name}   className="w-full h-auto object-cover rounded-lg" />
           </div>
           

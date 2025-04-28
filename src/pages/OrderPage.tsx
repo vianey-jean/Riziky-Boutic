@@ -27,8 +27,8 @@ const OrderPage = () => {
     );
   }
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('fr-FR', {
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -38,8 +38,8 @@ const OrderPage = () => {
   // Order status steps
   const steps = [
     { name: 'Commande confirmée', icon: Check, completed: true },
-    { name: 'En préparation', icon: Package, completed: order.status !== 'en attente' },
-    { name: 'En cours de livraison', icon: Truck, completed: order.status === 'expédiée' || order.status === 'livrée' },
+    { name: 'En préparation', icon: Package, completed: order.status !== 'confirmée' },
+    { name: 'En cours de livraison', icon: Truck, completed: order.status === 'en livraison' || order.status === 'livrée' },
     { name: 'Livrée', icon: ShoppingBag, completed: order.status === 'livrée' }
   ];
 
@@ -49,12 +49,12 @@ const OrderPage = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold">Commande #{order.id.split('-')[1]}</h1>
-            <p className="text-muted-foreground">Placée le {formatDate(order.date)}</p>
+            <p className="text-muted-foreground">Placée le {formatDate(order.createdAt)}</p>
           </div>
           <div className="mt-2 sm:mt-0">
             <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
               order.status === 'livrée' ? 'bg-green-100 text-green-800' : 
-              order.status === 'expédiée' ? 'bg-blue-100 text-blue-800' : 
+              order.status === 'en livraison' ? 'bg-blue-100 text-blue-800' : 
               'bg-yellow-100 text-yellow-800'
             }`}>
               {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -92,19 +92,19 @@ const OrderPage = () => {
                 <h2 className="text-lg font-semibold mb-4">Produits commandés</h2>
                 <div className="space-y-4">
                   {order.items.map((item) => (
-                    <div key={item.product.id} className="flex">
+                    <div key={item.productId} className="flex">
                       <div className="w-16 h-16 rounded overflow-hidden">
                         <img 
-                          src={item.product.image} 
-                          alt={item.product.name}
+                          src={item.image} 
+                          alt={item.name}
                           className="w-full h-full object-cover" 
                         />
                       </div>
                       <div className="ml-4 flex-1">
-                        <h4 className="font-medium">{item.product.name}</h4>
+                        <h4 className="font-medium">{item.name}</h4>
                         <div className="flex justify-between mt-1">
                           <span className="text-sm text-muted-foreground">Quantité: {item.quantity}</span>
-                          <span className="font-medium">{(item.product.price * item.quantity).toFixed(2)} €</span>
+                          <span className="font-medium">{(item.price * item.quantity).toFixed(2)} €</span>
                         </div>
                       </div>
                     </div>
@@ -117,7 +117,7 @@ const OrderPage = () => {
               <div className="p-6">
                 <div className="flex justify-between mb-2">
                   <span>Sous-total</span>
-                  <span>{order.total.toFixed(2)} €</span>
+                  <span>{order.totalAmount.toFixed(2)} €</span>
                 </div>
                 <div className="flex justify-between mb-2">
                   <span>Livraison</span>
@@ -125,11 +125,11 @@ const OrderPage = () => {
                 </div>
                 <div className="flex justify-between mb-2">
                   <span>Taxes</span>
-                  <span>{(order.total * 0.2).toFixed(2)} €</span>
+                  <span>{(order.totalAmount * 0.2).toFixed(2)} €</span>
                 </div>
                 <div className="border-t pt-2 mt-2 flex justify-between font-bold">
                   <span>Total</span>
-                  <span>{(order.total * 1.2).toFixed(2)} €</span>
+                  <span>{(order.totalAmount * 1.2).toFixed(2)} €</span>
                 </div>
               </div>
             </div>
@@ -138,10 +138,10 @@ const OrderPage = () => {
           <div>
             <div className="bg-white border rounded-lg p-6 mb-6">
               <h2 className="text-lg font-semibold mb-4">Informations de livraison</h2>
-              <p className="text-sm mb-1">Jean Dupont</p>
-              <p className="text-sm mb-1">123 Rue de Paris</p>
-              <p className="text-sm mb-1">75001 Paris</p>
-              <p className="text-sm">France</p>
+              <p className="text-sm mb-1">{order.shippingAddress.prenom} {order.shippingAddress.nom}</p>
+              <p className="text-sm mb-1">{order.shippingAddress.adresse}</p>
+              <p className="text-sm mb-1">{order.shippingAddress.codePostal} {order.shippingAddress.ville}</p>
+              <p className="text-sm">{order.shippingAddress.pays}</p>
             </div>
             
             <div className="bg-white border rounded-lg p-6">

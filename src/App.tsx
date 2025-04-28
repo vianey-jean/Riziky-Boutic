@@ -1,70 +1,66 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { StoreProvider } from "./contexts/StoreContext";
-import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Index from "./pages/Index";
-import ProductDetail from "./pages/ProductDetail";
-import CartPage from "./pages/CartPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import OrderPage from "./pages/OrderPage";
-import FavoritesPage from "./pages/FavoritesPage";
-import ChatPage from "./pages/ChatPage";
-import CategoryPage from "./pages/CategoryPage";
-import AdminProductsPage from "./pages/admin/AdminProductsPage";
-import AdminUsersPage from "./pages/admin/AdminUsersPage";
-import AdminMessagesPage from "./pages/admin/AdminMessagesPage";
-import AdminChatPage from "./pages/admin/AdminChatPage";
-import NotFound from "./pages/NotFound";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ContactPage from "./pages/ContactPage";
-import DeliveryPage from "./pages/DeliveryPage";
-import ReturnsPage from "./pages/ReturnsPage";
-import CustomerServicePage from "./pages/CustomerServicePage";
+import React from 'react';
+import './App.css';
+import { Toaster } from './components/ui/sonner';
+import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { StoreProvider } from './contexts/StoreContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
-const queryClient = new QueryClient();
+import Index from './pages/Index';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import NotFound from './pages/NotFound';
+import ProductDetail from './pages/ProductDetail';
+import CategoryPage from './pages/CategoryPage';
+import CartPage from './pages/CartPage';
+import FavoritesPage from './pages/FavoritesPage';
+import CheckoutPage from './pages/CheckoutPage';
+import ChatPage from './pages/ChatPage';
+import ContactPage from './pages/ContactPage';
+import OrderPage from './pages/OrderPage';
+import OrdersPage from './pages/OrdersPage';
+import ProfilePage from './pages/ProfilePage';
+import DeliveryPage from './pages/DeliveryPage';
+import ReturnsPage from './pages/ReturnsPage';
+import CustomerServicePage from './pages/CustomerServicePage';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthProvider>
-        <StoreProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              {/* Pages publiques */}
-              <Route path="/" element={<Index />} />
-              <Route path="/produit/:productId" element={<ProductDetail />} />
-              <Route path="/categorie/:categoryName" element={<CategoryPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/livraison" element={<DeliveryPage />} />
-              <Route path="/retours" element={<ReturnsPage />} />
-              <Route path="/service-client" element={<CustomerServicePage />} />
-              
-              {/* Pages protégées (utilisateur connecté) */}
-              <Route path="/panier" element={
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminProductsPage from './pages/admin/AdminProductsPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminMessagesPage from './pages/admin/AdminMessagesPage';
+import AdminChatPage from './pages/admin/AdminChatPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+
+
+
+function App() {
+  return (
+    <AuthProvider>
+      <StoreProvider>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/produit/:productId" element={<ProductDetail />} />
+          <Route path="/categorie/:categoryName" element={<CategoryPage />} />
+           {/* Pages d'information */}
+           <Route path="/livraison" element={<DeliveryPage />} />
+          <Route path="/retours" element={<ReturnsPage />} />
+          <Route path="/service-client" element={<CustomerServicePage />} />
+          <Route path="/contact" element={<ContactPage />} />
+
+          <Route path="/chat" element={
+                <ProtectedRoute>
+                  <ChatPage />
+                </ProtectedRoute>
+              } />
+          <Route path="/panier" element={
                 <ProtectedRoute>
                   <CartPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/paiement" element={
-                <ProtectedRoute>
-                  <CheckoutPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/commandes/:orderId" element={
-                <ProtectedRoute>
-                  <OrderPage />
                 </ProtectedRoute>
               } />
               <Route path="/favoris" element={
@@ -72,12 +68,29 @@ const App = () => (
                   <FavoritesPage />
                 </ProtectedRoute>
               } />
-              <Route path="/chat" element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              } />
-              
+          {/* Routes protégées */}
+          <Route path="/paiement" element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/commandes" element={
+            <ProtectedRoute>
+              <OrdersPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/commande/:orderId" element={
+            <ProtectedRoute>
+              <OrderPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/profil" element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
+
+          
               {/* Pages Admin */}
               <Route path="/admin/produits" element={
                 <ProtectedRoute requireAdmin>
@@ -94,20 +107,33 @@ const App = () => (
                   <AdminMessagesPage />
                 </ProtectedRoute>
               } />
-              <Route path="/admin/chat" element={
+              
+              <Route path="/admin/parametres" element={
+                <ProtectedRoute requireAdmin>
+                  <AdminSettingsPage />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/admin/:adminId?" element={
                 <ProtectedRoute requireAdmin>
                   <AdminChatPage />
                 </ProtectedRoute>
               } />
-              
-              {/* 404 Route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </TooltipProvider>
-        </StoreProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+              <Route path="admin/commandes" element={
+                <ProtectedRoute requireAdmin>
+                  <AdminOrdersPage />
+                </ProtectedRoute>
+              } />
+
+
+        
+          {/* Page 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+      </StoreProvider>
+    </AuthProvider>
+  );
+}
 
 export default App;

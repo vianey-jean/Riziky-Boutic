@@ -1,248 +1,355 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { productsAPI, Product, panierAPI, favoritesAPI, Cart, ordersAPI, Order } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
+import { useAuth } from './AuthContext';
 
-// Types
-export type Product = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
-  isSold: boolean;
-  stock?: number;
-  promotion?: number;
-  promotionEnd?: string;
-  originalPrice?: number;
-  dateAjout?: string;
-};
-
-type CartItem = {
+export interface CartItem {
   product: Product;
   quantity: number;
-};
+}
 
-type Order = {
-  id: string;
-  items: CartItem[];
-  total: number;
-  status: 'en attente' | 'expédiée' | 'livrée';
-  date: Date;
-};
-
-type StoreContextType = {
+interface StoreContextType {
   products: Product[];
-  cart: CartItem[];
   favorites: Product[];
+  cart: CartItem[];
   orders: Order[];
-  addToCart: (product: Product) => void;
+  loadingProducts: boolean;
+  loadingFavorites: boolean;
+  loadingCart: boolean;
+  loadingOrders: boolean;
+  addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  getCartTotal: () => number;
   toggleFavorite: (product: Product) => void;
   isFavorite: (productId: string) => boolean;
-  getCartTotal: () => number;
-  createOrder: () => Order | null;
-};
+  getProductById: (id: string) => Product | undefined;
+  fetchProducts: (categoryName?: string) => Promise<void>;
+  fetchOrders: () => Promise<void>;
+  favoriteCount: number;
+  createOrder: (shippingAddress: any, paymentMethod: string) => Promise<Order | null>;
+}
 
-// Sample products data
-const sampleProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Écouteurs Sans Fil',
-    description: 'Écouteurs sans fil avec annulation de bruit active et autonomie de 20 heures.',
-    price: 79.99,
-    originalPrice: 79.99,
-    image: '/placeholder.svg',
-    category: 'Électronique',
-    isSold: true,
-    stock: 15,
-    dateAjout: '2025-04-20T10:00:00.000Z'
-  },
-  {
-    id: '2',
-    name: 'Montre Connectée',
-    description: 'Montre connectée avec suivi de la santé et notifications intelligentes.',
-    price: 117.00,
-    originalPrice: 129.99,
-    image: '/placeholder.svg',
-    category: 'Électronique',
-    isSold: true,
-    stock: 8,
-    promotion: 10,
-    promotionEnd: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    dateAjout: '2025-04-23T10:00:00.000Z'
-  },
-  {
-    id: '3',
-    name: 'Caméra Sport HD',
-    description: 'Caméra sport étanche avec vidéo 4K et stabilisation d\'image.',
-    price: 149.99,
-    image: '/placeholder.svg',
-    category: 'Électronique',
-    isSold: true,
-  },
-  {
-    id: '4',
-    name: 'Sac à Dos de Randonnée',
-    description: 'Sac à dos imperméable avec multiples compartiments et support dorsal.',
-    price: 59.99,
-    image: '/placeholder.svg',
-    category: 'Plein Air',
-    isSold: true,
-  },
-  {
-    id: '5',
-    name: 'Chaussures de Course',
-    description: 'Chaussures légères avec semelle amortissante et respiration optimale.',
-    price: 89.99,
-    image: '/placeholder.svg',
-    category: 'Sport',
-    isSold: true,
-  },
-  {
-    id: '6',
-    name: 'Collier en Argent',
-    description: 'Collier en argent sterling avec pendentif élégant.',
-    price: 45.99,
-    image: '/placeholder.svg',
-    category: 'Bijoux',
-    isSold: true,
-  },
-  {
-    id: '7',
-    name: 'Enceinte Portable',
-    description: 'Enceinte Bluetooth étanche avec 24 heures d\'autonomie.',
-    price: 69.99,
-    image: '/placeholder.svg',
-    category: 'Électronique',
-    isSold: false,
-  },
-  {
-    id: '8',
-    name: 'Tablette 10 pouces',
-    description: 'Tablette tactile avec écran haute résolution et processeur rapide.',
-    price: 199.99,
-    image: '/placeholder.svg',
-    category: 'Électronique',
-    isSold: true,
-  },
-];
-
-// Create context
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-export const useStore = () => {
-  const context = useContext(StoreContext);
-  if (!context) throw new Error('useStore doit être utilisé dans un StoreProvider');
-  return context;
-};
-
-export const StoreProvider = ({ children }: { children: ReactNode }) => {
-  const [products, setProducts] = useState<Product[]>(sampleProducts);
-  const [cart, setCart] = useState<CartItem[]>([]);
+export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [products, setProducts] = useState<Product[]>([]);
   const [favorites, setFavorites] = useState<Product[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingFavorites, setLoadingFavorites] = useState(true);
+  const [loadingCart, setLoadingCart] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const { user, isAuthenticated } = useAuth();
 
-  const addToCart = (product: Product) => {
-    setCart(currentCart => {
-      const existingItem = currentCart.find(item => item.product.id === product.id);
-      
-      if (existingItem) {
-        return currentCart.map(item => 
-          item.product.id === product.id 
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+  const fetchProducts = async (categoryName?: string) => {
+    setLoadingProducts(true);
+    try {
+      let response;
+      if (categoryName) {
+        response = await productsAPI.getByCategory(categoryName);
       } else {
-        return [...currentCart, { product, quantity: 1 }];
+        response = await productsAPI.getAll();
       }
-    });
+      
+      if (!response.data || !Array.isArray(response.data)) {
+        throw new Error('Format de données incorrect pour les produits');
+      }
+      
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Erreur lors du chargement des produits:", error);
+      toast.error('Erreur lors du chargement des produits');
+      setProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const fetchFavorites = async () => {
+    if (!isAuthenticated || !user) {
+      setFavorites([]);
+      setLoadingFavorites(false);
+      return;
+    }
     
-    toast.success("Produit ajouté au panier!");
+    setLoadingFavorites(true);
+    try {
+      const response = await favoritesAPI.get(user.id);
+      if (response.data && response.data.items && Array.isArray(response.data.items)) {
+        setFavorites(response.data.items);
+      } else {
+        setFavorites([]);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des favoris:", error);
+      setFavorites([]);
+    } finally {
+      setLoadingFavorites(false);
+    }
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart(currentCart => currentCart.filter(item => item.product.id !== productId));
-    toast.info("Produit supprimé du panier");
+  const fetchCart = async () => {
+    if (!isAuthenticated || !user) {
+      setCart([]);
+      setLoadingCart(false);
+      return;
+    }
+    
+    setLoadingCart(true);
+    try {
+      const response = await panierAPI.get(user.id);
+      const cartData = response.data;
+      
+      if (!cartData || !Array.isArray(cartData.items)) {
+        setCart([]);
+        return;
+      }
+      
+      const cartItems: CartItem[] = [];
+      for (const item of cartData.items) {
+        try {
+          const productResponse = await productsAPI.getById(item.productId);
+          if (productResponse.data) {
+            cartItems.push({
+              product: productResponse.data,
+              quantity: item.quantity
+            });
+          }
+        } catch (err) {
+          console.error(`Erreur lors du chargement du produit ${item.productId}:`, err);
+        }
+      }
+      
+      setCart(cartItems);
+    } catch (error) {
+      console.error("Erreur lors du chargement du panier:", error);
+      setCart([]);
+    } finally {
+      setLoadingCart(false);
+    }
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
-    if (quantity < 1) {
+  const fetchOrders = async () => {
+    if (!isAuthenticated) {
+      setOrders([]);
+      setLoadingOrders(false);
+      return;
+    }
+    
+    setLoadingOrders(true);
+    try {
+      const response = await ordersAPI.getUserOrders();
+      if (Array.isArray(response.data)) {
+        setOrders(response.data);
+      } else {
+        setOrders([]);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des commandes:", error);
+      setOrders([]);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    fetchFavorites();
+    fetchCart();
+    fetchOrders();
+  }, [user]);
+
+  const addToCart = async (product: Product, quantity: number = 1) => {
+    if (!isAuthenticated || !user) {
+      toast.error('Vous devez être connecté pour ajouter un produit au panier');
+      return;
+    }
+    
+    try {
+      await panierAPI.addItem(user.id, product.id, quantity);
+      
+      const existingItemIndex = cart.findIndex(item => item.product.id === product.id);
+      
+      if (existingItemIndex >= 0) {
+        const updatedCart = [...cart];
+        updatedCart[existingItemIndex].quantity += quantity;
+        setCart(updatedCart);
+      } else {
+        setCart([...cart, { product, quantity }]);
+      }
+      
+      toast.success('Produit ajouté au panier');
+    } catch (error) {
+      console.error("Erreur lors de l'ajout au panier:", error);
+      toast.error('Erreur lors de l\'ajout au panier');
+    }
+  };
+
+  const removeFromCart = async (productId: string) => {
+    if (!isAuthenticated || !user) return;
+    
+    try {
+      await panierAPI.removeItem(user.id, productId);
+      setCart(cart.filter(item => item.product.id !== productId));
+      toast.info('Produit supprimé du panier');
+    } catch (error) {
+      console.error("Erreur lors de la suppression du panier:", error);
+      toast.error('Erreur lors de la suppression du produit');
+    }
+  };
+
+  const updateQuantity = async (productId: string, quantity: number) => {
+    if (!isAuthenticated || !user) return;
+    
+    if (quantity <= 0) {
       removeFromCart(productId);
       return;
     }
     
-    setCart(currentCart => 
-      currentCart.map(item => 
-        item.product.id === productId 
-          ? { ...item, quantity }
-          : item
-      )
-    );
-  };
-
-  const clearCart = () => {
-    setCart([]);
-  };
-
-  const toggleFavorite = (product: Product) => {
-    setFavorites(currentFavorites => {
-      const isFav = currentFavorites.some(fav => fav.id === product.id);
+    try {
+      await panierAPI.updateItem(user.id, productId, quantity);
       
+      const updatedCart = cart.map(item => {
+        if (item.product.id === productId) {
+          return { ...item, quantity };
+        }
+        return item;
+      });
+      
+      setCart(updatedCart);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du panier:", error);
+      toast.error('Erreur lors de la mise à jour de la quantité');
+    }
+  };
+
+  const clearCart = async () => {
+    if (!isAuthenticated || !user) return;
+    
+    try {
+      await panierAPI.clear(user.id);
+      setCart([]);
+    } catch (error) {
+      console.error("Erreur lors de la suppression du panier:", error);
+      toast.error('Erreur lors de la suppression du panier');
+    }
+  };
+
+  const toggleFavorite = async (product: Product) => {
+    if (!isAuthenticated || !user) {
+      toast.error('Vous devez être connecté pour ajouter un produit aux favoris');
+      return;
+    }
+    
+    const isFav = favorites.some(fav => fav.id === product.id);
+    
+    try {
       if (isFav) {
-        toast.info("Retiré des favoris");
-        return currentFavorites.filter(fav => fav.id !== product.id);
+        await favoritesAPI.removeItem(user.id, product.id);
+        setFavorites(favorites.filter(fav => fav.id !== product.id));
+        toast.info('Produit retiré des favoris');
       } else {
-        toast.success("Ajouté aux favoris!");
-        return [...currentFavorites, product];
+        await favoritesAPI.addItem(user.id, product.id);
+        setFavorites([...favorites, product]);
+        toast.success('Produit ajouté aux favoris');
       }
-    });
+    } catch (error) {
+      console.error("Erreur lors de la gestion des favoris:", error);
+      toast.error('Erreur lors de la gestion des favoris');
+    }
   };
 
   const isFavorite = (productId: string) => {
-    return favorites.some(product => product.id === productId);
+    return favorites.some(fav => fav.id === productId);
   };
 
   const getCartTotal = () => {
-    return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+    return cart.reduce((total, item) => {
+      return total + (item.product.price * item.quantity);
+    }, 0);
   };
 
-  const createOrder = (): Order | null => {
-    if (cart.length === 0) return null;
-    
-    const order: Order = {
-      id: `ORD-${Date.now()}`,
-      items: [...cart],
-      total: getCartTotal(),
-      status: 'en attente',
-      date: new Date()
-    };
-    
-    setOrders(currentOrders => [order, ...currentOrders]);
-    clearCart();
-    toast.success("Commande créée avec succès!");
-    return order;
+  const getProductById = (id: string) => {
+    return products.find(p => p.id === id);
   };
 
-  const value = {
-    products,
-    cart,
-    favorites,
-    orders,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    toggleFavorite,
-    isFavorite,
-    getCartTotal,
-    createOrder,
+  const createOrder = async (shippingAddress: any, paymentMethod: string): Promise<Order | null> => {
+    if (!isAuthenticated || !user || cart.length === 0) {
+      return null;
+    }
+
+    try {
+      const orderItems = cart.map(item => ({
+        productId: item.product.id,
+        quantity: item.quantity
+      }));
+      
+      const orderData = {
+        items: orderItems,
+        shippingAddress,
+        paymentMethod
+      };
+      
+      const response = await ordersAPI.create(orderData);
+      
+      if (response.data) {
+        await fetchOrders();
+        
+        await clearCart();
+        
+        return response.data;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Erreur lors de la création de la commande:", error);
+      toast.error('Erreur lors de la création de la commande');
+      return null;
+    }
   };
+
+  const favoriteCount = favorites.length;
 
   return (
-    <StoreContext.Provider value={value}>
+    <StoreContext.Provider value={{
+      products,
+      favorites,
+      cart,
+      orders,
+      loadingProducts,
+      loadingFavorites,
+      loadingCart,
+      loadingOrders,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      getCartTotal,
+      toggleFavorite,
+      isFavorite,
+      getProductById,
+      fetchProducts,
+      fetchOrders,
+      favoriteCount,
+      createOrder
+    }}>
       {children}
     </StoreContext.Provider>
   );
 };
+
+export const useStore = () => {
+  const context = useContext(StoreContext);
+  if (!context) {
+    throw new Error('useStore must be used within a StoreProvider');
+  }
+  return context;
+};
+
+export type { Product };

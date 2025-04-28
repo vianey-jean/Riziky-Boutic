@@ -18,9 +18,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Card className="overflow-hidden h-full flex flex-col">
       <Link to={`/produit/${product.id}`} className="overflow-hidden">
-       
-         <img src={`${baseImageUrl}${product.image}`} alt={product.name} className="h-48 w-full object-cover transition-transform hover:scale-105" />
-
+        <img src={`${baseImageUrl}${product.image}`} alt={product.name} className="h-48 w-full object-cover transition-transform hover:scale-105" />
+        
       </Link>
       <CardContent className="p-4 flex flex-col flex-grow">
         <Link to={`/produit/${product.id}`} className="block">

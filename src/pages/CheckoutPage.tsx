@@ -1,15 +1,16 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/sonner';
 
 const CheckoutPage = () => {
   const { cart, getCartTotal, createOrder } = useStore();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   
@@ -21,10 +22,29 @@ const CheckoutPage = () => {
     city: '',
     postalCode: '',
     country: 'France',
+    phone: '',
     cardNumber: '',
     cardExpiry: '',
     cardCvc: '',
+    useShippingAddress: true,
   });
+
+  // Fill in user information when user is loaded
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: user.prenom || '',
+        lastName: user.nom || '',
+        email: user.email || '',
+        address: user.adresse || '',
+        city: user.ville || '',
+        postalCode: user.codePostal || '',
+        country: user.pays || 'France',
+        phone: user.telephone || '',
+      }));
+    }
+  }, [user]);
 
   if (cart.length === 0) {
     navigate('/panier');
@@ -33,24 +53,98 @@ const CheckoutPage = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    
+    // Format card number with spaces every 4 digits
+    if (name === 'cardNumber') {
+      const formatted = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
+      setFormData(prev => ({ ...prev, [name]: formatted.slice(0, 19) }));
+      return;
+    }
+    
+    // Format card expiry as MM/YY
+    if (name === 'cardExpiry') {
+      const expiry = value.replace(/\D/g, '');
+      if (expiry.length <= 2) {
+        setFormData(prev => ({ ...prev, [name]: expiry }));
+      } else {
+        const month = expiry.slice(0, 2);
+        const year = expiry.slice(2, 4);
+        setFormData(prev => ({ ...prev, [name]: `${month}/${year}` }));
+      }
+      return;
+    }
+    
+    // Format CVC to only allow 3 or 4 digits
+    if (name === 'cardCvc') {
+      const cvc = value.replace(/\D/g, '');
+      setFormData(prev => ({ ...prev, [name]: cvc.slice(0, 4) }));
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateCardExpiry = (expiry: string): boolean => {
+    // Extract month and year
+    const parts = expiry.split('/');
+    if (parts.length !== 2) return false;
+    
+    const month = parseInt(parts[0], 10);
+    const year = parseInt(`20${parts[1]}`, 10);
+    
+    // Check if month is valid (1-12)
+    if (month < 1 || month > 12) return false;
+    
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    
+    // Check if the expiry date is in the future
+    if (year < currentYear || (year === currentYear && month < currentMonth)) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate card expiry
+    if (!validateCardExpiry(formData.cardExpiry)) {
+      toast.error('La date d\'expiration de la carte est invalide ou expirée');
+      return;
+    }
+    
     setIsProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
-      const order = createOrder();
+    // Prepare shipping address
+    const shippingAddress = {
+      prenom: formData.firstName,
+      nom: formData.lastName,
+      adresse: formData.address,
+      ville: formData.city,
+      codePostal: formData.postalCode,
+      pays: formData.country,
+      telephone: formData.phone,
+    };
+    
+    try {
+      // Call the createOrder function
+      const order = await createOrder(shippingAddress, 'Card');
+      
       if (order) {
-        navigate(`/commandes/${order.id}`);
+        navigate(`/commande/${order.id}`);
         toast.success('Commande passée avec succès!');
       } else {
-        toast.error('Une erreur est survenue. Veuillez réessayer.');
+        throw new Error('Erreur lors de la création de la commande');
       }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error('Une erreur est survenue. Veuillez réessayer.');
+    } finally {
       setIsProcessing(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -95,6 +189,18 @@ const CheckoutPage = () => {
                     name="email"
                     type="email"
                     value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <Label htmlFor="phone">Téléphone</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
                     onChange={handleChange}
                     required
                   />
@@ -169,7 +275,7 @@ const CheckoutPage = () => {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="cardExpiry">Date d'expiration</Label>
+                    <Label htmlFor="cardExpiry">Date d'expiration (MM/YY)</Label>
                     <Input
                       id="cardExpiry"
                       name="cardExpiry"

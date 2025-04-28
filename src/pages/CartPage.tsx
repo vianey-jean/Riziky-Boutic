@@ -1,14 +1,16 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 
 const CartPage = () => {
-  const { cart, updateQuantity, removeFromCart, getCartTotal } = useStore();
+  const { cart, updateQuantity, removeFromCart, getCartTotal, loadingCart } = useStore();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
   const handleQuantityChange = (productId: string, newQuantity: number) => {
@@ -21,12 +23,34 @@ const CartPage = () => {
     navigate('/paiement');
   };
 
+  if (loadingCart) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6">Votre Panier</h1>
+          <div className="text-center py-10">Chargement de votre panier...</div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Votre Panier</h1>
         
-        {cart.length > 0 ? (
+        {!isAuthenticated ? (
+          <div className="text-center py-12 border rounded-lg bg-gray-50">
+            <div className="mb-4">
+              <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-medium mb-2">Connectez-vous pour voir votre panier</h2>
+            <p className="text-muted-foreground mb-6">Vous devez être connecté pour accéder à votre panier</p>
+            <Button asChild>
+              <Link to="/login">Se connecter</Link>
+            </Button>
+          </div>
+        ) : cart.length > 0 ? (
           <>
             <div className="mb-8">
               {cart.map((item) => (

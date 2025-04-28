@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -6,6 +5,7 @@ import {
   Package,
   MessageCircle,
   Users,
+  Truck, // virgule corrigée ici
   Settings,
   LogOut
 } from 'lucide-react';
@@ -21,6 +21,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: 'Produits', path: '/admin/produits', icon: Package },
     { name: 'Utilisateurs', path: '/admin/utilisateurs', icon: Users },
     { name: 'Messages', path: '/admin/messages', icon: MessageCircle },
+    { name: 'Commandes', path: '/admin/commandes', icon: Truck }, // correction ici
     { name: 'Chat Admin', path: '/admin/chat', icon: ShoppingBag },
     { name: 'Paramètres', path: '/admin/parametres', icon: Settings },
   ];

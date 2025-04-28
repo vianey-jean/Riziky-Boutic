@@ -63,7 +63,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-gray-200 mt-8 pt-8 text-center">
-          <p className="text-gray-600">© 2025 FranceBoutique. Tous droits réservés.</p>
+          <p className="text-gray-600">© 2023 FranceBoutique. Tous droits réservés.</p>
         </div>
       </div>
     </footer>

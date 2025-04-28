@@ -29,9 +29,16 @@ export interface AuthResponse {
 export interface User {
   id: string;
   nom: string;
+  prenom?: string;
   email: string;
   role: 'admin' | 'client';
   dateCreation: string;
+  adresse?: string;
+  ville?: string;
+  codePostal?: string;
+  pays?: string;
+  telephone?: string;
+  genre?: 'homme' | 'femme' | 'autre';
 }
 
 export interface LoginData {
@@ -55,6 +62,17 @@ export interface ResetPasswordData {
   newPassword: string;
 }
 
+export interface UpdateProfileData {
+  nom?: string;
+  prenom?: string;
+  adresse?: string;
+  ville?: string;
+  codePostal?: string;
+  pays?: string;
+  telephone?: string;
+  genre?: 'homme' | 'femme' | 'autre';
+}
+
 // Services d'authentification
 export const authAPI = {
   login: (data: LoginData) => API.post<AuthResponse>('/auth/login', data),
@@ -63,6 +81,10 @@ export const authAPI = {
   resetPassword: (data: ResetPasswordData) => API.post('/auth/reset-password', data),
   verifyToken: () => API.get('/auth/verify-token'),
   checkEmail: (email: string) => API.post('/auth/check-email', { email }),
+  updateProfile: (userId: string, data: UpdateProfileData) => API.put(`/users/${userId}`, data),
+  updatePassword: (userId: string, currentPassword: string, newPassword: string) => 
+    API.put(`/users/${userId}/password`, { currentPassword, newPassword }),
+  getUserProfile: (userId: string) => API.get(`/users/${userId}`),
 };
 
 // Interface Produit
@@ -85,6 +107,7 @@ export interface Product {
 export const productsAPI = {
   getAll: () => API.get<Product[]>('/products'),
   getById: (id: string) => API.get<Product>(`/products/${id}`),
+  getByCategory: (category: string) => API.get<Product[]>(`/products/category/${category}`),
   getMostFavorited: () => API.get<Product[]>('/products/stats/most-favorited'),
   getNewArrivals: () => API.get<Product[]>('/products/stats/new-arrivals'),
   create: (product: FormData) => API.post<Product>('/products', product),
@@ -92,6 +115,7 @@ export const productsAPI = {
   delete: (id: string) => API.delete(`/products/${id}`),
   applyPromotion: (id: string, promotion: number, duration: number) => 
     API.post(`/products/${id}/promotion`, { promotion, duration }),
+  search: (query: string) => API.get<Product[]>(`/products/search?q=${encodeURIComponent(query)}`),
 };
 
 // Interface Contact
@@ -118,9 +142,21 @@ export const contactsAPI = {
   markAsRead: (id: string, read: boolean) => API.put<Contact>(`/contacts/${id}`, { read }),
 };
 
+// Interface Panier
+export interface CartItem {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
+export interface Cart {
+  userId: string;
+  items: CartItem[];
+}
+
 // Services pour le panier
 export const panierAPI = {
-  get: (userId: string) => API.get(`/panier/${userId}`),
+  get: (userId: string) => API.get<Cart>(`/panier/${userId}`),
   addItem: (userId: string, productId: string, quantity: number = 1) => 
     API.post(`/panier/${userId}/add`, { productId, quantity }),
   updateItem: (userId: string, productId: string, quantity: number) => 
@@ -130,13 +166,85 @@ export const panierAPI = {
   clear: (userId: string) => API.delete(`/panier/${userId}/clear`),
 };
 
+// Interface Favoris
+export interface Favorites {
+  userId: string;
+  items: Product[];
+}
+
 // Services pour les favoris
 export const favoritesAPI = {
-  get: (userId: string) => API.get(`/favorites/${userId}`),
+  get: (userId: string) => API.get<Favorites>(`/favorites/${userId}`),
   addItem: (userId: string, productId: string) => 
     API.post(`/favorites/${userId}/add`, { productId }),
   removeItem: (userId: string, productId: string) => 
     API.delete(`/favorites/${userId}/remove/${productId}`),
+};
+
+// Interface Commande
+export interface OrderItem {
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+  subtotal: number;
+}
+
+export interface Order {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  items: OrderItem[];
+  totalAmount: number;
+  shippingAddress: {
+    nom: string;
+    prenom: string;
+    adresse: string;
+    ville: string;
+    codePostal: string;
+    pays: string;
+    telephone: string;
+  };
+  paymentMethod: string;
+  status: 'confirmée' | 'en préparation' | 'en livraison' | 'livrée';
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Services pour les commandes
+export const ordersAPI = {
+  getAll: () => API.get<Order[]>('/orders'),
+  getUserOrders: () => API.get<Order[]>('/orders/user'),
+  getById: (orderId: string) => API.get<Order>(`/orders/${orderId}`),
+  create: (orderData: any) => API.post<Order>('/orders', orderData),
+  updateStatus: (orderId: string, status: 'confirmée' | 'en préparation' | 'en livraison' | 'livrée') => 
+    API.put(`/orders/${orderId}/status`, { status }),
+};
+
+// Interface Admin Chat
+export interface Message {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: string;
+  read: boolean;
+}
+
+export interface Conversation {
+  messages: Message[];
+  participants: string[];
+}
+
+export const adminChatAPI = {
+  getAdmins: () => API.get('/admin-chat/admins'),
+  getConversations: () => API.get('/admin-chat/conversations'),
+  getConversation: (adminId: string) => API.get(`/admin-chat/conversations/${adminId}`),
+  sendMessage: (adminId: string, message: string) => 
+    API.post(`/admin-chat/conversations/${adminId}`, { message }),
+  markAsRead: (messageId: string, conversationId: string) => 
+    API.put(`/admin-chat/messages/${messageId}/read`, { conversationId }),
 };
 
 export default API;

@@ -14,7 +14,7 @@ const Index = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const baseImageUrl = "https://riziky-boutic-server.onrender.com";
-
+  
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -85,9 +85,7 @@ const Index = () => {
                       <Card>
                         <CardContent className="flex aspect-square items-center justify-center p-0">
                           <div className="w-full">
-
                           <img src={`${baseImageUrl}${product.image}`} alt={product.name} className="w-full h-48 object-cover" />
-                          
                             <div className="p-4">
                               <h3 className="font-medium">{product.name}</h3>
                               {product.promotion ? (

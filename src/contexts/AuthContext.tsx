@@ -1,7 +1,8 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { authAPI, User } from '../services/api';
+import { authAPI, User, UpdateProfileData } from '../services/api';
 import { toast } from '@/components/ui/sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, NavigateFunction } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -13,9 +14,25 @@ interface AuthContextType {
   register: (nom: string, email: string, password: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
+  updateProfile: (data: UpdateProfileData) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Création d'un hook de navigation qui est sûr à utiliser
+const NavigationContext = createContext<NavigateFunction | null>(null);
+
+export const useAuthNavigate = () => {
+  const navigate = useContext(NavigationContext);
+  if (!navigate) {
+    // Fallback pour les cas où useNavigate n'est pas disponible
+    return (path: string) => {
+      window.location.href = path;
+    };
+  }
+  return navigate;
+};
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -101,6 +118,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateProfile = async (data: UpdateProfileData) => {
+    try {
+      if (!user) throw new Error('Utilisateur non connecté');
+      
+      const response = await authAPI.updateProfile(user.id, data);
+      setUser(prev => prev ? { ...prev, ...response.data } : null);
+      toast.success('Profil mis à jour avec succès');
+    } catch (error: any) {
+      console.error("Erreur de mise à jour du profil:", error);
+      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du profil');
+      throw error;
+    }
+  };
+
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      if (!user) throw new Error('Utilisateur non connecté');
+      
+      await authAPI.updatePassword(user.id, currentPassword, newPassword);
+      toast.success('Mot de passe mis à jour avec succès');
+    } catch (error: any) {
+      console.error("Erreur de mise à jour du mot de passe:", error);
+      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du mot de passe');
+      throw error;
+    }
+  };
+
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
 
@@ -114,9 +158,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     register,
     forgotPassword,
     resetPassword,
+    updateProfile,
+    updatePassword,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <NavigationContext.Provider value={navigate}>
+      <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    </NavigationContext.Provider>
+  );
 };
 
 export const useAuth = () => {

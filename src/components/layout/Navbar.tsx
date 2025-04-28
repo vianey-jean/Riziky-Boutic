@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -10,19 +9,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package } from 'lucide-react';
 import { productsAPI, Product } from '@/services/api';
 import { debounce } from 'lodash';
+import axios from 'axios';
 
 const Navbar = () => {
-  const { cart } = useStore();
+  const { cart, favoriteCount } = useStore();
   const { isAuthenticated, user, isAdmin, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   
   const cartItemsCount = cart.reduce((count, item) => count + item.quantity, 0);
   
-  // Fermer les résultats de recherche quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -36,44 +36,41 @@ const Navbar = () => {
     };
   }, []);
   
-  // Fonction de recherche debounced
-  const searchProducts = debounce(async (term: string) => {
+  const debouncedSearch = debounce(async (term: string) => {
     if (term.length < 3) {
       setSearchResults([]);
       setShowResults(false);
+      setIsSearching(false);
       return;
     }
     
+    setIsSearching(true);
     try {
-      const response = await productsAPI.getAll();
-      
-      if (!response.data || !Array.isArray(response.data)) {
-        console.error("Format de données incorrect pour la recherche");
-        return;
+      const response = await productsAPI.search(term);
+      if (response.data && Array.isArray(response.data)) {
+        setSearchResults(response.data);
+      } else {
+        setSearchResults([]);
       }
-      
-      const products = response.data;
-      
-      // Filtrer les produits correspondant à la recherche
-      const results = products.filter((product: Product) => 
-        product.name.toLowerCase().includes(term.toLowerCase()) ||
-        product.description.toLowerCase().includes(term.toLowerCase()) ||
-        product.category.toLowerCase().includes(term.toLowerCase())
-      ).slice(0, 5); // Limiter à 5 résultats
-      
-      setSearchResults(results);
       setShowResults(true);
-      
-      console.log(`Recherche: "${term}", ${results.length} résultats trouvés`);
     } catch (error) {
       console.error("Erreur lors de la recherche:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
     }
   }, 300);
   
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    searchProducts(value);
+    
+    if (value.length >= 3) {
+      debouncedSearch(value);
+    } else {
+      setSearchResults([]);
+      setShowResults(false);
+    }
   };
   
   const handleProductClick = (productId: string) => {
@@ -97,10 +94,13 @@ const Navbar = () => {
                 value={searchTerm} 
                 onChange={handleSearchChange} 
               />
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              {isSearching ? (
+                <div className="absolute right-3 top-2.5 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-brand-blue"></div>
+              ) : (
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              )}
               
-              {/* Résultats de recherche */}
-              {showResults && searchResults.length > 0 && (
+              {showResults && Array.isArray(searchResults) && searchResults.length > 0 && (
                 <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
                   <ul className="py-1">
                     {searchResults.map(product => (
@@ -125,14 +125,25 @@ const Navbar = () => {
                   </ul>
                 </div>
               )}
+              
+              {showResults && searchTerm.length >= 3 && (!Array.isArray(searchResults) || searchResults.length === 0) && (
+                <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 p-4 text-center">
+                  Aucun produit trouvé pour "{searchTerm}"
+                </div>
+              )}
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
-            <Link to="/favoris">
+            <Link to="/favoris" className="relative">
               <Button variant="ghost" size="icon">
                 <Heart className="h-5 w-5" />
               </Button>
+              {favoriteCount > 0 && (
+                <Badge variant="destructive" className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 text-xs rounded-full">
+                  {favoriteCount}
+                </Badge>
+              )}
             </Link>
             
             <Link to="/panier" className="relative">
@@ -160,7 +171,7 @@ const Navbar = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/compte">
+                    <Link to="/profil">
                       <User className="mr-2 h-4 w-4" />
                       <span>Profil</span>
                     </Link>
@@ -207,10 +218,13 @@ const Navbar = () => {
             value={searchTerm} 
             onChange={handleSearchChange} 
           />
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          {isSearching ? (
+            <div className="absolute right-3 top-2.5 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-brand-blue"></div>
+          ) : (
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          )}
           
-          {/* Résultats de recherche mobile */}
-          {showResults && searchResults.length > 0 && (
+          {showResults && Array.isArray(searchResults) && searchResults.length > 0 && (
             <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
               <ul className="py-1">
                 {searchResults.map(product => (
@@ -233,6 +247,12 @@ const Navbar = () => {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+          
+          {showResults && searchTerm.length >= 3 && (!Array.isArray(searchResults) || searchResults.length === 0) && (
+            <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 p-4 text-center">
+              Aucun produit trouvé pour "{searchTerm}"
             </div>
           )}
         </div>
