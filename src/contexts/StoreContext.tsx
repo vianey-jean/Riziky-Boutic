@@ -12,6 +12,7 @@ interface StoreContextType {
   products: Product[];
   favorites: Product[];
   cart: CartItem[];
+  selectedCartItems: CartItem[];
   orders: Order[];
   loadingProducts: boolean;
   loadingFavorites: boolean;
@@ -29,6 +30,7 @@ interface StoreContextType {
   fetchOrders: () => Promise<void>;
   favoriteCount: number;
   createOrder: (shippingAddress: any, paymentMethod: string) => Promise<Order | null>;
+  setSelectedCartItems: (items: CartItem[]) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -37,6 +39,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [products, setProducts] = useState<Product[]>([]);
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedCartItems, setSelectedCartItems] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingFavorites, setLoadingFavorites] = useState(true);
@@ -164,6 +167,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchCart();
     fetchOrders();
   }, [user]);
+
+  useEffect(() => {
+    setSelectedCartItems(cart);
+  }, [cart]);
 
   const addToCart = async (product: Product, quantity: number = 1) => {
     if (!isAuthenticated || !user) {
@@ -321,6 +328,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       products,
       favorites,
       cart,
+      selectedCartItems,
       orders,
       loadingProducts,
       loadingFavorites,
@@ -337,7 +345,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       fetchProducts,
       fetchOrders,
       favoriteCount,
-      createOrder
+      createOrder,
+      setSelectedCartItems
     }}>
       {children}
     </StoreContext.Provider>

@@ -1,17 +1,28 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 
 const CartPage = () => {
-  const { cart, updateQuantity, removeFromCart, getCartTotal, loadingCart } = useStore();
+  const { cart, updateQuantity, removeFromCart, getCartTotal, loadingCart, setSelectedCartItems } = useStore();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({});
+  
+  useEffect(() => {
+    // Par défaut, sélectionner tous les articles du panier
+    const initialSelection = cart.reduce((acc, item) => {
+      acc[item.product.id] = true;
+      return acc;
+    }, {} as Record<string, boolean>);
+    setSelectedItems(initialSelection);
+  }, [cart]);
   
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     if (newQuantity >= 1) {
@@ -19,7 +30,22 @@ const CartPage = () => {
     }
   };
 
+  const handleSelectItem = (productId: string, checked: boolean) => {
+    setSelectedItems(prev => ({
+      ...prev,
+      [productId]: checked
+    }));
+  };
+
+  const getSelectedTotal = () => {
+    return cart
+      .filter(item => selectedItems[item.product.id])
+      .reduce((total, item) => total + (item.product.price * item.quantity), 0);
+  };
+
   const handleCheckout = () => {
+    const selectedProducts = cart.filter(item => selectedItems[item.product.id]);
+    setSelectedCartItems(selectedProducts);
     navigate('/paiement');
   };
 
@@ -55,12 +81,20 @@ const CartPage = () => {
             <div className="mb-8">
               {cart.map((item) => (
                 <div key={item.product.id} className="flex flex-col sm:flex-row border-b py-4">
-                  <div className="sm:w-24 mb-4 sm:mb-0">
-                    <img 
-                      src={item.product.image} 
-                      alt={item.product.name} 
-                      className="w-full h-auto object-cover rounded" 
+                  <div className="flex items-center mb-4 sm:mb-0">
+                    <Checkbox 
+                      checked={selectedItems[item.product.id] || false}
+                      onCheckedChange={(checked) => handleSelectItem(item.product.id, checked === true)}
+                      className="mr-3"
+                      id={`select-${item.product.id}`}
                     />
+                    <div className="sm:w-20">
+                      <img 
+                        src={item.product.image} 
+                        alt={item.product.name} 
+                        className="w-full h-auto object-cover rounded" 
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex-1 sm:ml-6 flex flex-col sm:flex-row justify-between">
@@ -120,12 +154,32 @@ const CartPage = () => {
                   </div>
                 </div>
               ))}
+              
+              <div className="mt-4 flex justify-end">
+                <Button 
+                  variant="outline" 
+                  className="text-sm"
+                  onClick={() => {
+                    // Sélectionner ou désélectionner tous les articles
+                    const allSelected = cart.every(item => selectedItems[item.product.id]);
+                    const newSelection = cart.reduce((acc, item) => {
+                      acc[item.product.id] = !allSelected;
+                      return acc;
+                    }, {} as Record<string, boolean>);
+                    setSelectedItems(newSelection);
+                  }}
+                >
+                  {cart.every(item => selectedItems[item.product.id]) 
+                    ? "Désélectionner tout" 
+                    : "Sélectionner tout"}
+                </Button>
+              </div>
             </div>
             
             <div className="bg-gray-50 p-6 rounded-lg">
               <div className="flex justify-between mb-4">
                 <span>Sous-total</span>
-                <span>{getCartTotal().toFixed(2)} €</span>
+                <span>{getSelectedTotal().toFixed(2)} €</span>
               </div>
               <div className="flex justify-between mb-4">
                 <span>Livraison</span>
@@ -133,11 +187,16 @@ const CartPage = () => {
               </div>
               <div className="border-t pt-4 flex justify-between font-bold">
                 <span>Total</span>
-                <span>{getCartTotal().toFixed(2)} €</span>
+                <span>{getSelectedTotal().toFixed(2)} €</span>
               </div>
               
               <div className="mt-6">
-                <Button className="w-full" size="lg" onClick={handleCheckout}>
+                <Button 
+                  className="w-full" 
+                  size="lg" 
+                  onClick={handleCheckout}
+                  disabled={Object.values(selectedItems).filter(Boolean).length === 0}
+                >
                   Procéder au paiement
                 </Button>
                 <div className="flex justify-center mt-4">
