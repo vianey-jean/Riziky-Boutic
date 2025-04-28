@@ -292,7 +292,8 @@ const AdminProductsPage = () => {
               <TableRow key={product.id}>
                 <TableCell className="flex items-center space-x-3">
                  
-                <img src={`${baseImageUrl}${product.image}`} alt={product.name} className="w-10 h-10 object-cover rounded"  />
+                  <img src={`${baseImageUrl}${product.image}`} alt={product.name} className="w-10 h-10 object-cover rounded"  />
+                  <div>
                     <p className="font-medium">{product.name}</p>
                     <p className="text-xs text-muted-foreground truncate max-w-xs">
                       {product.description}
