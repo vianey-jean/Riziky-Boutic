@@ -14,6 +14,7 @@ import { authAPI } from '@/services/api';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, User, Lock } from 'lucide-react';
 import { debounce } from 'lodash';
+import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
 
 const formSchema = z.object({
   nom: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
@@ -156,6 +157,7 @@ const RegisterPage = () => {
                         </div>
                       </FormControl>
                       <FormMessage />
+                      <PasswordStrengthIndicator password={field.value} />
                     </FormItem>
                   )}
                 />

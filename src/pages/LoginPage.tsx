@@ -17,6 +17,7 @@ import Layout from '@/components/layout/Layout';
 import { authAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
 
 // ✅ Validation schemas
 const emailSchema = z.object({
@@ -167,6 +168,7 @@ const LoginPage = () => {
                           </div>
                         </FormControl>
                         <FormMessage />
+                        <PasswordStrengthIndicator password={field.value} />
                       </FormItem>
                     )}
                   />

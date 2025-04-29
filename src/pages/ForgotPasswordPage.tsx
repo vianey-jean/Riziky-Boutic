@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
 import { toast } from '@/components/ui/sonner';
 import { authAPI } from '@/services/api';
+import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
 
 const emailFormSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -165,6 +166,7 @@ const ForgotPasswordPage: React.FC = () => {
                           <Input type="password" placeholder="********" {...field} />
                         </FormControl>
                         <FormMessage />
+                        <PasswordStrengthIndicator password={field.value} />
                       </FormItem>
                     )}
                   />
