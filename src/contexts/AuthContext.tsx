@@ -66,11 +66,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await authAPI.login({ email, password });
       localStorage.setItem('authToken', response.data.token);
       setUser(response.data.user);
-      toast.success('Connexion réussie');
+      toast.success('Connexion réussie', {
+        style: { backgroundColor: 'green', color: 'white' },
+      } );
+
       navigate('/');
     } catch (error) {
       console.error("Erreur de connexion:", error);
-      toast.error('Email ou mot de passe incorrect');
+      toast.error('Mot de passe incorrect', {
+        style: { backgroundColor: 'red', color: 'white' },
+      } );
+
       throw error;
     }
   };
@@ -78,7 +84,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     localStorage.removeItem('authToken');
     setUser(null);
-    toast.info('Vous êtes déconnecté');
+    toast.info('Vous êtes déconnecté', {
+      style: { backgroundColor: 'red', color: 'white' },
+    });
+
     navigate('/login');
   };
 
@@ -87,7 +96,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await authAPI.register({ nom, email, password });
       localStorage.setItem('authToken', response.data.token);
       setUser(response.data.user);
-      toast.success('Inscription réussie');
+      toast.success('Inscription réussie', {
+        style: { backgroundColor: 'green', color: 'white' },
+      });
+
       navigate('/');
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Erreur lors de l\'inscription';
@@ -102,7 +114,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Le message de confirmation est géré par le composant
     } catch (error) {
       console.error("Erreur de demande de réinitialisation:", error);
-      toast.error('Une erreur est survenue');
+      toast.error('Une erreur est survenue', {
+        style: { backgroundColor: 'red', color: 'white' },
+      });
+     
+
       throw error;
     }
   };
@@ -113,7 +129,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Le message de confirmation est géré par le composant
     } catch (error) {
       console.error("Erreur de réinitialisation de mot de passe:", error);
-      toast.error('Une erreur est survenue');
+      toast.error('Une erreur est survenue', {
+        style: { backgroundColor: 'red', color: 'white' },
+      });
+      
       throw error;
     }
   };
@@ -124,10 +143,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       const response = await authAPI.updateProfile(user.id, data);
       setUser(prev => prev ? { ...prev, ...response.data } : null);
-      toast.success('Profil mis à jour avec succès');
+      toast.success('Profil mis à jour avec succès', {
+        style: { backgroundColor: 'green', color: 'white' },
+      });
+     
     } catch (error: any) {
       console.error("Erreur de mise à jour du profil:", error);
-      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du profil');
+      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du profil', {
+        style: { backgroundColor: 'red', color: 'white' },
+      });
+     
       throw error;
     }
   };
@@ -137,10 +162,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!user) throw new Error('Utilisateur non connecté');
       
       await authAPI.updatePassword(user.id, currentPassword, newPassword);
-      toast.success('Mot de passe mis à jour avec succès');
+      toast.success('Mot de passe mis à jour avec succès', {
+        style: { backgroundColor: 'green', color: 'white' },
+      });
+      
     } catch (error: any) {
       console.error("Erreur de mise à jour du mot de passe:", error);
-      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du mot de passe');
+      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du mot de passe', {
+        style: { backgroundColor: 'red', color: 'white' },
+      });
+     
       throw error;
     }
   };
