@@ -85,8 +85,6 @@ export const authAPI = {
   updatePassword: (userId: string, currentPassword: string, newPassword: string) => 
     API.put(`/users/${userId}/password`, { currentPassword, newPassword }),
   getUserProfile: (userId: string) => API.get(`/users/${userId}`),
-  verifyPassword: (userId: string, password: string) => 
-    API.post(`/users/${userId}/verify-password`, { password }),
 };
 
 // Interface Produit
@@ -95,8 +93,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  image: string; // Maintenu pour compatibilité
-  images?: string[]; // Nouveau tableau d'images
+  image: string;
   category: string;
   isSold: boolean;
   originalPrice?: number;
@@ -191,7 +188,6 @@ export interface OrderItem {
   price: number;
   quantity: number;
   image: string;
-  images?: string[]; // Support pour multiples images
   subtotal: number;
 }
 

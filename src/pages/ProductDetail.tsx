@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -10,14 +11,14 @@ const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
   const { products, addToCart, toggleFavorite, isFavorite } = useStore();
   const baseImageUrl = "https://riziky-boutic-server.onrender.com";
-
+  
   const product = products.find(p => p.id === productId);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
+  
+  // Related products
   const relatedProducts = products
     .filter(p => p.category === product?.category && p.id !== product?.id)
     .slice(0, 4);
-
+  
   if (!product) {
     return (
       <Layout>
@@ -31,106 +32,55 @@ const ProductDetail = () => {
       </Layout>
     );
   }
-
+  
   const isProductFavorite = isFavorite(product.id);
-
-  const productImages =
-    product.images && product.images.length > 0
-      ? product.images
-      : product.image
-        ? [product.image]
-        : [];
 
   return (
     <Layout>
       <div className="py-6">
         <div className="flex flex-col lg:flex-row gap-10">
-          {/* Images produit */}
+          {/* Product Image */}
           <div className="flex-1">
-            <div className="mb-4">
-              <img
-                src={`${baseImageUrl}${productImages[selectedImageIndex]}`}
-                alt={product.name}
-                className="w-full h-auto object-cover rounded-lg"
-                style={{ height: "400px" }}
-              />
-            </div>
-
-            {productImages.length > 1 && (
-              <div className="flex space-x-2 mt-2 overflow-x-auto py-2">
-                {productImages.map((image, index) => (
-                  <div
-                    key={index}
-                    className={`w-20 h-20 overflow-hidden rounded cursor-pointer ${
-                      index === selectedImageIndex ? 'ring-2 ring-blue-500' : 'opacity-70'
-                    }`}
-                    onClick={() => setSelectedImageIndex(index)}
-                  >
-                    <img
-                      src={`${baseImageUrl}${image}`}
-                      alt={`${product.name} - image ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+          <img src={`${baseImageUrl}${product.image}`} alt={product.name}   className="w-full h-auto object-cover rounded-lg" />
           </div>
-
-          {/* Infos produit */}
+          
+          {/* Product Info */}
           <div className="flex-1">
             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-            <p className="text-xl font-bold mb-4">
-              {Number(product.price).toFixed(2)} €
-            </p>
-
+            <p className="text-xl font-bold mb-4">{product.price.toFixed(2)} €</p>
+            
             <div className="border-t border-b py-4 my-6">
               <p className="text-gray-700 mb-4">{product.description}</p>
-              <p className="text-sm text-muted-foreground mb-2">
-                Catégorie : {product.category}
-              </p>
-
+              <p className="text-sm text-muted-foreground mb-2">Catégorie: {product.category}</p>
+              
               <div className="mt-2">
-                {product.stock !== undefined && (
-                  <p className="text-sm mb-2">
-                    Stock disponible : <span className="font-medium">{product.stock}</span>
-                  </p>
-                )}
-                <span className={`px-2 py-1 rounded text-xs ${
-                  product.isSold && (product.stock === undefined || product.stock > 0)
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {product.isSold && (product.stock === undefined || product.stock > 0)
-                    ? 'En stock'
-                    : 'Rupture de stock'}
+                <span className={`px-2 py-1 rounded text-xs ${product.isSold ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {product.isSold ? 'En stock' : 'Rupture de stock'}
                 </span>
               </div>
             </div>
-
+            
             <div className="flex space-x-4 mt-8">
-              <Button
-                size="lg"
+              <Button 
+                size="lg" 
                 onClick={() => addToCart(product)}
-                disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
+                disabled={!product.isSold}
                 className="flex-1"
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 Ajouter au panier
               </Button>
-
+              
               <Button
                 variant="outline"
                 size="icon"
                 className="h-12 w-12"
                 onClick={() => toggleFavorite(product)}
               >
-                <Heart
-                  className={`h-5 w-5 ${isProductFavorite ? 'fill-red-500 text-red-500' : ''}`}
-                />
+                <Heart className={`h-5 w-5 ${isProductFavorite ? 'fill-red-500 text-red-500' : ''}`} />
               </Button>
             </div>
-
+            
             <div className="mt-6">
               <h3 className="font-medium mb-2">Informations de livraison</h3>
               <ul className="text-sm text-muted-foreground space-y-1">
@@ -141,8 +91,8 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
-
-        {/* Produits similaires */}
+        
+        {/* Related Products */}
         <div className="mt-12">
           <ProductGrid products={relatedProducts} title="Produits similaires" />
         </div>
