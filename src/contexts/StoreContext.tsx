@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { productsAPI, Product, panierAPI, favoritesAPI, Cart, ordersAPI, Order } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
@@ -178,10 +179,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
     
+    // Check if there's enough stock
+    if (product.stock !== undefined && product.stock < quantity) {
+      toast.error(`Stock insuffisant. Disponible: ${product.stock}`);
+      return;
+    }
+    
+    // Check for existing item in cart
+    const existingItemIndex = cart.findIndex(item => item.product.id === product.id);
+    const existingQuantity = existingItemIndex >= 0 ? cart[existingItemIndex].quantity : 0;
+    
+    // Check total quantity against stock
+    if (product.stock !== undefined && (existingQuantity + quantity) > product.stock) {
+      toast.error(`Stock insuffisant. Disponible: ${product.stock}`);
+      return;
+    }
+    
     try {
       await panierAPI.addItem(user.id, product.id, quantity);
-      
-      const existingItemIndex = cart.findIndex(item => item.product.id === product.id);
       
       if (existingItemIndex >= 0) {
         const updatedCart = [...cart];
@@ -216,6 +231,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     if (quantity <= 0) {
       removeFromCart(productId);
+      return;
+    }
+    
+    // Check stock before updating
+    const product = products.find(p => p.id === productId);
+    if (product && product.stock !== undefined && quantity > product.stock) {
+      toast.error(`Stock insuffisant. Disponible: ${product.stock}`);
       return;
     }
     
@@ -277,7 +299,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const getCartTotal = () => {
-    return cart.reduce((total, item) => {
+    return selectedCartItems.reduce((total, item) => {
       return total + (item.product.price * item.quantity);
     }, 0);
   };
@@ -287,12 +309,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const createOrder = async (shippingAddress: any, paymentMethod: string): Promise<Order | null> => {
-    if (!isAuthenticated || !user || cart.length === 0) {
+    if (!isAuthenticated || !user || selectedCartItems.length === 0) {
       return null;
     }
 
+    // Check stock availability for each item before placing order
+    for (const item of selectedCartItems) {
+      const currentProduct = products.find(p => p.id === item.product.id);
+      if (currentProduct && currentProduct.stock !== undefined && item.quantity > currentProduct.stock) {
+        toast.error(`Stock insuffisant pour ${currentProduct.name}. Disponible: ${currentProduct.stock}`);
+        return null;
+      }
+    }
+
     try {
-      const orderItems = cart.map(item => ({
+      const orderItems = selectedCartItems.map(item => ({
         productId: item.product.id,
         quantity: item.quantity
       }));
@@ -306,8 +337,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const response = await ordersAPI.create(orderData);
       
       if (response.data) {
-        await fetchOrders();
+        // Update local products with new stock levels
+        const updatedProducts = [...products];
+        selectedCartItems.forEach(item => {
+          const productIndex = updatedProducts.findIndex(p => p.id === item.product.id);
+          if (productIndex !== -1 && updatedProducts[productIndex].stock !== undefined) {
+            const newStock = Math.max(0, updatedProducts[productIndex].stock! - item.quantity);
+            updatedProducts[productIndex] = {
+              ...updatedProducts[productIndex],
+              stock: newStock,
+              isSold: newStock > 0
+            };
+          }
+        });
+        setProducts(updatedProducts);
         
+        // Refresh data
+        await fetchOrders();
+        await fetchProducts();
         await clearCart();
         
         return response.data;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +10,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package } from 'lucide-react';
 import { productsAPI, Product } from '@/services/api';
 import { debounce } from 'lodash';
-import axios from 'axios';
 
 const Navbar = () => {
   const { cart, favoriteCount } = useStore();
@@ -22,6 +22,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   
   const cartItemsCount = cart.reduce((count, item) => count + item.quantity, 0);
+  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
   
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -100,7 +101,7 @@ const Navbar = () => {
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               )}
               
-              {showResults && Array.isArray(searchResults) && searchResults.length > 0 && (
+              {showResults && searchResults.length > 0 && (
                 <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
                   <ul className="py-1">
                     {searchResults.map(product => (
@@ -111,7 +112,7 @@ const Navbar = () => {
                       >
                         <div className="flex items-center">
                           <img 
-                            src={product.image} 
+                            src={`${baseImageUrl}${product.images && product.images.length > 0 ? product.images[0] : product.image}`} 
                             alt={product.name} 
                             className="w-10 h-10 object-cover rounded mr-3" 
                           />
@@ -126,7 +127,7 @@ const Navbar = () => {
                 </div>
               )}
               
-              {showResults && searchTerm.length >= 3 && (!Array.isArray(searchResults) || searchResults.length === 0) && (
+              {showResults && searchTerm.length >= 3 && searchResults.length === 0 && (
                 <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 p-4 text-center">
                   Aucun produit trouvé pour "{searchTerm}"
                 </div>
@@ -224,7 +225,7 @@ const Navbar = () => {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           )}
           
-          {showResults && Array.isArray(searchResults) && searchResults.length > 0 && (
+          {showResults && searchResults.length > 0 && (
             <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
               <ul className="py-1">
                 {searchResults.map(product => (
@@ -235,7 +236,7 @@ const Navbar = () => {
                   >
                     <div className="flex items-center">
                       <img 
-                        src={product.image} 
+                        src={`${baseImageUrl}${product.images && product.images.length > 0 ? product.images[0] : product.image}`} 
                         alt={product.name} 
                         className="w-10 h-10 object-cover rounded mr-3" 
                       />
@@ -250,7 +251,7 @@ const Navbar = () => {
             </div>
           )}
           
-          {showResults && searchTerm.length >= 3 && (!Array.isArray(searchResults) || searchResults.length === 0) && (
+          {showResults && searchTerm.length >= 3 && searchResults.length === 0 && (
             <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 p-4 text-center">
               Aucun produit trouvé pour "{searchTerm}"
             </div>

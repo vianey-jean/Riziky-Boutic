@@ -1,421 +1,305 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { useAuth } from '@/contexts/AuthContext';
 import { useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
-import { Textarea } from '@/components/ui/textarea';
-
-// Fonction de validation de carte bancaire (algorithme de Luhn)
-const isValidCreditCard = (number: string) => {
-  // Enlever les espaces et les tirets
-  const cleanNumber = number.replace(/\s+|-/g, '');
-  
-  // Vérifier si la carte contient uniquement des chiffres
-  if (!/^\d+$/.test(cleanNumber)) return false;
-  
-  // Vérifier la longueur (la plupart des cartes ont entre 13 et 19 chiffres)
-  if (cleanNumber.length < 13 || cleanNumber.length > 19) return false;
-  
-  // Algorithme de Luhn
-  let sum = 0;
-  let shouldDouble = false;
-  
-  // Parcourir de droite à gauche
-  for (let i = cleanNumber.length - 1; i >= 0; i--) {
-    let digit = parseInt(cleanNumber.charAt(i));
-    
-    if (shouldDouble) {
-      digit *= 2;
-      if (digit > 9) digit -= 9;
-    }
-    
-    sum += digit;
-    shouldDouble = !shouldDouble;
-  }
-  
-  return sum % 10 === 0;
-};
-
-// Fonction de validation de la date d'expiration
-const isValidExpiryDate = (month: string, year: string) => {
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth() + 1; // getMonth() renvoie 0-11
-  
-  const expiryYear = parseInt(year);
-  const expiryMonth = parseInt(month);
-  
-  // Vérifier le format
-  if (isNaN(expiryYear) || isNaN(expiryMonth)) return false;
-  if (expiryMonth < 1 || expiryMonth > 12) return false;
-  
-  // Vérifier si la date n'est pas expirée
-  const fullExpiryYear = expiryYear < 100 ? 2000 + expiryYear : expiryYear;
-  
-  if (fullExpiryYear < currentYear) return false;
-  if (fullExpiryYear === currentYear && expiryMonth < currentMonth) return false;
-  
-  return true;
-};
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from '@/components/ui/sonner';
+import CreditCardForm from '@/components/checkout/CreditCardForm';
 
 const CheckoutPage = () => {
+  const { selectedCartItems, getCartTotal, createOrder } = useStore();
   const { user } = useAuth();
-  const { selectedCartItems, createOrder } = useStore();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('stripe');
+  const [showCardForm, setShowCardForm] = useState(false);
   
-  const [shippingInfo, setShippingInfo] = useState({
-    firstName: user?.nom?.split(' ')[0] || '',
-    lastName: user?.nom?.split(' ')[1] || '',
-    email: user?.email || '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: 'France',
-    phone: ''
+  const [shippingData, setShippingData] = useState({
+    nom: user?.nom || '',
+    prenom: user?.prenom || '',
+    adresse: user?.adresse || '',
+    ville: user?.ville || '',
+    codePostal: user?.codePostal || '',
+    pays: user?.pays || 'France',
+    telephone: user?.telephone || '',
   });
   
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    cardName: '',
-    expiryMonth: '',
-    expiryYear: '',
-    cvv: ''
-  });
-  
-  const [cardNumberError, setCardNumberError] = useState('');
-  const [expiryDateError, setExpiryDateError] = useState('');
-  
-  const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setShippingInfo(prev => ({ ...prev, [name]: value }));
+    setShippingData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
-    if (name === 'cardNumber') {
-      // Formater le numéro de carte avec des espaces tous les 4 caractères
-      const formattedValue = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
-      setPaymentInfo(prev => ({ ...prev, [name]: formattedValue }));
-      
-      // Valider le numéro de carte
-      if (value.length > 0) {
-        setCardNumberError(isValidCreditCard(value) ? '' : 'Numéro de carte invalide');
-      } else {
-        setCardNumberError('');
-      }
-    } else if (name === 'expiryMonth' || name === 'expiryYear') {
-      setPaymentInfo(prev => ({ ...prev, [name]: value }));
-      
-      // Valider la date d'expiration
-      if (name === 'expiryMonth' && (paymentInfo.expiryYear || name === 'expiryYear' && paymentInfo.expiryMonth)) {
-        const isValid = isValidExpiryDate(
-          name === 'expiryMonth' ? value : paymentInfo.expiryMonth,
-          name === 'expiryYear' ? value : paymentInfo.expiryYear
-        );
-        setExpiryDateError(isValid ? '' : 'Date d\'expiration invalide');
-      }
-    } else {
-      setPaymentInfo(prev => ({ ...prev, [name]: value }));
-    }
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Vérifier les informations de paiement
-    if (!isValidCreditCard(paymentInfo.cardNumber)) {
-      toast.error('Numéro de carte invalide');
+    if (!validateForm()) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
     
-    if (!isValidExpiryDate(paymentInfo.expiryMonth, paymentInfo.expiryYear)) {
-      toast.error('Date d\'expiration invalide');
+    if (selectedCartItems.length === 0) {
+      toast.error("Votre panier est vide");
       return;
     }
-    
-    try {
-      const order = await createOrder(shippingInfo, `Carte ****${paymentInfo.cardNumber.slice(-4)}`);
-      
-      if (order) {
-        toast.success('Commande effectuée avec succès !');
-        navigate(`/commande/${order.id}`);
-      } else {
-        toast.error('Échec de la commande, veuillez réessayer');
-      }
-    } catch (error) {
-      console.error('Erreur lors de la commande:', error);
-      toast.error('Erreur lors de la commande, veuillez réessayer');
+
+    if (paymentMethod === 'stripe') {
+      setShowCardForm(true);
+    } else if (paymentMethod === 'paypal') {
+      // PayPal payment process would go here
+      processOrder();
     }
   };
   
-  const subtotal = selectedCartItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
-  const shippingCost = subtotal > 50 ? 0 : 5.99;
-  const total = subtotal + shippingCost;
-  
-  useEffect(() => {
-    // Rediriger vers le panier si aucun produit n'est sélectionné
-    if (selectedCartItems.length === 0) {
-      toast.warning('Veuillez sélectionner des produits dans votre panier');
-      navigate('/panier');
+  const processOrder = async (orderId?: string) => {
+    setLoading(true);
+    try {
+      const order = await createOrder(shippingData, paymentMethod, orderId);
+      
+      if (order) {
+        toast.success("Commande effectuée avec succès !");
+        navigate(`/commande/${order.id}`);
+      } else {
+        toast.error("Erreur lors de la création de la commande");
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      toast.error("Une erreur est survenue lors de la validation de la commande");
+    } finally {
+      setLoading(false);
     }
-  }, [selectedCartItems, navigate]);
+  };
+
+  const handlePaymentSuccess = (orderId: string) => {
+    processOrder(orderId);
+  };
+  
+  const validateForm = () => {
+    return (
+      shippingData.nom.trim() !== '' &&
+      shippingData.prenom.trim() !== '' &&
+      shippingData.adresse.trim() !== '' &&
+      shippingData.ville.trim() !== '' &&
+      shippingData.codePostal.trim() !== '' &&
+      shippingData.pays.trim() !== '' &&
+      shippingData.telephone.trim() !== ''
+    );
+  };
+  
+  const total = getCartTotal();
+  const shipping = total > 50 ? 0 : 4.99;
+  const orderTotal = total + shipping;
   
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Finaliser votre commande</h1>
+      <div className="py-8">
+        <h1 className="text-3xl font-bold mb-8 text-center">Finaliser la commande</h1>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Informations de livraison et paiement */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-bold mb-4">Adresse de livraison</h2>
-                <form className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="firstName">Prénom</Label>
-                      <Input 
-                        id="firstName" 
-                        name="firstName" 
-                        value={shippingInfo.firstName} 
-                        onChange={handleShippingChange} 
-                        required 
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lastName">Nom</Label>
-                      <Input 
-                        id="lastName" 
-                        name="lastName" 
-                        value={shippingInfo.lastName} 
-                        onChange={handleShippingChange} 
-                        required 
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      name="email" 
-                      type="email" 
-                      value={shippingInfo.email} 
-                      onChange={handleShippingChange} 
-                      required 
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="address">Adresse</Label>
-                    <Textarea 
-                      id="address" 
-                      name="address" 
-                      value={shippingInfo.address} 
-                      onChange={handleShippingChange} 
-                      required 
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">Ville</Label>
-                      <Input 
-                        id="city" 
-                        name="city" 
-                        value={shippingInfo.city} 
-                        onChange={handleShippingChange} 
-                        required 
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="postalCode">Code postal</Label>
-                      <Input 
-                        id="postalCode" 
-                        name="postalCode" 
-                        value={shippingInfo.postalCode} 
-                        onChange={handleShippingChange} 
-                        required 
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="country">Pays</Label>
-                    <Input 
-                      id="country" 
-                      name="country" 
-                      value={shippingInfo.country} 
-                      onChange={handleShippingChange} 
-                      required 
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="phone">Téléphone</Label>
-                    <Input 
-                      id="phone" 
-                      name="phone" 
-                      value={shippingInfo.phone} 
-                      onChange={handleShippingChange} 
-                      required 
-                    />
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-bold mb-4">Informations de paiement</h2>
-                <form className="space-y-4">
-                  <div>
-                    <Label htmlFor="cardNumber">Numéro de carte</Label>
-                    <Input 
-                      id="cardNumber" 
-                      name="cardNumber" 
-                      placeholder="1234 5678 9012 3456" 
-                      value={paymentInfo.cardNumber} 
-                      onChange={handlePaymentChange} 
-                      maxLength={19}
-                      required 
-                    />
-                    {cardNumberError && <p className="text-sm text-red-500 mt-1">{cardNumberError}</p>}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="cardName">Nom sur la carte</Label>
-                    <Input 
-                      id="cardName" 
-                      name="cardName" 
-                      value={paymentInfo.cardName} 
-                      onChange={handlePaymentChange} 
-                      required 
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="expiryMonth">Mois d'expiration</Label>
-                      <Input 
-                        id="expiryMonth" 
-                        name="expiryMonth" 
-                        placeholder="MM" 
-                        maxLength={2}
-                        value={paymentInfo.expiryMonth} 
-                        onChange={handlePaymentChange} 
-                        required 
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="expiryYear">Année d'expiration</Label>
-                      <Input 
-                        id="expiryYear" 
-                        name="expiryYear" 
-                        placeholder="YY" 
-                        maxLength={2}
-                        value={paymentInfo.expiryYear} 
-                        onChange={handlePaymentChange} 
-                        required 
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input 
-                        id="cvv" 
-                        name="cvv" 
-                        maxLength={4}
-                        value={paymentInfo.cvv} 
-                        onChange={handlePaymentChange} 
-                        required 
-                      />
-                    </div>
-                  </div>
-                  {expiryDateError && <p className="text-sm text-red-500">{expiryDateError}</p>}
-                </form>
-              </CardContent>
-            </Card>
+        {showCardForm ? (
+          <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Paiement par carte bancaire</h2>
+            <CreditCardForm onSuccess={handlePaymentSuccess} />
+            <Button 
+              variant="outline" 
+              className="mt-4 w-full"
+              onClick={() => setShowCardForm(false)}
+            >
+              Retour
+            </Button>
           </div>
-          
-          {/* Récapitulatif de la commande */}
-          <div>
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-bold mb-4">Récapitulatif de la commande</h2>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4">Informations de livraison</h2>
+              
+              <form onSubmit={handleSubmit}>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label htmlFor="nom">Nom*</Label>
+                    <Input
+                      id="nom"
+                      name="nom"
+                      value={shippingData.nom}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="prenom">Prénom*</Label>
+                    <Input
+                      id="prenom"
+                      name="prenom"
+                      value={shippingData.prenom}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
                 
-                <div className="space-y-4">
-                  {selectedCartItems.map((item) => (
-                    <div key={item.product.id} className="flex items-center space-x-4">
+                <div className="mb-4">
+                  <Label htmlFor="adresse">Adresse*</Label>
+                  <Input
+                    id="adresse"
+                    name="adresse"
+                    value={shippingData.adresse}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label htmlFor="ville">Ville*</Label>
+                    <Input
+                      id="ville"
+                      name="ville"
+                      value={shippingData.ville}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="codePostal">Code postal*</Label>
+                    <Input
+                      id="codePostal"
+                      name="codePostal"
+                      value={shippingData.codePostal}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label htmlFor="pays">Pays*</Label>
+                    <Select 
+                      value={shippingData.pays}
+                      onValueChange={(value) => setShippingData({...shippingData, pays: value})}
+                    >
+                      <SelectTrigger id="pays">
+                        <SelectValue placeholder="Sélectionnez un pays" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="France">France</SelectItem>
+                        <SelectItem value="Belgique">Belgique</SelectItem>
+                        <SelectItem value="Suisse">Suisse</SelectItem>
+                        <SelectItem value="Luxembourg">Luxembourg</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="telephone">Téléphone*</Label>
+                    <Input
+                      id="telephone"
+                      name="telephone"
+                      type="tel"
+                      value={shippingData.telephone}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <h2 className="text-xl font-semibold mb-4 mt-8">Mode de paiement</h2>
+                
+                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mb-6">
+                  <div className="flex items-center space-x-2 rounded-md border p-3 mb-2">
+                    <RadioGroupItem value="stripe" id="stripe" />
+                    <Label htmlFor="stripe" className="flex-grow cursor-pointer">
+                      Carte bancaire
+                    </Label>
+                    <div className="flex space-x-1">
+                      <div className="w-8 h-5 bg-blue-600 rounded"></div>
+                      <div className="w-8 h-5 bg-red-500 rounded"></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 rounded-md border p-3 mb-2">
+                    <RadioGroupItem value="paypal" id="paypal" />
+                    <Label htmlFor="paypal" className="flex-grow cursor-pointer">
+                      PayPal
+                    </Label>
+                    <div className="w-8 h-5 bg-blue-500 rounded"></div>
+                  </div>
+                </RadioGroup>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full mt-4 bg-red-800 hover:bg-red-700"
+                  disabled={loading}
+                >
+                  {loading ? 'Traitement en cours...' : 'Confirmer la commande'}
+                </Button>
+              </form>
+            </div>
+            
+            <div>
+              <div className="bg-white p-6 rounded-lg shadow mb-4">
+                <h2 className="text-xl font-semibold mb-4">Récapitulatif de commande</h2>
+                
+                <div className="space-y-4 mb-6">
+                  {selectedCartItems.map(item => (
+                    <div key={item.product.id} className="flex items-center space-x-3">
                       <img 
-                        src={item.product.image} 
+                        src={`https://riziky-boutic-server.onrender.com${
+                          item.product.images && item.product.images.length > 0 
+                            ? item.product.images[0] 
+                            : item.product.image
+                        }`} 
                         alt={item.product.name} 
                         className="w-16 h-16 object-cover rounded" 
                       />
-                      <div className="flex-1">
+                      <div className="flex-grow">
                         <p className="font-medium">{item.product.name}</p>
-                        <p className="text-sm text-gray-500">Quantité: {item.quantity}</p>
-                        <p className="text-sm font-medium">
-                          {(item.product.price * item.quantity).toFixed(2)} €
+                        <p className="text-sm text-muted-foreground">
+                          {item.quantity} x {item.product.price.toFixed(2)} €
                         </p>
                       </div>
+                      <p className="font-semibold">
+                        {(item.quantity * item.product.price).toFixed(2)} €
+                      </p>
                     </div>
                   ))}
-                  
-                  <Separator className="my-4" />
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Sous-total</span>
-                      <span>{subtotal.toFixed(2)} €</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Frais de livraison</span>
-                      <span>{shippingCost === 0 ? 'Gratuit' : `${shippingCost.toFixed(2)} €`}</span>
-                    </div>
-                    <Separator className="my-2" />
-                    <div className="flex justify-between font-bold">
-                      <span>Total</span>
-                      <span>{total.toFixed(2)} €</span>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    className="w-full mt-4" 
-                    size="lg" 
-                    onClick={handleSubmit}
-                    disabled={
-                      !shippingInfo.firstName || 
-                      !shippingInfo.lastName || 
-                      !shippingInfo.email || 
-                      !shippingInfo.address || 
-                      !shippingInfo.city || 
-                      !shippingInfo.postalCode || 
-                      !shippingInfo.country ||
-                      !paymentInfo.cardNumber ||
-                      !paymentInfo.cardName ||
-                      !paymentInfo.expiryMonth ||
-                      !paymentInfo.expiryYear ||
-                      !paymentInfo.cvv ||
-                      !!cardNumberError ||
-                      !!expiryDateError
-                    }
-                  >
-                    Confirmer et payer
-                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+                
+                <div className="border-t pt-4 space-y-2">
+                  <div className="flex justify-between">
+                    <p>Sous-total</p>
+                    <p>{total.toFixed(2)} €</p>
+                  </div>
+                  <div className="flex justify-between">
+                    <p>Livraison</p>
+                    <p>{shipping === 0 ? 'Gratuit' : `${shipping.toFixed(2)} €`}</p>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg">
+                    <p>Total</p>
+                    <p>{orderTotal.toFixed(2)} €</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <h3 className="font-medium mb-2">Informations sur la livraison</h3>
+                <ul className="text-sm space-y-1 text-muted-foreground">
+                  <li>• Livraison gratuite à partir de 50€ d'achat</li>
+                  <li>• Livraison en 3-5 jours ouvrés</li>
+                  <li>• Retours gratuits sous 30 jours</li>
+                  <li>• Paiements sécurisés</li>
+                </ul>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Layout>
   );
