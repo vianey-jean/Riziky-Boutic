@@ -63,19 +63,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Tentative de connexion avec:", { email, password });
       const response = await authAPI.login({ email, password });
       localStorage.setItem('authToken', response.data.token);
       setUser(response.data.user);
       toast.success('Connexion réussie', {
         style: { backgroundColor: 'green', color: 'white' },
-      } );
+      });
 
       navigate('/');
-    } catch (error) {
+      return response.data;
+    } catch (error: any) {
       console.error("Erreur de connexion:", error);
-      toast.error('Mot de passe incorrect', {
+      
+      // Vérifier si l'erreur vient de l'API et contient un message
+      const errorMessage = error.response?.data?.message || "Erreur de connexion";
+      toast.error(errorMessage, {
         style: { backgroundColor: 'red', color: 'white' },
-      } );
+      });
 
       throw error;
     }

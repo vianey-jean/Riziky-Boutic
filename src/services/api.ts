@@ -1,9 +1,9 @@
-
 import axios from 'axios';
 
 // Créer une instance axios avec la configuration de base
 const API = axios.create({
   baseURL: 'https://riziky-boutic-server.onrender.com/api',
+  timeout: 10000, // Timeout plus long pour éviter les erreurs de connexion
 });
 
 // Ajouter un intercepteur pour inclure le token d'authentification
@@ -16,6 +16,16 @@ API.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Ajouter un intercepteur pour gérer les erreurs globalement
+API.interceptors.response.use(
+  response => response,
+  error => {
+    // Log de l'erreur pour le débogage
+    console.error("API Error:", error.response || error);
     return Promise.reject(error);
   }
 );
@@ -85,6 +95,8 @@ export const authAPI = {
   updatePassword: (userId: string, currentPassword: string, newPassword: string) => 
     API.put(`/users/${userId}/password`, { currentPassword, newPassword }),
   getUserProfile: (userId: string) => API.get(`/users/${userId}`),
+  verifyPassword: (userId: string, password: string) => 
+    API.post(`/auth/verify-password`, { userId, password }),
 };
 
 // Interface Produit
@@ -93,7 +105,8 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  image: string;
+  image: string; // Maintenu pour compatibilité
+  images?: string[]; // Nouveau tableau d'images
   category: string;
   isSold: boolean;
   originalPrice?: number;
@@ -188,6 +201,7 @@ export interface OrderItem {
   price: number;
   quantity: number;
   image: string;
+  images?: string[]; // Support pour multiples images
   subtotal: number;
 }
 

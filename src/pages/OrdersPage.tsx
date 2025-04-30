@@ -10,6 +10,8 @@ import { Separator } from '@/components/ui/separator';
 
 const OrdersPage = () => {
   const { orders, loadingOrders, fetchOrders } = useStore();
+  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
+
 
   useEffect(() => {
     fetchOrders();
@@ -62,6 +64,7 @@ const OrdersPage = () => {
                     {order.items.slice(0, 3).map((item) => (
                       <div key={item.productId} className="flex items-center">
                         <div className="w-12 h-12 rounded overflow-hidden">
+                       
                           <img
                             src={item.image}
                             alt={item.name}
