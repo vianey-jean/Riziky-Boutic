@@ -65,12 +65,13 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
                     {order.items.slice(0, 3).map((item) => (
                       <div key={item.productId} className="flex items-center">
                         <div className="w-12 h-12 rounded overflow-hidden">
-                       
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
+                          
+                           <img
+                              src={`${AUTH_BASE_URL}${item.image}`}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                            
                         </div>
                         <div className="ml-3">
                           <p className="text-sm font-medium">{item.name}</p>
