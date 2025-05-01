@@ -39,22 +39,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const validateToken = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setLoading(false);
+      return false;
+    }
+    
+    try {
+      const response = await authAPI.verifyToken();
+      if (response.data && response.data.valid) {
+        setUser(response.data.user);
+        return true;
+      }
+    } catch (error) {
+      console.error("Erreur de vérification du token:", error);
+      localStorage.removeItem('authToken');
+    }
+    
+    setLoading(false);
+    return false;
+  };
+
   useEffect(() => {
     const verifyToken = async () => {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        try {
-          const response = await authAPI.verifyToken();
-          if (response.data.valid) {
-            setUser(response.data.user);
-          } else {
-            localStorage.removeItem('authToken');
-          }
-        } catch (error) {
-          localStorage.removeItem('authToken');
-          console.error("Erreur de vérification du token:", error);
-        }
-      }
+      await validateToken();
       setLoading(false);
     };
 
@@ -130,7 +139,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const resetPassword = async (email: string, code: string, newPassword: string) => {
     try {
-      await authAPI.resetPassword({ email, code, newPassword });
+      await authAPI.resetPassword({ email, passwordUnique: code, newPassword });
       // Le message de confirmation est géré par le composant
     } catch (error) {
       console.error("Erreur de réinitialisation de mot de passe:", error);
@@ -145,6 +154,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateProfile = async (data: UpdateProfileData) => {
     try {
       if (!user) throw new Error('Utilisateur non connecté');
+      
+      // Vérifier la validité du token avant la mise à jour du profil
+      const isTokenValid = await validateToken();
+      if (!isTokenValid) {
+        toast.error('Votre session a expiré, veuillez vous reconnecter', {
+          style: { backgroundColor: 'red', color: 'white' },
+        });
+        navigate('/login');
+        throw new Error('Session expirée');
+      }
       
       const response = await authAPI.updateProfile(user.id, data);
       setUser(prev => prev ? { ...prev, ...response.data } : null);
@@ -165,6 +184,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updatePassword = async (currentPassword: string, newPassword: string) => {
     try {
       if (!user) throw new Error('Utilisateur non connecté');
+      
+      // Vérifier la validité du token avant la mise à jour du mot de passe
+      const isTokenValid = await validateToken();
+      if (!isTokenValid) {
+        toast.error('Votre session a expiré, veuillez vous reconnecter', {
+          style: { backgroundColor: 'red', color: 'white' },
+        });
+        navigate('/login');
+        throw new Error('Session expirée');
+      }
       
       await authAPI.updatePassword(user.id, currentPassword, newPassword);
       toast.success('Mot de passe mis à jour avec succès', {

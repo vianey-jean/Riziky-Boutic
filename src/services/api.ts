@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 // Créer une instance axios avec la configuration de base
@@ -26,6 +27,17 @@ API.interceptors.response.use(
   error => {
     // Log de l'erreur pour le débogage
     console.error("API Error:", error.response || error);
+    
+    // Si l'erreur est 401 (non autorisé) et que ce n'est pas une tentative de connexion
+    if (error.response && error.response.status === 401 && 
+        !error.config.url.includes('/auth/login') && 
+        !error.config.url.includes('/auth/verify-token')) {
+      // Essayer de rafraîchir le token ou rediriger vers la page de connexion
+      console.log("Session expirée, redirection vers la page de connexion...");
+      localStorage.removeItem('authToken');
+      window.location.href = '/login';
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -49,6 +61,7 @@ export interface User {
   pays?: string;
   telephone?: string;
   genre?: 'homme' | 'femme' | 'autre';
+  passwordUnique?: string;
 }
 
 export interface LoginData {
@@ -68,7 +81,7 @@ export interface ForgotPasswordData {
 
 export interface ResetPasswordData {
   email: string;
-  code: string;
+  passwordUnique: string;
   newPassword: string;
 }
 
@@ -94,9 +107,13 @@ export const authAPI = {
   updateProfile: (userId: string, data: UpdateProfileData) => API.put(`/users/${userId}`, data),
   updatePassword: (userId: string, currentPassword: string, newPassword: string) => 
     API.put(`/users/${userId}/password`, { currentPassword, newPassword }),
+  resetPasswordWithTempCode: (userId: string, passwordUnique: string, newPassword: string) =>
+    API.put(`/users/${userId}/password`, { passwordUnique, newPassword }),
   getUserProfile: (userId: string) => API.get(`/users/${userId}`),
   verifyPassword: (userId: string, password: string) => 
-    API.post(`/auth/verify-password`, { userId, password }),
+    API.post(`/users/${userId}/verify-password`, { password }),
+  setTempPassword: (userId: string, passwordUnique: string) =>
+    API.put(`/users/${userId}/temp-password`, { passwordUnique }),
 };
 
 // Interface Produit
@@ -194,6 +211,17 @@ export const favoritesAPI = {
     API.delete(`/favorites/${userId}/remove/${productId}`),
 };
 
+// Interface Adresse de livraison
+export interface ShippingAddress {
+  nom: string;
+  prenom: string;
+  adresse: string;
+  ville: string;
+  codePostal: string;
+  pays: string;
+  telephone: string;
+}
+
 // Interface Commande
 export interface OrderItem {
   productId: string;
@@ -212,15 +240,7 @@ export interface Order {
   userEmail: string;
   items: OrderItem[];
   totalAmount: number;
-  shippingAddress: {
-    nom: string;
-    prenom: string;
-    adresse: string;
-    ville: string;
-    codePostal: string;
-    pays: string;
-    telephone: string;
-  };
+  shippingAddress: ShippingAddress;
   paymentMethod: string;
   status: 'confirmée' | 'en préparation' | 'en livraison' | 'livrée';
   createdAt: string;
