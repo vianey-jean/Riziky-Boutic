@@ -175,7 +175,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addToCart = async (product: Product, quantity: number = 1) => {
     if (!isAuthenticated || !user) {
-      toast.error('Vous devez être connecté pour ajouter un produit au panier');
+      toast.error('Vous devez être connecté pour ajouter un produit au panier',
+        {
+          style: { backgroundColor: 'red', color: 'white' },
+        }
+      );
       return;
     }
     
@@ -272,7 +276,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const toggleFavorite = async (product: Product) => {
     if (!isAuthenticated || !user) {
-      toast.error('Vous devez être connecté pour ajouter un produit aux favoris');
+      toast.error('Vous devez être connecté pour ajouter un produit aux favoris',
+        {
+          style: { backgroundColor: 'red', color: 'white' },
+        }
+      );
       return;
     }
     

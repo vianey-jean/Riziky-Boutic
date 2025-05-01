@@ -1,19 +1,27 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+
+import {
+  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage
+} from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
 import Layout from '@/components/layout/Layout';
 import { authAPI } from '@/services/api';
 import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
 import { CheckCircle, Mail } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+
 
 const emailFormSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -22,23 +30,12 @@ const emailFormSchema = z.object({
 const resetFormSchema = z.object({
   email: z.string().email('Email invalide'),
   passwordUnique: z.string().min(1, 'Le code temporaire est requis'),
-  newPassword: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères')
-    .refine(
-      (password) => /[A-Z]/.test(password),
-      'Le mot de passe doit contenir au moins une majuscule'
-    )
-    .refine(
-      (password) => /[a-z]/.test(password),
-      'Le mot de passe doit contenir au moins une minuscule'
-    )
-    .refine(
-      (password) => /[0-9]/.test(password),
-      'Le mot de passe doit contenir au moins un chiffre'
-    )
-    .refine(
-      (password) => /[^A-Za-z0-9]/.test(password),
-      'Le mot de passe doit contenir au moins un caractère spécial'
-    ),
+  newPassword: z.string()
+    .min(8, 'Le mot de passe doit contenir au moins 8 caractères')
+    .refine((val) => /[A-Z]/.test(val), 'Au moins une majuscule')
+    .refine((val) => /[a-z]/.test(val), 'Au moins une minuscule')
+    .refine((val) => /[0-9]/.test(val), 'Au moins un chiffre')
+    .refine((val) => /[^A-Za-z0-9]/.test(val), 'Au moins un caractère spécial'),
   confirmPassword: z.string(),
 }).refine(data => data.newPassword === data.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',
@@ -55,21 +52,16 @@ const ForgotPasswordPage: React.FC = () => {
   const [isTempPasswordValid, setIsTempPasswordValid] = useState(false);
   const [showContactAdmin, setShowContactAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState('');
-  
+
   const emailForm = useForm<EmailFormValues>({
     resolver: zodResolver(emailFormSchema),
-    defaultValues: {
-      email: '',
-    },
+    defaultValues: { email: '' },
   });
-  
+
   const resetForm = useForm<ResetFormValues>({
     resolver: zodResolver(resetFormSchema),
     defaultValues: {
-      email: '',
-      passwordUnique: '',
-      newPassword: '',
-      confirmPassword: '',
+      email: '', passwordUnique: '', newPassword: '', confirmPassword: '',
     },
     mode: 'onChange',
   });
@@ -77,93 +69,77 @@ const ForgotPasswordPage: React.FC = () => {
   const onSubmitEmail = async (data: EmailFormValues) => {
     try {
       setIsLoading(true);
-      
-      // Vérifier si l'email existe
+
       const emailCheckResponse = await authAPI.checkEmail(data.email);
-      
       if (!emailCheckResponse.data.exists) {
-        toast.error(`Aucun compte trouvé avec l'email ${data.email}`);
-        setIsLoading(false);
+        toast.error(`Aucun compte trouvé avec l'email ${data.email}`, {
+          style: { backgroundColor: 'red', color: 'white' },
+        });
+                  
         return;
       }
-      
+
       setUserEmail(data.email);
-      
-      // Récupérer l'ID utilisateur
-      const userId = emailCheckResponse.data.userId;
-      setUserId(userId);
-      
-      try {
-        // Récupérer les informations utilisateur sans authentification
-        const response = await fetch(`https://riziky-boutic-server.onrender.com/api/auth/user-temp-password?email=${encodeURIComponent(data.email)}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const userData = await response.json();
-        
-        if (!userData.passwordUnique) {
-          // L'utilisateur n'a pas de mot de passe temporaire
-          setShowContactAdmin(true);
-          toast.error("Aucun code temporaire n'a été défini pour votre compte. Veuillez contacter l'administrateur.");
-        } else {
-          // L'utilisateur a un mot de passe temporaire
-          resetForm.setValue('email', data.email);
-          toast.success(`Veuillez saisir le mot de passe à usage unique fourni par l'administrateur.`);
-        }
-      } catch (error) {
-        console.error('Erreur lors de la récupération du profil:', error);
-        toast.error("Une erreur s'est produite. Veuillez réessayer plus tard.");
+      setUserId(emailCheckResponse.data.userId);
+
+      const response = await fetch(`${AUTH_BASE_URL}/api/auth/user-temp-password?email=${encodeURIComponent(data.email)}`);
+      if (!response.ok) throw new Error(`Erreur serveur: ${response.status}`);
+
+      const userData = await response.json();
+      if (!userData.passwordUnique) {
         setShowContactAdmin(true);
+        toast.error("Aucun code temporaire n'a été défini pour ce compte.",{
+          style: { backgroundColor: 'red', color: 'white' },
+        });
+      } else {
+        resetForm.setValue('email', data.email);
+        toast.success("Veuillez saisir le code temporaire transmis.",{
+          style: { backgroundColor: 'green', color: 'white' },
+        });
       }
-    } catch (error) {
-      console.error('Erreur de vérification de l\'email:', error);
-      toast.error("Une erreur s'est produite. Veuillez réessayer plus tard.");
+    } catch (err) {
+      console.error('Erreur dans la vérification email:', err);
+      toast.error("Une erreur est survenue. Veuillez réessayer plus tard.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const verifyTempPassword = async () => {
-    if (!userId || !userEmail) return;
-    
     const tempPassword = resetForm.getValues('passwordUnique');
-    if (!tempPassword) return;
-    
+    if (!userId || !userEmail || !tempPassword) return;
+
     try {
       setIsLoading(true);
-      
-      const response = await fetch(`https://riziky-boutic-server.onrender.com/api/auth/verify-temp-password`, {
+
+      const res = await fetch(`${AUTH_BASE_URL}/api/auth/verify-temp-password`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: userEmail,
-          tempPassword: tempPassword
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, tempPassword }),
       });
-      
-      if (!response.ok) {
-        toast.error("Code temporaire invalide.");
-        setIsTempPasswordValid(false);
-        setIsLoading(false);
-        return;
-      }
-      
-      const data = await response.json();
-      
-      if (data.valid) {
+
+      const result = await res.json();
+
+      if (res.ok && result.valid) {
         setIsTempPasswordValid(true);
-        toast.success("Code temporaire valide. Vous pouvez maintenant définir un nouveau mot de passe.");
+        toast.success("Code temporaire valide.",{
+          style: { backgroundColor: 'green', color: 'white' },
+        });
       } else {
         setIsTempPasswordValid(false);
-        toast.error("Code temporaire invalide.");
+        toast.error("Code temporaire invalide.",
+          {
+            style: { backgroundColor: 'red', color: 'white' },
+          }
+        );
       }
     } catch (error) {
       console.error('Erreur de vérification du code temporaire:', error);
-      toast.error("Erreur de vérification du code temporaire.");
+      toast.error("Une erreur est survenue.",
+        {
+          style: { backgroundColor: 'red', color: 'white' },
+        }
+      );
     } finally {
       setIsLoading(false);
     }
@@ -171,33 +147,37 @@ const ForgotPasswordPage: React.FC = () => {
 
   const onSubmitReset = async (data: ResetFormValues) => {
     if (!userId) return;
-    
+
     try {
       setIsLoading(true);
-      
-      // Appel API pour réinitialiser le mot de passe avec endpoint modifié
-      const response = await fetch(`https://riziky-boutic-server.onrender.com/api/auth/reset-password`, {
+      const res = await fetch(`${AUTH_BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: data.email,
           passwordUnique: data.passwordUnique,
           newPassword: data.newPassword
         }),
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Une erreur s'est produite");
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erreur inconnue");
       }
-      
-      toast.success("Votre mot de passe a été réinitialisé avec succès");
+
+      toast.success("Mot de passe réinitialisé avec succès.",
+        {
+          style: { backgroundColor: 'green', color: 'white' },
+        }
+      );
       navigate('/login');
     } catch (error: any) {
-      console.error('Erreur de réinitialisation du mot de passe:', error);
-      toast.error(error.message || "Une erreur s'est produite lors de la réinitialisation du mot de passe");
+      console.error('Erreur de réinitialisation:', error);
+      toast.error(error.message || "Une erreur est survenue.",
+        {
+          style: { backgroundColor: 'red', color: 'white' },
+        }
+      );
     } finally {
       setIsLoading(false);
     }
@@ -211,8 +191,8 @@ const ForgotPasswordPage: React.FC = () => {
             <CardTitle>Mot de passe oublié</CardTitle>
             <CardDescription>
               {userId && !showContactAdmin
-                ? 'Entrez votre code temporaire et créez un nouveau mot de passe'
-                : 'Entrez votre adresse email pour commencer la réinitialisation'}
+                ? 'Entrez le code temporaire et créez un nouveau mot de passe'
+                : 'Entrez votre adresse email pour commencer'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -243,7 +223,7 @@ const ForgotPasswordPage: React.FC = () => {
                   <Mail className="h-4 w-4" />
                   <AlertTitle>Code temporaire non trouvé</AlertTitle>
                   <AlertDescription>
-                    Aucun code temporaire n'a été défini pour votre compte. Veuillez contacter l'administrateur du site à l'adresse suivante :
+                    Aucun code temporaire n'a été défini pour votre compte. Contactez l'administrateur :
                   </AlertDescription>
                 </Alert>
                 <div className="flex items-center justify-center p-4 bg-muted rounded-md">
@@ -251,9 +231,9 @@ const ForgotPasswordPage: React.FC = () => {
                     vianey.jean@ymail.com
                   </a>
                 </div>
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
+                <Button
+                  variant="outline"
+                  className="w-full"
                   onClick={() => {
                     setUserId(null);
                     setShowContactAdmin(false);
@@ -279,7 +259,7 @@ const ForgotPasswordPage: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={resetForm.control}
                     name="passwordUnique"
@@ -288,7 +268,7 @@ const ForgotPasswordPage: React.FC = () => {
                         <FormLabel>Code temporaire</FormLabel>
                         <div className="flex space-x-2">
                           <FormControl>
-                            <Input 
+                            <Input
                               placeholder="Code temporaire"
                               {...field}
                               disabled={isTempPasswordValid}
@@ -299,8 +279,8 @@ const ForgotPasswordPage: React.FC = () => {
                             />
                           </FormControl>
                           {!isTempPasswordValid ? (
-                            <Button 
-                              type="button" 
+                            <Button
+                              type="button"
                               onClick={verifyTempPassword}
                               disabled={!field.value || isLoading}
                             >
@@ -314,7 +294,7 @@ const ForgotPasswordPage: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={resetForm.control}
                     name="newPassword"
@@ -322,10 +302,10 @@ const ForgotPasswordPage: React.FC = () => {
                       <FormItem>
                         <FormLabel>Nouveau mot de passe</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="********" 
-                            {...field} 
+                          <Input
+                            type="password"
+                            placeholder="********"
+                            {...field}
                             disabled={!isTempPasswordValid}
                           />
                         </FormControl>
@@ -334,7 +314,7 @@ const ForgotPasswordPage: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={resetForm.control}
                     name="confirmPassword"
@@ -342,9 +322,9 @@ const ForgotPasswordPage: React.FC = () => {
                       <FormItem>
                         <FormLabel>Confirmer le mot de passe</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="********" 
+                          <Input
+                            type="password"
+                            placeholder="********"
                             {...field}
                             disabled={!isTempPasswordValid}
                           />
@@ -353,13 +333,13 @@ const ForgotPasswordPage: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
+
+                  <Button
+                    type="submit"
+                    className="w-full"
                     disabled={isLoading || !isTempPasswordValid}
                   >
-                    {isLoading ? "Réinitialisation en cours..." : "Réinitialiser le mot de passe"}
+                    {isLoading ? "Réinitialisation..." : "Réinitialiser"}
                   </Button>
                 </form>
               </Form>

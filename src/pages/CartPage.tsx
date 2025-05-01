@@ -8,6 +8,9 @@ import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 
+// 🔁 URL de base récupérée depuis le .env
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const CartPage = () => {
   const { cart, updateQuantity, removeFromCart, getCartTotal, loadingCart, setSelectedCartItems } = useStore();
   const { isAuthenticated } = useAuth();
@@ -88,7 +91,7 @@ const CartPage = () => {
                     />
                     <div className="sm:w-20">
                       <img 
-                        src={`https://riziky-boutic-server.onrender.com/${item.product.image.startsWith('/') ? item.product.image.slice(1) : item.product.image}`} 
+                        src={`${AUTH_BASE_URL}${item.product.image.startsWith('/') ? item.product.image.slice(1) : item.product.image}`} 
                         alt={item.product.name} 
                         className="w-full h-auto object-cover rounded" 
                       />

@@ -43,13 +43,13 @@ const Footer = () => {
               <a href="#" className="text-gray-600 hover:text-brand-blue">Twitter</a>
               <a href="#" className="text-gray-600 hover:text-brand-blue">Instagram</a>
             </div>
-            <div className="mt-4">
+            {/* <div className="mt-4">
               <h4 className="text-sm font-medium mb-2">Newsletter</h4>
               <form className="flex">
                 <input
                   type="email"
                   placeholder="Votre email"
-                  className="px-4 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                  className="px-2 py-2 border rounded-l-md focus:outline-none  focus:ring-brand-blue"
                 />
                 <button
                   type="submit"
@@ -58,12 +58,12 @@ const Footer = () => {
                   S'inscrire
                 </button>
               </form>
-            </div>
+            </div> */}
           </div>
         </div>
         
         <div className="border-t border-gray-200 mt-8 pt-8 text-center">
-          <p className="text-gray-600">© 2023 FranceBoutique. Tous droits réservés.</p>
+          <p className="text-gray-600">© 2025 Riziky Boutique. Tous droits réservés.</p>
         </div>
       </div>
     </footer>

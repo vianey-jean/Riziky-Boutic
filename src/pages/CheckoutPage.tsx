@@ -99,6 +99,7 @@ const CheckoutPage = () => {
   const total = getCartTotal();
   const shipping = total > 50 ? 0 : 4.99;
   const orderTotal = total + shipping;
+  const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   
   return (
     <Layout>
@@ -251,7 +252,7 @@ const CheckoutPage = () => {
                   {selectedCartItems.map(item => (
                     <div key={item.product.id} className="flex items-center space-x-3">
                      <img 
-                        src={`https://riziky-boutic-server.onrender.com${
+                        src={`${AUTH_BASE_URL}${
                           item.product.images && item.product.images.length > 0 
                             ? item.product.images[0] 
                             : item.product.image

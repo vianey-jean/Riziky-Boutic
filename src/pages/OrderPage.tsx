@@ -9,6 +9,7 @@ import { Check, Truck, Package, ShoppingBag } from 'lucide-react';
 const OrderPage = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const { orders } = useStore();
+  const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const order = orders.find(o => o.id === orderId);
 
@@ -94,7 +95,7 @@ const OrderPage = () => {
                     <div key={item.productId} className="flex">
                       <div className="w-16 h-16 rounded overflow-hidden">
                         <img
-                          src={`https://riziky-boutic-server.onrender.com${item.image}`}
+                          src={`${AUTH_BASE_URL}${item.image}`}
                           alt={item.name}
                           className="w-full h-full object-cover"
                         />

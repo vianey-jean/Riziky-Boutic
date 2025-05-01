@@ -13,8 +13,11 @@ const Index = () => {
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
-  
+
+   // 🔁 URL de base récupérée depuis le .env
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+ 
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -85,7 +88,7 @@ const Index = () => {
                       <Card>
                         <CardContent className="flex aspect-square items-center justify-center p-0">
                           <div className="w-full">
-                          <img src={`${baseImageUrl}${product.image}`} alt={product.name} className="w-full h-48 object-cover" />
+                          <img src={`${AUTH_BASE_URL}${product.image}`} alt={product.name} className="w-full h-48 object-cover" />
                             <div className="p-4">
                               <h3 className="font-medium">{product.name}</h3>
                               {product.promotion ? (

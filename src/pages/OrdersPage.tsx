@@ -10,7 +10,8 @@ import { Separator } from '@/components/ui/separator';
 
 const OrdersPage = () => {
   const { orders, loadingOrders, fetchOrders } = useStore();
-  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
+  // 🔁 URL de base récupérée depuis le .env
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 
   useEffect(() => {

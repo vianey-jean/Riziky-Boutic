@@ -1,12 +1,14 @@
 
 import axios from 'axios';
 
+// 🔁 URL de base récupérée depuis le .env
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // Créer une instance axios avec la configuration de base
 const API = axios.create({
-  baseURL: 'https://riziky-boutic-server.onrender.com/api',
+  baseURL: `${AUTH_BASE_URL}/api`, // Utilisation correcte de la template string
   timeout: 10000, // Timeout plus long pour éviter les erreurs de connexion
 });
-
 // Ajouter un intercepteur pour inclure le token d'authentification
 API.interceptors.request.use(
   (config) => {

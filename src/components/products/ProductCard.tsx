@@ -9,11 +9,12 @@ import { Product, useStore } from '@/contexts/StoreContext';
 interface ProductCardProps {
   product: Product;
 }
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart, toggleFavorite, isFavorite } = useStore();
   const isProductFavorite = isFavorite(product.id);
-  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
+  const baseImageUrl = `${AUTH_BASE_URL}`;
   
   // Determine which image to display - first image from images array or fallback to image property
   const displayImage = product.images && product.images.length > 0 

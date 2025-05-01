@@ -40,8 +40,9 @@ interface ExtendedProduct extends Product {
 }
 
 const AdminProductsPage = () => {
+  // 🔁 URL de base récupérée depuis le .env
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const queryClient = useQueryClient();
-  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPromotionDialogOpen, setIsPromotionDialogOpen] = useState(false);
@@ -257,7 +258,7 @@ const AdminProductsPage = () => {
     
     // Récupérer les images existantes comme prévisualisations
     const existingImages = product.images || [product.image];
-    setImagePreviews(existingImages.map(img => `${baseImageUrl}${img}`));
+    setImagePreviews(existingImages.map(img => `${AUTH_BASE_URL}${img}`));
     setImageFiles([]);
     
     setIsDialogOpen(true);
@@ -314,7 +315,7 @@ const AdminProductsPage = () => {
           // Find which original image this preview corresponds to
           const previewUrl = imagePreviews[i];
           const originalIndex = currentImages.findIndex(img => 
-            previewUrl === `${baseImageUrl}${img}`
+            previewUrl === `${AUTH_BASE_URL}${img}`
           );
           if (originalIndex !== -1) {
             keptImages.push(currentImages[originalIndex]);
@@ -333,7 +334,7 @@ const AdminProductsPage = () => {
       // Map preview URLs back to original image paths
       for (const previewUrl of imagePreviews) {
         const originalImage = currentImages.find(img => 
-          previewUrl === `${baseImageUrl}${img}`
+          previewUrl === `${AUTH_BASE_URL}${img}`
         );
         if (originalImage) {
           finalImages.push(originalImage);
@@ -431,7 +432,7 @@ const AdminProductsPage = () => {
                 <TableCell className="flex items-center space-x-3">
                   <div className="relative">
                     <img 
-                      src={`${baseImageUrl}${product.image}`} 
+                      src={`${AUTH_BASE_URL}${product.image}`} 
                       alt={product.name} 
                       className="w-10 h-10 object-cover rounded"
                     />

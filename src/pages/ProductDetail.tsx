@@ -9,7 +9,10 @@ import ProductGrid from '@/components/products/ProductGrid';
 const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
   const { products, addToCart, toggleFavorite, isFavorite } = useStore();
-  const baseImageUrl = "https://riziky-boutic-server.onrender.com";
+  // 🔁 URL de base récupérée depuis le .env
+const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  
 
   const product = products.find(p => p.id === productId);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -49,7 +52,7 @@ const ProductDetail = () => {
           <div className="flex-1">
             <div className="mb-4">
               <img
-                src={`${baseImageUrl}${productImages[selectedImageIndex]}`}
+                src={`${AUTH_BASE_URL}${productImages[selectedImageIndex]}`}
                 alt={product.name}
                 className="w-full h-auto object-cover rounded-lg"
                 style={{ height: "400px" }}
@@ -67,7 +70,7 @@ const ProductDetail = () => {
                     onClick={() => setSelectedImageIndex(index)}
                   >
                     <img
-                      src={`${baseImageUrl}${image}`}
+                      src={`$${AUTH_BASE_URL}${image}`}
                       alt={`${product.name} - image ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
