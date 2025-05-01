@@ -16,7 +16,7 @@ import { toast } from '@/components/ui/sonner';
 import Layout from '@/components/layout/Layout';
 import { authAPI } from '@/services/api';
 import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
-import { CheckCircle, Mail } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, Mail } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -46,6 +46,7 @@ type EmailFormValues = z.infer<typeof emailFormSchema>;
 type ResetFormValues = z.infer<typeof resetFormSchema>;
 
 const ForgotPasswordPage: React.FC = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -183,6 +184,8 @@ const ForgotPasswordPage: React.FC = () => {
     }
   };
 
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  
   return (
     <Layout>
       <div className="flex justify-center items-center min-h-[70vh]">
@@ -302,12 +305,27 @@ const ForgotPasswordPage: React.FC = () => {
                       <FormItem>
                         <FormLabel>Nouveau mot de passe</FormLabel>
                         <FormControl>
+                        <div className="relative">
                           <Input
                             type="password"
                             placeholder="********"
                             {...field}
                             disabled={!isTempPasswordValid}
                           />
+                           <Button
+                              type="button"
+                                variant="ghost"
+                                  size="icon"
+                                className="absolute right-0 top-0"
+                              onClick={togglePasswordVisibility}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-5 w-5 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-5 w-5 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                         <PasswordStrengthIndicator password={field.value} />
@@ -322,12 +340,27 @@ const ForgotPasswordPage: React.FC = () => {
                       <FormItem>
                         <FormLabel>Confirmer le mot de passe</FormLabel>
                         <FormControl>
+                        <div className="relative">
                           <Input
                             type="password"
                             placeholder="********"
                             {...field}
                             disabled={!isTempPasswordValid}
                           />
+                           <Button
+                              type="button"
+                               variant="ghost"
+                                size="icon"
+                              className="absolute right-0 top-0"
+                            onClick={togglePasswordVisibility}
+                           >
+                              {showPassword ? (
+                                <EyeOff className="h-5 w-5 text-muted-foreground" />
+                                  ) : (
+                                <Eye className="h-5 w-5 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
