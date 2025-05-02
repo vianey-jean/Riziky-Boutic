@@ -1,15 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package } from 'lucide-react';
 import { productsAPI, Product } from '@/services/api';
 import { debounce } from 'lodash';
-import axios from 'axios';
+
+// ✅ Supprime les accents et met en minuscule
+const normalizeString = (str: string) =>
+  str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
 const Navbar = () => {
   const { cart, favoriteCount } = useStore();
@@ -20,79 +30,145 @@ const Navbar = () => {
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const cartItemsCount = cart.reduce((count, item) => count + item.quantity, 0);
-  
+
+  // Ferme les résultats si clic en dehors
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
       }
     };
-    
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  
-  const debouncedSearch = debounce(async (term: string) => {
-    if (term.length < 3) {
-      setSearchResults([]);
-      setShowResults(false);
-      setIsSearching(false);
-      return;
-    }
-    
-    setIsSearching(true);
-    try {
-      const response = await productsAPI.search(term);
-      if (response.data && Array.isArray(response.data)) {
-        setSearchResults(response.data);
-      } else {
+
+  const debouncedSearch = useCallback(
+    debounce(async (term: string) => {
+      const normalized = normalizeString(term);
+
+      if (normalized.length < 3) {
         setSearchResults([]);
+        setShowResults(false);
+        setIsSearching(false);
+        return;
       }
-      setShowResults(true);
-    } catch (error) {
-      console.error("Erreur lors de la recherche:", error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
+
+      setIsSearching(true);
+      try {
+        const response = await productsAPI.search(normalized);
+        const results = Array.isArray(response.data) ? response.data : [];
+
+        // ✅ Filtrage client avec accents supprimés
+        const filteredResults = results.filter(product =>
+          normalizeString(product.name).includes(normalized)
+        );
+
+        setSearchResults(filteredResults);
+        setShowResults(true);
+
+        if (location.pathname === '/') {
+          setSearchParams({ q: term });
+        }
+      } catch (error) {
+        console.error("Erreur lors de la recherche:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300),
+    [location.pathname, setSearchParams]
+  );
+
+  useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch]);
+
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query) {
+      setSearchTerm(query);
+      if (query.length >= 3) {
+        debouncedSearch(query);
+      }
     }
-  }, 300);
-  
+  }, [searchParams, debouncedSearch]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    
+
     if (value.length >= 3) {
       debouncedSearch(value);
     } else {
       setSearchResults([]);
       setShowResults(false);
+      if (location.pathname === '/' && searchParams.has('q')) {
+        setSearchParams({});
+      }
     }
   };
-  
+
   const handleProductClick = (productId: string) => {
     setShowResults(false);
     setSearchTerm('');
     navigate(`/produit/${productId}`);
   };
-  
+
+  const renderSearchResults = () => (
+    <>
+      {showResults && searchResults.length > 0 && (
+        <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
+          <ul className="py-1">
+            {searchResults.map((product) => (
+              <li
+                key={product.id}
+                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                onClick={() => handleProductClick(product.id)}
+              >
+                <div className="flex items-center">
+                  <img
+                    src={`${import.meta.env.VITE_API_BASE_URL}${product.image}`}
+                    alt={product.name}
+                    className="w-10 h-10 object-cover rounded mr-3"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `${import.meta.env.VITE_API_BASE_URL}/uploads/placeholder.jpg`;
+                    }}
+                  />
+                  <div>
+                    <p className="font-medium">{product.name}</p>
+                    <p className="text-sm text-gray-500">{Number(product.price).toFixed(2)} €</p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {showResults && searchTerm.length >= 3 && searchResults.length === 0 && (
+        <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 p-4 text-center">
+          Aucun produit trouvé pour "{searchTerm}"
+        </div>
+      )}
+    </>
+  );
+
   return (
     <nav className="border-b py-4">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="text-2xl font-bold text-red-800">Riziky Boutique</Link>
-          
+
+          {/* Recherche desktop */}
           <div className="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-8">
             <div className="relative w-full" ref={searchRef}>
-              <Input 
-                type="text" 
-                placeholder="Rechercher des produits..." 
-                className="w-full pl-10" 
-                value={searchTerm} 
-                onChange={handleSearchChange} 
+              <Input
+                type="text"
+                placeholder="Rechercher des produits..."
+                className="w-full pl-10"
+                value={searchTerm}
+                onChange={handleSearchChange}
               />
               {isSearching ? (
                 <div className="absolute right-3 top-2.5 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-brand-blue"></div>
@@ -100,40 +176,10 @@ const Navbar = () => {
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               )}
               
-              {showResults && Array.isArray(searchResults) && searchResults.length > 0 && (
-                <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
-                  <ul className="py-1">
-                    {searchResults.map(product => (
-                      <li 
-                        key={product.id} 
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleProductClick(product.id)}
-                      >
-                        <div className="flex items-center">
-                          <img 
-                            src={product.image} 
-                            alt={product.name} 
-                            className="w-10 h-10 object-cover rounded mr-3" 
-                          />
-                          <div>
-                            <p className="font-medium">{product.name}</p>
-                            <p className="text-sm text-gray-500">{product.price.toFixed(2)} €</p>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {showResults && searchTerm.length >= 3 && (!Array.isArray(searchResults) || searchResults.length === 0) && (
-                <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 p-4 text-center">
-                  Aucun produit trouvé pour "{searchTerm}"
-                </div>
-              )}
             </div>
           </div>
-          
+
+          {/* Icônes utilisateur */}
           <div className="flex items-center space-x-4">
             <Link to="/favoris" className="relative">
               <Button variant="ghost" size="icon">
@@ -145,7 +191,7 @@ const Navbar = () => {
                 </Badge>
               )}
             </Link>
-            
+
             <Link to="/panier" className="relative">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-5 w-5" />
@@ -156,7 +202,7 @@ const Navbar = () => {
                 </Badge>
               )}
             </Link>
-            
+
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -209,61 +255,35 @@ const Navbar = () => {
             )}
           </div>
         </div>
-        
+
+        {/* Recherche mobile */}
         <div className="md:hidden mt-4 relative" ref={searchRef}>
-          <Input 
-            type="text" 
-            placeholder="Rechercher des produits..." 
-            className="w-full pl-10" 
-            value={searchTerm} 
-            onChange={handleSearchChange} 
+          <Input
+            type="text"
+            placeholder="Rechercher des produits..."
+            className="w-full pl-10"
+            value={searchTerm}
+            onChange={handleSearchChange}
           />
           {isSearching ? (
             <div className="absolute right-3 top-2.5 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-brand-blue"></div>
           ) : (
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           )}
-          
-          {showResults && Array.isArray(searchResults) && searchResults.length > 0 && (
-            <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
-              <ul className="py-1">
-                {searchResults.map(product => (
-                  <li 
-                    key={product.id} 
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleProductClick(product.id)}
-                  >
-                    <div className="flex items-center">
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
-                        className="w-10 h-10 object-cover rounded mr-3" 
-                      />
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-gray-500">{product.price.toFixed(2)} €</p>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          
-          {showResults && searchTerm.length >= 3 && (!Array.isArray(searchResults) || searchResults.length === 0) && (
-            <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 p-4 text-center">
-              Aucun produit trouvé pour "{searchTerm}"
-            </div>
-          )}
+          {renderSearchResults()}
         </div>
-        
+
+        {/* Liens catégories */}
         <div className="mt-4 flex space-x-4 overflow-x-auto py-2">
-          <Link to="/categorie/electronique" className="text-sm whitespace-nowrap text-red-800 hover:text-red-600">Électronique</Link>
-          <Link to="/categorie/mode" className="text-sm whitespace-nowrap text-red-800 hover:text-red-600">Mode</Link>
-          <Link to="/categorie/maison" className="text-sm whitespace-nowrap text-red-800 hover:text-red-600">Maison</Link>
-          <Link to="/categorie/beaute" className="text-sm whitespace-nowrap text-red-800 hover:text-red-600">Beauté</Link>
-          <Link to="/categorie/sport" className="text-sm whitespace-nowrap text-red-800 hover:text-red-600">Sport</Link>
-          <Link to="/categorie/bijoux" className="text-sm whitespace-nowrap text-red-800 hover:text-red-600">Bijoux</Link>
+          {["electronique", "mode", "maison", "beaute", "sport", "bijoux"].map(cat => (
+            <Link
+              key={cat}
+              to={`/categorie/${cat}`}
+              className="text-sm whitespace-nowrap text-red-800 hover:text-red-600"
+            >
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </Link>
+          ))}
         </div>
       </div>
     </nav>
