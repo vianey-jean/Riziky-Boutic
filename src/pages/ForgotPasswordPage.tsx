@@ -46,7 +46,8 @@ type EmailFormValues = z.infer<typeof emailFormSchema>;
 type ResetFormValues = z.infer<typeof resetFormSchema>;
 
 const ForgotPasswordPage: React.FC = () => {
-  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -184,7 +185,8 @@ const ForgotPasswordPage: React.FC = () => {
     }
   };
 
-  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const toggleNewPasswordVisibility  = () => setShowNewPassword(!showNewPassword);
+  const togglePasswordConfirmVisibility = () => setShowConfirmPassword(!showConfirmPassword);
   
   return (
     <Layout>
@@ -307,25 +309,24 @@ const ForgotPasswordPage: React.FC = () => {
                         <FormControl>
                         <div className="relative">
                           <Input
-                            type="password"
-                            placeholder="********"
                             {...field}
-                            disabled={!isTempPasswordValid}
+                              type={showNewPassword ? 'text' : 'password'}
+                              placeholder="********"
                           />
-                           <Button
+                            <Button
                               type="button"
-                                variant="ghost"
-                                  size="icon"
-                                className="absolute right-0 top-0"
-                              onClick={togglePasswordVisibility}
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0"
+                              onClick={toggleNewPasswordVisibility}
                             >
-                              {showPassword ? (
-                                <EyeOff className="h-5 w-5 text-muted-foreground" />
-                              ) : (
-                                <Eye className="h-5 w-5 text-muted-foreground" />
-                              )}
-                            </Button>
-                          </div>
+                            {showNewPassword ? (
+                             <EyeOff className="h-5 w-5 text-muted-foreground" />
+                               ) : (
+                              <Eye className="h-5 w-5 text-muted-foreground" />
+                                )}
+                               </Button>
+                              </div>
                         </FormControl>
                         <FormMessage />
                         <PasswordStrengthIndicator password={field.value} />
@@ -340,27 +341,26 @@ const ForgotPasswordPage: React.FC = () => {
                       <FormItem>
                         <FormLabel>Confirmer le mot de passe</FormLabel>
                         <FormControl>
-                        <div className="relative">
+                       <div className="relative">
                           <Input
-                            type="password"
-                            placeholder="********"
                             {...field}
-                            disabled={!isTempPasswordValid}
-                          />
-                           <Button
+                              type={showConfirmPassword ? 'text' : 'password'}
+                               placeholder="********"
+                                  />
+                            <Button
                               type="button"
                                variant="ghost"
-                                size="icon"
-                              className="absolute right-0 top-0"
-                            onClick={togglePasswordVisibility}
-                           >
-                              {showPassword ? (
-                                <EyeOff className="h-5 w-5 text-muted-foreground" />
-                                  ) : (
-                                <Eye className="h-5 w-5 text-muted-foreground" />
-                              )}
+                                 size="icon"
+                                className="absolute right-0 top-0"
+                              onClick={togglePasswordConfirmVisibility}
+                            >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-5 w-5 text-muted-foreground" />
+                               ) : (
+                              <Eye className="h-5 w-5 text-muted-foreground" />
+                                )}
                             </Button>
-                          </div>
+                        </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
