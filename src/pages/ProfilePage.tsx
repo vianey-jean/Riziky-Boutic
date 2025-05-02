@@ -118,18 +118,7 @@ const ProfilePage = () => {
         <h1 className="text-3xl font-bold mb-8">Mon Compte</h1>
         
         <div className="grid gap-6 md:grid-cols-[250px_1fr]">
-          <aside>
-            <nav className="grid gap-2">
-              {/* Pass all necessary props to PersonalInfoForm */}
-              <PersonalInfoForm 
-                profileData={profileData}
-                loading={loading}
-                handleProfileChange={handleProfileChange}
-                handleGenreChange={handleGenreChange}
-                handleProfileSubmit={handleProfileSubmit}
-              />
-            </nav>
-          </aside>
+       
           
           <div className="md:col-span-2">
             <Tabs defaultValue="informations">
