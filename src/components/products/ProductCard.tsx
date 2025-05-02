@@ -28,6 +28,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           src={`${baseImageUrl}${displayImage}`} 
           alt={product.name} 
           className="h-48 w-full object-cover transition-transform hover:scale-105" 
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
+          }}
         />
       </Link>
       <CardContent className="p-4 flex flex-col flex-grow">

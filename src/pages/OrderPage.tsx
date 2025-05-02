@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -33,6 +34,17 @@ const OrderPage = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  // Helper function to ensure image URL has correct format
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return '';
+    
+    // If the image already has the full URL, return it
+    if (imagePath.startsWith('http')) return imagePath;
+    
+    // If it's a relative path, add the base URL
+    return `${AUTH_BASE_URL}${imagePath}`;
   };
 
   const steps = [
@@ -94,11 +106,21 @@ const OrderPage = () => {
                   {order.items.map((item) => (
                     <div key={item.productId} className="flex">
                       <div className="w-16 h-16 rounded overflow-hidden">
-                        <img
-                          src={`${AUTH_BASE_URL}${item.image}`}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
+                        {item.image ? (
+                          <img
+                            src={getImageUrl(item.image)}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <ShoppingBag className="h-6 w-6 text-gray-500" />
+                          </div>
+                        )}
                       </div>
                       <div className="ml-4 flex-1">
                         <h4 className="font-medium">{item.name}</h4>

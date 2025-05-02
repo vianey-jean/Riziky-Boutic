@@ -88,7 +88,7 @@ const ChatPage = () => {
                 <User className="h-5 w-5" />
               </div>
               <div className="ml-3">
-                <h2 className="font-medium">Support FranceBoutique</h2>
+                <h2 className="font-medium">Support Riziky Boutique</h2>
                 <p className="text-xs text-muted-foreground">En ligne</p>
               </div>
             </div>

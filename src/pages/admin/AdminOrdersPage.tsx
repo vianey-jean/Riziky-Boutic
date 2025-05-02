@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -19,6 +19,7 @@ import AdminLayout from './AdminLayout';
 
 const AdminOrdersPage = () => {
   const queryClient = useQueryClient();
+  const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['admin-orders'],
@@ -47,6 +48,17 @@ const AdminOrdersPage = () => {
 
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'dd MMMM yyyy', { locale: fr });
+  };
+
+  // Helper function to ensure image URL has correct format
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return '';
+    
+    // If the image already has the full URL, return it
+    if (imagePath.startsWith('http')) return imagePath;
+    
+    // If it's a relative path, add the base URL
+    return `${AUTH_BASE_URL}${imagePath}`;
   };
 
   if (isLoading) {
@@ -86,7 +98,21 @@ const AdminOrdersPage = () => {
                     {order.items.map((item) => (
                       <div key={item.productId} className="flex items-center">
                         <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden mr-2">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          {item.image ? (
+                            <img 
+                              src={getImageUrl(item.image)} 
+                              alt={item.name} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                              <ShoppingBag className="h-4 w-4 text-gray-500" />
+                            </div>
+                          )}
                         </div>
                         <div>
                           <p className="text-sm font-medium">{item.name}</p>

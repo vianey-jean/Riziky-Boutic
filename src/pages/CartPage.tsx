@@ -91,7 +91,7 @@ const CartPage = () => {
                     />
                     <div className="sm:w-20">
                       <img 
-                        src={`${AUTH_BASE_URL}${item.product.image.startsWith('/') ? item.product.image.slice(1) : item.product.image}`} 
+                        src={`${AUTH_BASE_URL}/${item.product.image.startsWith('/') ? item.product.image.slice(1) : item.product.image}`} 
                         alt={item.product.name} 
                         className="w-full h-auto object-cover rounded" 
                       />

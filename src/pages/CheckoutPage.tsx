@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -16,6 +17,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from '@/components/ui/sonner';
 import CreditCardForm from '@/components/checkout/CreditCardForm';
+import { ShippingAddress } from '@/services/api';
 
 const CheckoutPage = () => {
   const { selectedCartItems, getCartTotal, createOrder } = useStore();
@@ -25,7 +27,7 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('stripe');
   const [showCardForm, setShowCardForm] = useState(false);
   
-  const [shippingData, setShippingData] = useState({
+  const [shippingData, setShippingData] = useState<ShippingAddress>({
     nom: user?.nom || '',
     prenom: user?.prenom || '',
     adresse: user?.adresse || '',
@@ -64,11 +66,11 @@ const CheckoutPage = () => {
   const processOrder = async (orderId?: string) => {
     setLoading(true);
     try {
-      const order = await createOrder(shippingData, paymentMethod, orderId);
+      const order = await createOrder(shippingData, paymentMethod);
       
       if (order) {
         toast.success("Commande effectuée avec succès !");
-        navigate(`/commande/${order.id}`);
+        navigate(`/commandes`);  // Redirect to orders page
       } else {
         toast.error("Erreur lors de la création de la commande");
       }
@@ -80,8 +82,8 @@ const CheckoutPage = () => {
     }
   };
 
-  const handlePaymentSuccess = (orderId: string) => {
-    processOrder(orderId);
+  const handlePaymentSuccess = () => {
+    processOrder();
   };
   
   const validateForm = () => {
@@ -196,6 +198,9 @@ const CheckoutPage = () => {
                         <SelectItem value="Belgique">Belgique</SelectItem>
                         <SelectItem value="Suisse">Suisse</SelectItem>
                         <SelectItem value="Luxembourg">Luxembourg</SelectItem>
+                        <SelectItem value="La Réunion">La Réunion</SelectItem>
+                        <SelectItem value="Madagascar">Madagascar</SelectItem>
+                        <SelectItem value="Mayotte">Mayotte</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -259,6 +264,10 @@ const CheckoutPage = () => {
                         }`} 
                         alt={item.product.name} 
                         className="w-16 h-16 object-cover rounded" 
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
+                        }}
                       />
                       <div className="flex-grow">
                         <p className="font-medium">{item.product.name}</p>

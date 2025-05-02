@@ -10,9 +10,7 @@ import { Separator } from '@/components/ui/separator';
 
 const OrdersPage = () => {
   const { orders, loadingOrders, fetchOrders } = useStore();
-  // 🔁 URL de base récupérée depuis le .env
-const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
+  const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     fetchOrders();
@@ -34,6 +32,17 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
       case 'livrée': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // Helper function to ensure image URL has correct format
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return '';
+    
+    // If the image already has the full URL, return it
+    if (imagePath.startsWith('http')) return imagePath;
+    
+    // If it's a relative path, add the base URL
+    return `${AUTH_BASE_URL}${imagePath}`;
   };
 
   return (
@@ -65,13 +74,21 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
                     {order.items.slice(0, 3).map((item) => (
                       <div key={item.productId} className="flex items-center">
                         <div className="w-12 h-12 rounded overflow-hidden">
-                          
-                           <img
-                              src={`${AUTH_BASE_URL}${item.image}`}
+                          {item.image ? (
+                            <img
+                              src={getImageUrl(item.image)}
                               alt={item.name}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
+                              }}
                             />
-                            
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                              <ShoppingBag className="h-6 w-6 text-gray-500" />
+                            </div>
+                          )}
                         </div>
                         <div className="ml-3">
                           <p className="text-sm font-medium">{item.name}</p>

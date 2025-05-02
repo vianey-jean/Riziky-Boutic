@@ -1,119 +1,183 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/components/ui/sonner';
-import { UpdateProfileData } from '@/services/api';
+import { useNavigate } from 'react-router-dom';
 import PersonalInfoForm from '@/components/profile/PersonalInfoForm';
 import PasswordForm from '@/components/profile/PasswordForm';
 import PreferencesForm from '@/components/profile/PreferencesForm';
+import { UserCircle2, File, Bell, ShoppingBag } from 'lucide-react';
+import { toast } from '@/components/ui/sonner';
+import { Link } from 'react-router-dom';
+import { useStore } from '@/contexts/StoreContext';
+import { authAPI } from '@/services/api';
 
 const ProfilePage = () => {
-  const { user, updateProfile } = useAuth();
-  const [profileData, setProfileData] = useState<UpdateProfileData & { id?: string }>({});
+  const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
+  const { orders, fetchOrders } = useStore();
+  const [activeTab, setActiveTab] = useState('info');
   const [loading, setLoading] = useState(false);
-
+  const [profileData, setProfileData] = useState({
+    nom: user?.nom || '',
+    prenom: user?.prenom || '',
+    email: user?.email || '',
+    adresse: user?.adresse || '',
+    ville: user?.ville || '',
+    codePostal: user?.codePostal || '',
+    pays: user?.pays || '',
+    telephone: user?.telephone || '',
+    genre: user?.genre || '',
+  });
+  
+  const navigate = useNavigate();
+  
   useEffect(() => {
-    if (user) {
-      const { nom, prenom, adresse, ville, codePostal, pays, telephone, genre } = user;
-      setProfileData({ nom, prenom, adresse, ville, codePostal, pays, telephone, genre });
+    if (!authLoading && !isAuthenticated) {
+      navigate('/login');
     }
-  }, [user]);
-
+    
+    if (user) {
+      setProfileData({
+        nom: user.nom || '',
+        prenom: user.prenom || '',
+        email: user.email || '',
+        adresse: user.adresse || '',
+        ville: user.ville || '',
+        codePostal: user.codePostal || '',
+        pays: user.pays || '',
+        telephone: user.telephone || '',
+        genre: user.genre || '',
+      });
+      
+      fetchOrders();
+    }
+  }, [isAuthenticated, authLoading, user]);
+  
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({ ...prev, [name]: value }));
+    setProfileData({ ...profileData, [name]: value });
   };
-
+  
   const handleGenreChange = (value: string) => {
-    setProfileData(prev => ({ ...prev, genre: value as 'homme' | 'femme' | 'autre' }));
+    setProfileData({ ...profileData, genre: value });
   };
-
+  
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!user) return;
     
+    setLoading(true);
     try {
-      await updateProfile(profileData);
+      await authAPI.updateProfile(user.id, {
+        nom: profileData.nom,
+        prenom: profileData.prenom,
+        adresse: profileData.adresse,
+        ville: profileData.ville,
+        codePostal: profileData.codePostal,
+        pays: profileData.pays,
+        telephone: profileData.telephone,
+        genre: profileData.genre as 'homme' | 'femme' | 'autre' | undefined,
+      });
+      
+      toast.success('Profil mis à jour avec succès');
     } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
-      // Error toast already shown in the auth context
+      toast.error('Erreur lors de la mise à jour du profil');
     } finally {
       setLoading(false);
     }
   };
-
-  const handlePasswordUpdate = () => {
-    // This function is called when the password is successfully updated
-    setLoading(false);
+  
+  const handlePasswordUpdate = async (currentPassword: string, newPassword: string) => {
+    setLoading(true);
+    try {
+      await authAPI.updatePassword(currentPassword, newPassword);
+      toast.success('Mot de passe mis à jour avec succès');
+      return true;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du mot de passe:', error);
+      toast.error('Erreur lors de la mise à jour du mot de passe');
+      return false;
+    } finally {
+      setLoading(false);
+    }
   };
-
-  if (!user) {
-    return (
-      <Layout>
-        <div className="max-w-3xl mx-auto p-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profil utilisateur</CardTitle>
-              <CardDescription>Vous devez être connecté pour accéder à cette page</CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </Layout>
-    );
-  }
-
+  
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+  
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-6">Profil utilisateur</h1>
+      <div className="container px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Mon Compte</h1>
         
-        <Tabs defaultValue="informations">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="informations">Informations personnelles</TabsTrigger>
-            <TabsTrigger value="security">Sécurité</TabsTrigger>
-            <TabsTrigger value="preferences">Préférences</TabsTrigger>
-          </TabsList>
+        <div className="grid gap-6 md:grid-cols-[250px_1fr]">
+          <aside>
+            <nav className="grid gap-2">
+              {/* Pass all necessary props to PersonalInfoForm */}
+              <PersonalInfoForm 
+                profileData={profileData}
+                loading={loading}
+                handleProfileChange={handleProfileChange}
+                handleGenreChange={handleGenreChange}
+                handleProfileSubmit={handleProfileSubmit}
+              />
+            </nav>
+          </aside>
           
-          <TabsContent value="informations" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informations personnelles</CardTitle>
-                <CardDescription>Modifiez vos informations personnelles</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <PersonalInfoForm
-                  profileData={profileData}
-                  loading={loading}
-                  handleProfileChange={handleProfileChange}
-                  handleGenreChange={handleGenreChange}
-                  handleProfileSubmit={handleProfileSubmit}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="security" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sécurité</CardTitle>
-                <CardDescription>Modifiez vos informations de sécurité</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <PasswordForm
-                  loading={loading}
-                  onPasswordChange={handlePasswordUpdate}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="preferences" className="mt-6">
-            <PreferencesForm />
-          </TabsContent>
-        </Tabs>
+          <div className="md:col-span-2">
+            <Tabs defaultValue="informations">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="informations">Informations personnelles</TabsTrigger>
+                <TabsTrigger value="security">Sécurité</TabsTrigger>
+                <TabsTrigger value="preferences">Préférences</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="informations" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Informations personnelles</CardTitle>
+                    <CardDescription>Modifiez vos informations personnelles</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <PersonalInfoForm
+                      profileData={profileData}
+                      loading={loading}
+                      handleProfileChange={handleProfileChange}
+                      handleGenreChange={handleGenreChange}
+                      handleProfileSubmit={handleProfileSubmit}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="security" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Sécurité</CardTitle>
+                    <CardDescription>Modifiez vos informations de sécurité</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <PasswordForm
+                      loading={loading}
+                      onPasswordChange={handlePasswordUpdate}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="preferences" className="mt-6">
+                <PreferencesForm />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
     </Layout>
   );
