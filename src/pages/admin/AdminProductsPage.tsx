@@ -430,7 +430,8 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
             {products.map((product: ExtendedProduct) => (
               <TableRow key={product.id}>
                 <TableCell className="flex items-center space-x-3">
-                  <div className="relative">
+                <div className="relative w-[50px]">
+
                     <img 
                       src={`${AUTH_BASE_URL}${product.image}`} 
                       alt={product.name} 
