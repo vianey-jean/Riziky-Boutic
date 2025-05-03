@@ -9,6 +9,7 @@ const API = axios.create({
   baseURL: `${AUTH_BASE_URL}/api`, // Utilisation correcte de la template string
   timeout: 10000, // Timeout plus long pour éviter les erreurs de connexion
 });
+
 // Ajouter un intercepteur pour inclure le token d'authentification
 API.interceptors.request.use(
   (config) => {
@@ -255,7 +256,7 @@ export const ordersAPI = {
   getUserOrders: () => API.get<Order[]>('/orders/user'),
   getById: (orderId: string) => API.get<Order>(`/orders/${orderId}`),
   create: (orderData: any) => API.post<Order>('/orders', orderData),
-  updateStatus: (orderId: string, status: 'confirmée' | 'en préparation' | 'en livraison' | 'livrée') => 
+  updateStatus: (orderId: string, status: string) => 
     API.put(`/orders/${orderId}/status`, { status }),
 };
 
@@ -266,6 +267,8 @@ export interface Message {
   content: string;
   timestamp: string;
   read: boolean;
+  isAutoReply?: boolean;
+  isEdited?: boolean;
 }
 
 export interface Conversation {
@@ -273,6 +276,7 @@ export interface Conversation {
   participants: string[];
 }
 
+// Services pour le chat entre administrateurs
 export const adminChatAPI = {
   getAdmins: () => API.get('/admin-chat/admins'),
   getConversations: () => API.get('/admin-chat/conversations'),
@@ -281,6 +285,13 @@ export const adminChatAPI = {
     API.post(`/admin-chat/conversations/${adminId}`, { message }),
   markAsRead: (messageId: string, conversationId: string) => 
     API.put(`/admin-chat/messages/${messageId}/read`, { conversationId }),
+  setOnline: () => API.post('/admin-chat/online'),
+  setOffline: () => API.post('/admin-chat/offline'),
+  getStatus: (adminId: string) => API.get(`/admin-chat/status/${adminId}`),
+  editMessage: (messageId: string, content: string, conversationId: string) => 
+    API.put(`/admin-chat/messages/${messageId}/edit`, { content, conversationId }),
+  deleteMessage: (messageId: string, conversationId: string) => 
+    API.delete(`/admin-chat/messages/${messageId}?conversationId=${conversationId}`),
 };
 
 export default API;

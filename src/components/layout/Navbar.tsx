@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -17,9 +18,14 @@ import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package } from 'lu
 import { productsAPI, Product } from '@/services/api';
 import { debounce } from 'lodash';
 
-// ✅ Supprime les accents et met en minuscule
-const normalizeString = (str: string) =>
-  str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+// Fonction améliorée pour normaliser les chaînes de caractères (supprime les accents et met en minuscule)
+const normalizeString = (str: string) => {
+  return str
+    .normalize("NFD") // Décompose les caractères accentués
+    .replace(/[\u0300-\u036f]/g, "") // Supprime les accents
+    .toLowerCase() // Met en minuscule
+    .trim(); // Supprime les espaces inutiles
+};
 
 const Navbar = () => {
   const { cart, favoriteCount } = useStore();
@@ -48,9 +54,7 @@ const Navbar = () => {
 
   const debouncedSearch = useCallback(
     debounce(async (term: string) => {
-      const normalized = normalizeString(term);
-
-      if (normalized.length < 3) {
+      if (term.length < 3) {
         setSearchResults([]);
         setShowResults(false);
         setIsSearching(false);
@@ -59,13 +63,23 @@ const Navbar = () => {
 
       setIsSearching(true);
       try {
-        const response = await productsAPI.search(normalized);
+        // Normaliser le terme de recherche pour l'API
+        const normalizedTerm = normalizeString(term);
+        
+        // Recherche côté serveur
+        const response = await productsAPI.search(normalizedTerm);
         const results = Array.isArray(response.data) ? response.data : [];
 
-        // ✅ Filtrage client avec accents supprimés
-        const filteredResults = results.filter(product =>
-          normalizeString(product.name).includes(normalized)
-        );
+        // Filtrage amélioré côté client pour gérer les accents
+        const filteredResults = results.filter(product => {
+          // Normaliser le nom du produit pour comparer sans accents
+          const normalizedProductName = normalizeString(product.name);
+          const normalizedProductDesc = normalizeString(product.description);
+          
+          // Vérifier si le nom normalisé ou la description contient le terme normalisé
+          return normalizedProductName.includes(normalizedTerm) || 
+                 normalizedProductDesc.includes(normalizedTerm);
+        });
 
         setSearchResults(filteredResults);
         setShowResults(true);

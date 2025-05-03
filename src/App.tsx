@@ -25,6 +25,13 @@ import ProfilePage from './pages/ProfilePage';
 import DeliveryPage from './pages/DeliveryPage';
 import ReturnsPage from './pages/ReturnsPage';
 import CustomerServicePage from './pages/CustomerServicePage';
+import BlogPage from './pages/BlogPage';
+import CarriersPage from './pages/CarriersPage';
+import HistoryPage from './pages/HistoryPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import CookiesPage from './pages/CookiesPage';
+import FAQPage from './pages/FAQPage';
 
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
@@ -47,11 +54,19 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/produit/:productId" element={<ProductDetail />} />
           <Route path="/categorie/:categoryName" element={<CategoryPage />} />
-           {/* Pages d'information */}
-           <Route path="/livraison" element={<DeliveryPage />} />
+          
+          {/* Pages d'information */}
+          <Route path="/livraison" element={<DeliveryPage />} />
           <Route path="/retours" element={<ReturnsPage />} />
           <Route path="/service-client" element={<CustomerServicePage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/carrieres" element={<CarriersPage />} />
+          <Route path="/notre-histoire" element={<HistoryPage />} />
+          <Route path="/conditions-utilisation" element={<TermsPage />} />
+          <Route path="/politique-confidentialite" element={<PrivacyPage />} />
+          <Route path="/politique-cookies" element={<CookiesPage />} />
+          <Route path="/faq" element={<FAQPage />} />
 
           <Route path="/chat" element={
                 <ProtectedRoute>

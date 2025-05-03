@@ -10,7 +10,7 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">À Propos</h3>
             <ul className="space-y-2">
-              <li><Link to="/a-propos" className="text-gray-600 hover:text-brand-blue">Notre Histoire</Link></li>
+              <li><Link to="/notre-histoire" className="text-gray-600 hover:text-brand-blue">Notre Histoire</Link></li>
               <li><Link to="/contact" className="text-gray-600 hover:text-brand-blue">Contact</Link></li>
               <li><Link to="/blog" className="text-gray-600 hover:text-brand-blue">Blog</Link></li>
               <li><Link to="/carrieres" className="text-gray-600 hover:text-brand-blue">Carrières</Link></li>
@@ -23,16 +23,16 @@ const Footer = () => {
               <li><Link to="/faq" className="text-gray-600 hover:text-brand-blue">FAQ</Link></li>
               <li><Link to="/livraison" className="text-gray-600 hover:text-brand-blue">Livraison</Link></li>
               <li><Link to="/retours" className="text-gray-600 hover:text-brand-blue">Retours</Link></li>
-              <li><Link to="/support" className="text-gray-600 hover:text-brand-blue">Service Client</Link></li>
+              <li><Link to="/service-client" className="text-gray-600 hover:text-brand-blue">Service Client</Link></li>
             </ul>
           </div>
           
           <div>
             <h3 className="text-lg font-semibold mb-4">Légal</h3>
             <ul className="space-y-2">
-              <li><Link to="/conditions" className="text-gray-600 hover:text-brand-blue">Conditions d'utilisation</Link></li>
-              <li><Link to="/confidentialite" className="text-gray-600 hover:text-brand-blue">Politique de confidentialité</Link></li>
-              <li><Link to="/cookies" className="text-gray-600 hover:text-brand-blue">Politique des cookies</Link></li>
+              <li><Link to="/conditions-utilisation" className="text-gray-600 hover:text-brand-blue">Conditions d'utilisation</Link></li>
+              <li><Link to="/politique-confidentialite" className="text-gray-600 hover:text-brand-blue">Politique de confidentialité</Link></li>
+              <li><Link to="/politique-cookies" className="text-gray-600 hover:text-brand-blue">Politique des cookies</Link></li>
             </ul>
           </div>
           
