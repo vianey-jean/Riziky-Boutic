@@ -1,23 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import PersonalInfoForm from '@/components/profile/PersonalInfoForm';
 import PasswordForm from '@/components/profile/PasswordForm';
 import PreferencesForm from '@/components/profile/PreferencesForm';
-import { UserCircle2, File, Bell, ShoppingBag } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
-import { Link } from 'react-router-dom';
 import { useStore } from '@/contexts/StoreContext';
-import { authAPI } from '@/services/api';
+import { authAPI, UpdateProfileData } from '@/services/api';
 
 const ProfilePage = () => {
-  const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { orders, fetchOrders } = useStore();
   const [activeTab, setActiveTab] = useState('info');
   const [loading, setLoading] = useState(false);
@@ -72,7 +67,8 @@ const ProfilePage = () => {
     
     setLoading(true);
     try {
-      await authAPI.updateProfile(user.id, {
+      // Type casting for genre to ensure it matches the expected type
+      const updatedProfile: UpdateProfileData = {
         nom: profileData.nom,
         prenom: profileData.prenom,
         adresse: profileData.adresse,
@@ -81,7 +77,9 @@ const ProfilePage = () => {
         pays: profileData.pays,
         telephone: profileData.telephone,
         genre: profileData.genre as 'homme' | 'femme' | 'autre' | undefined,
-      });
+      };
+      
+      await authAPI.updateProfile(user.id, updatedProfile);
       
       toast.success('Profil mis à jour avec succès');
     } catch (error) {
@@ -92,10 +90,12 @@ const ProfilePage = () => {
     }
   };
   
-  const handlePasswordUpdate = async (currentPassword: string, newPassword: string) => {
+  const handlePasswordUpdate = async (currentPassword: string, newPassword: string): Promise<boolean> => {
     setLoading(true);
     try {
-      await authAPI.updatePassword(currentPassword, newPassword);
+      if (!user) throw new Error('Utilisateur non connecté');
+      
+      await authAPI.updatePassword(user.id, currentPassword, newPassword);
       toast.success('Mot de passe mis à jour avec succès');
       return true;
     } catch (error) {
@@ -105,11 +105,6 @@ const ProfilePage = () => {
     } finally {
       setLoading(false);
     }
-  };
-  
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
   };
   
   return (
@@ -130,35 +125,22 @@ const ProfilePage = () => {
               
               <TabsContent value="informations" className="mt-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Informations personnelles</CardTitle>
-                    <CardDescription>Modifiez vos informations personnelles</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <PersonalInfoForm
-                      profileData={profileData}
-                      loading={loading}
-                      handleProfileChange={handleProfileChange}
-                      handleGenreChange={handleGenreChange}
-                      handleProfileSubmit={handleProfileSubmit}
-                    />
-                  </CardContent>
+                  
+                  <PersonalInfoForm
+                    profileData={profileData}
+                    loading={loading}
+                    handleProfileChange={handleProfileChange}
+                    handleGenreChange={handleGenreChange}
+                    handleProfileSubmit={handleProfileSubmit}
+                  />
                 </Card>
               </TabsContent>
               
               <TabsContent value="security" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Sécurité</CardTitle>
-                    <CardDescription>Modifiez vos informations de sécurité</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <PasswordForm
-                      loading={loading}
-                      onPasswordChange={handlePasswordUpdate}
-                    />
-                  </CardContent>
-                </Card>
+                <PasswordForm 
+                  loading={loading}
+                  onPasswordChange={handlePasswordUpdate}
+                />
               </TabsContent>
               
               <TabsContent value="preferences" className="mt-6">

@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     verifyToken();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<void> => {
     try {
       console.log("Tentative de connexion avec:", { email, password });
       const response = await authAPI.login({ email, password });
@@ -81,7 +81,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       navigate('/');
-      return response.data;
     } catch (error: any) {
       console.error("Erreur de connexion:", error);
       
@@ -213,7 +212,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
 
-  const value = {
+  const value: AuthContextType = {
     user,
     isAuthenticated,
     isAdmin,

@@ -53,12 +53,19 @@ const passwordSchema = z.object({
 
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
-const PasswordForm = () => {
+type PasswordFormProps = {
+  loading?: boolean;
+  onPasswordChange?: (currentPassword: string, newPassword: string) => Promise<boolean>;
+};
+
+const PasswordForm = ({ loading: externalLoading, onPasswordChange }: PasswordFormProps = {}) => {
   const { user, updatePassword } = useAuth();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const actualLoading = externalLoading || isLoading;
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
@@ -88,8 +95,13 @@ const PasswordForm = () => {
         return;
       }
       
-      // Si le mot de passe est correct, procéder à la mise à jour
-      await updatePassword(data.currentPassword, data.newPassword);
+      // Si une fonction de mise à jour personnalisée est fournie, l'utiliser
+      if (onPasswordChange) {
+        await onPasswordChange(data.currentPassword, data.newPassword);
+      } else {
+        // Sinon, utiliser la fonction par défaut du contexte
+        await updatePassword(data.currentPassword, data.newPassword);
+      }
       
       // Réinitialiser le formulaire
       form.reset();
@@ -219,8 +231,8 @@ const PasswordForm = () => {
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
+            <Button type="submit" className="w-full" disabled={actualLoading}>
+              {actualLoading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
             </Button>
           </form>
         </Form>
