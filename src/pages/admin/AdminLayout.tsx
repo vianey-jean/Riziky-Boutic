@@ -1,14 +1,17 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   ShoppingBag,
   Package,
   MessageCircle,
   Users,
-  Truck, // virgule corrigée ici
+  Truck,
   Settings,
-  LogOut
+  LogOut,
+  MessageSquare
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -16,13 +19,28 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
+  const { user } = useAuth();
+  const [isServiceAdmin, setIsServiceAdmin] = useState(false);
+  
+  useEffect(() => {
+    // Check if the current user is a service client admin
+    if (user && user.email === "service.client@example.com") {
+      setIsServiceAdmin(true);
+    }
+  }, [user]);
   
   const navItems = [
     { name: 'Produits', path: '/admin/produits', icon: Package },
     { name: 'Utilisateurs', path: '/admin/utilisateurs', icon: Users },
     { name: 'Messages', path: '/admin/messages', icon: MessageCircle },
-    { name: 'Commandes', path: '/admin/commandes', icon: Truck }, // correction ici
-    { name: 'Chat Admin', path: '/admin/chat', icon: ShoppingBag },
+    { name: 'Commandes', path: '/admin/commandes', icon: Truck },
+    { name: 'Chat Admin', path: '/admin', icon: ShoppingBag },
+    // Conditional item for service client admin
+    ...(isServiceAdmin ? [{ 
+      name: 'Service Client', 
+      path: '/admin/service-client', 
+      icon: MessageSquare 
+    }] : []),
     { name: 'Paramètres', path: '/admin/parametres', icon: Settings },
   ];
 

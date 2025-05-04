@@ -43,8 +43,8 @@ const CustomerServicePage = () => {
             </div>
             <h2 className="text-lg font-semibold mb-2">Chat en ligne</h2>
             <p className="text-gray-500 mb-4">Assistance immédiate</p>
-            <Button className="bg-red-800 hover:bg-red-700">
-              Démarrer un chat
+            <Button className="bg-red-800 hover:bg-red-700" asChild>
+              <Link to="/chat">Démarrer un chat</Link>
             </Button>
           </Card>
         </div>

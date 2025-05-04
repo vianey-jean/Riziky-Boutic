@@ -260,7 +260,7 @@ export const ordersAPI = {
     API.put(`/orders/${orderId}/status`, { status }),
 };
 
-// Interface Admin Chat
+// Interface pour les messages
 export interface Message {
   id: string;
   senderId: string;
@@ -269,11 +269,21 @@ export interface Message {
   read: boolean;
   isAutoReply?: boolean;
   isEdited?: boolean;
+  isAdminReply?: boolean;
+  isSystemMessage?: boolean;
 }
 
+// Interface pour les conversations admin
 export interface Conversation {
   messages: Message[];
   participants: string[];
+}
+
+// Interface pour les conversations client-service
+export interface ServiceConversation extends Conversation {
+  type: 'service';
+  clientInfo?: User;
+  unreadCount?: number;
 }
 
 // Services pour le chat entre administrateurs
@@ -292,6 +302,32 @@ export const adminChatAPI = {
     API.put(`/admin-chat/messages/${messageId}/edit`, { content, conversationId }),
   deleteMessage: (messageId: string, conversationId: string) => 
     API.delete(`/admin-chat/messages/${messageId}?conversationId=${conversationId}`),
+};
+
+// Services pour le chat entre clients et service client
+export const clientChatAPI = {
+  // Gestion de statut
+  setOnline: () => API.post('/client-chat/online'),
+  setOffline: () => API.post('/client-chat/offline'),
+  getStatus: (userId: string) => API.get(`/client-chat/status/${userId}`),
+  
+  // Pour les clients
+  getServiceAdmins: () => API.get('/client-chat/service-admins'),
+  getServiceChat: () => API.get('/client-chat/service'),
+  sendServiceMessage: (message: string) => API.post('/client-chat/service/message', { message }),
+  
+  // Pour les admins (service client)
+  getServiceConversations: () => API.get('/client-chat/admin/service'),
+  sendServiceReply: (conversationId: string, message: string) => 
+    API.post(`/client-chat/admin/service/${conversationId}/reply`, { message }),
+  
+  // Opérations communes sur les messages
+  editMessage: (messageId: string, content: string, conversationId: string) => 
+    API.put(`/client-chat/messages/${messageId}`, { content, conversationId }),
+  deleteMessage: (messageId: string, conversationId: string) => 
+    API.delete(`/client-chat/messages/${messageId}?conversationId=${conversationId}`),
+  markAsRead: (messageId: string, conversationId: string) => 
+    API.put(`/client-chat/messages/${messageId}/read`, { conversationId })
 };
 
 export default API;
