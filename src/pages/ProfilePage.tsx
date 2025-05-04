@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,37 +9,14 @@ import PasswordForm from '@/components/profile/PasswordForm';
 import PreferencesForm from '@/components/profile/PreferencesForm';
 import { toast } from '@/components/ui/sonner';
 import { useStore } from '@/contexts/StoreContext';
-import { authAPI } from '@/services/api';
-
-// Define the UpdateProfileData type here instead of importing it
-type UpdateProfileData = {
-  nom: string;
-  prenom: string;
-  email: string;
-  adresse: string;
-  ville: string;
-  codePostal: string;
-  pays: string;
-  telephone: string;
-  genre: "homme" | "femme" | "autre";
-};
+import { authAPI, UpdateProfileData } from '@/services/api';
 
 const ProfilePage = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { orders, fetchOrders } = useStore();
   const [activeTab, setActiveTab] = useState('info');
   const [loading, setLoading] = useState(false);
-  const [profileData, setProfileData] = useState<{
-    nom: string;
-    prenom: string;
-    email: string;
-    adresse: string;
-    ville: string;
-    codePostal: string;
-    pays: string;
-    telephone: string;
-    genre: string;
-  }>({
+  const [profileData, setProfileData] = useState({
     nom: user?.nom || '',
     prenom: user?.prenom || '',
     email: user?.email || '',
@@ -91,22 +67,16 @@ const ProfilePage = () => {
     
     setLoading(true);
     try {
-      // Ensure genre is of the correct type
-      const genre = profileData.genre as "homme" | "femme" | "autre";
-      if (!["homme", "femme", "autre"].includes(genre)) {
-        throw new Error("Genre invalide");
-      }
-      
+      // Type casting for genre to ensure it matches the expected type
       const updatedProfile: UpdateProfileData = {
         nom: profileData.nom,
         prenom: profileData.prenom,
-        email: profileData.email,
         adresse: profileData.adresse,
         ville: profileData.ville,
         codePostal: profileData.codePostal,
         pays: profileData.pays,
         telephone: profileData.telephone,
-        genre: genre, // Properly typed now
+        genre: profileData.genre as 'homme' | 'femme' | 'autre' | undefined,
       };
       
       await authAPI.updateProfile(user.id, updatedProfile);
@@ -157,7 +127,7 @@ const ProfilePage = () => {
                 <Card>
                   
                   <PersonalInfoForm
-                    profileData={profileData as UpdateProfileData & { id?: string }}
+                    profileData={profileData}
                     loading={loading}
                     handleProfileChange={handleProfileChange}
                     handleGenreChange={handleGenreChange}

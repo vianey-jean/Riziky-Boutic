@@ -38,9 +38,10 @@ import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminMessagesPage from './pages/admin/AdminMessagesPage';
 import AdminChatPage from './pages/admin/AdminChatPage';
-import AdminClientChatPage from './pages/admin/AdminClientChatPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+
+
 
 function App() {
   return (
@@ -128,18 +129,11 @@ function App() {
                 </ProtectedRoute>
               } />
               
-              <Route path="/admin/chat" element={
+              <Route path="/admin/:adminId?" element={
                 <ProtectedRoute requireAdmin>
                   <AdminChatPage />
                 </ProtectedRoute>
               } />
-              
-              <Route path="/admin/chat-client" element={
-                <ProtectedRoute requireAdmin>
-                  <AdminClientChatPage />
-                </ProtectedRoute>
-              } />
-              
               <Route path="admin/commandes" element={
                 <ProtectedRoute requireAdmin>
                   <AdminOrdersPage />

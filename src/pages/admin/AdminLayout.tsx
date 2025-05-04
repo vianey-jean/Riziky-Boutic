@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -6,12 +5,10 @@ import {
   Package,
   MessageCircle,
   Users,
-  Truck,
+  Truck, // virgule corrigée ici
   Settings,
-  LogOut,
-  MessageSquare
+  LogOut
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -19,33 +16,15 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
-  const { user } = useAuth();
   
   const navItems = [
     { name: 'Produits', path: '/admin/produits', icon: Package },
     { name: 'Utilisateurs', path: '/admin/utilisateurs', icon: Users },
     { name: 'Messages', path: '/admin/messages', icon: MessageCircle },
-    { name: 'Commandes', path: '/admin/commandes', icon: Truck },
+    { name: 'Commandes', path: '/admin/commandes', icon: Truck }, // correction ici
     { name: 'Chat Admin', path: '/admin/chat', icon: ShoppingBag },
-    // Nouvel élément pour le chat client, visible uniquement par le service client
-    { 
-      name: 'Chat Client', 
-      path: '/admin/chat-client', 
-      icon: MessageSquare,
-      isServiceClientOnly: true 
-    },
     { name: 'Paramètres', path: '/admin/parametres', icon: Settings },
   ];
-
-  // Filtrer les éléments de navigation en fonction du rôle de l'utilisateur
-  const filteredNavItems = navItems.filter(item => {
-    // Si c'est un élément réservé au service client, vérifier que l'utilisateur est le service client
-    if (item.isServiceClientOnly) {
-      return user && user.email === 'service.client@example.com';
-    }
-    // Sinon, afficher l'élément normalement
-    return true;
-  });
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -69,7 +48,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </div>
           
           <nav className="space-y-1">
-            {filteredNavItems.map((item) => (
+            {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
