@@ -1,12 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import ClientChat from '@/components/chat/ClientChat';
 
 const CustomerServicePage = () => {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   return (
     <Layout>
       <div className="container mx-auto py-8">
@@ -43,7 +47,10 @@ const CustomerServicePage = () => {
             </div>
             <h2 className="text-lg font-semibold mb-2">Chat en ligne</h2>
             <p className="text-gray-500 mb-4">Assistance immédiate</p>
-            <Button className="bg-red-800 hover:bg-red-700">
+            <Button 
+              className="bg-red-800 hover:bg-red-700"
+              onClick={() => setIsChatOpen(true)}
+            >
               Démarrer un chat
             </Button>
           </Card>
@@ -103,6 +110,14 @@ const CustomerServicePage = () => {
             <Link to="/contact">Formulaire de contact</Link>
           </Button>
         </div>
+
+        {/* Chat Dialog with proper accessibility */}
+        <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+          <DialogContent className="sm:max-w-[500px] p-0 h-[600px]">
+            <DialogTitle className="sr-only">Discussion avec le service client</DialogTitle>
+            <ClientChat onClose={() => setIsChatOpen(false)} />
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

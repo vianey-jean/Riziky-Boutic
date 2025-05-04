@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 // 🔁 URL de base récupérée depuis le .env
@@ -260,15 +259,16 @@ export const ordersAPI = {
     API.put(`/orders/${orderId}/status`, { status }),
 };
 
-// Interface Admin Chat
+// Interface Message pour le chat
 export interface Message {
   id: string;
   senderId: string;
   content: string;
   timestamp: string;
   read: boolean;
-  isAutoReply?: boolean;
   isEdited?: boolean;
+  isAutoReply?: boolean;
+  isOptimistic?: boolean;
 }
 
 export interface Conversation {
@@ -292,6 +292,24 @@ export const adminChatAPI = {
     API.put(`/admin-chat/messages/${messageId}/edit`, { content, conversationId }),
   deleteMessage: (messageId: string, conversationId: string) => 
     API.delete(`/admin-chat/messages/${messageId}?conversationId=${conversationId}`),
+};
+
+// Chat client API - Mise à jour pour utiliser l'instance API avec le baseURL correct
+export const clientChatAPI = {
+  getServiceClient: () => API.get('/client-chat/service-client'),
+  checkServiceClientStatus: () => API.get('/client-chat/service-client/status'),
+  getMyConversation: (timestamp?: number) => API.get(`/client-chat/my-conversation${timestamp ? `?t=${timestamp}` : ''}`),
+  sendMessage: (message: string) => API.post('/client-chat/messages', { message }),
+  editMessage: (messageId: string, content: string, conversationId: string) => 
+    API.put(`/client-chat/messages/${messageId}`, { content, conversationId }),
+  deleteMessage: (messageId: string, conversationId: string) => 
+    API.delete(`/client-chat/messages/${messageId}?conversationId=${conversationId}`),
+  markMessageAsRead: (messageId: string, conversationId: string) => 
+    API.put(`/client-chat/messages/${messageId}/read`, { conversationId }),
+  getClients: () => API.get('/client-chat/clients'),
+  getConversation: (clientId: string) => API.get(`/client-chat/conversations/${clientId}`),
+  setServiceClientOnline: () => API.post('/client-chat/service-client/online'),
+  setServiceClientOffline: () => API.post('/client-chat/service-client/offline'),
 };
 
 export default API;
