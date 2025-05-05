@@ -197,9 +197,12 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
         <Link to="/">
-  <img src="/images/Logo/Logo.png" alt="Logo" className="w-[100px] ml-[100px]" />
-
-</Link>
+          <img
+          src="/images/logo/logo.png"
+           alt="Logo"
+           className="w-[100px] ml-[100px]"
+        />
+        </Link>
 
           {/* Recherche desktop */}
           <div className="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-8">
