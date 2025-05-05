@@ -200,7 +200,7 @@ const Navbar = () => {
             <img 
               src="/images/logo/logo.png" 
               alt="Riziky Boutique" 
-              className="h-20 w-auto"
+              className="h-20 w-auto text-red-600 text-3xl font-bold"
             />
           </Link>
 
