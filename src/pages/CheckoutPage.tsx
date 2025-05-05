@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { useStore } from '@/contexts/StoreContext';
@@ -19,6 +19,31 @@ import { toast } from '@/components/ui/sonner';
 import CreditCardForm from '@/components/checkout/CreditCardForm';
 import { ShippingAddress } from '@/services/api';
 
+// Définition des prix de livraison par ville
+const DELIVERY_PRICES = {
+  "Saint-Benoît": 20,
+  "Saint-Denis": 0,
+  "Saint-Pierre": 20,
+  "Bras-Panon": 25,
+  "Entre-Deux": 20,
+  "Etang-Salé": 25,
+  "Petite-Île": 20,
+  "Le Port": 0,
+  "La Possession": 0,
+  "Saint-André": 10,
+  "Saint Joseph": 25,
+  "Saint-Leu": 15,
+  "Saint-Louis": 15,
+  "Saint-Paul": 0,
+  "Saint-Philippe": 25,
+  "Sainte-Marie": 0,
+  "Sainte-Rose": 25,
+  "Sainte-Suzanne": 0,
+  "Salazie": 25,
+  "Tampon": 20,
+  "Trois-Bassins": 20
+};
+
 const CheckoutPage = () => {
   const { selectedCartItems, getCartTotal, createOrder } = useStore();
   const { user } = useAuth();
@@ -26,6 +51,8 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('stripe');
   const [showCardForm, setShowCardForm] = useState(false);
+  const [deliveryCity, setDeliveryCity] = useState<string>("");
+  const [deliveryPrice, setDeliveryPrice] = useState<number>(0);
   
   const [shippingData, setShippingData] = useState<ShippingAddress>({
     nom: user?.nom || '',
@@ -41,6 +68,15 @@ const CheckoutPage = () => {
     const { name, value } = e.target;
     setShippingData(prev => ({ ...prev, [name]: value }));
   };
+
+  // Mettre à jour la ville et le prix de livraison
+  const handleCityChange = (city: string) => {
+    setDeliveryCity(city);
+    setShippingData(prev => ({ ...prev, ville: city }));
+    
+    const price = DELIVERY_PRICES[city as keyof typeof DELIVERY_PRICES] || 0;
+    setDeliveryPrice(price);
+  };
   
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,6 +88,11 @@ const CheckoutPage = () => {
     
     if (selectedCartItems.length === 0) {
       toast.error("Votre panier est vide");
+      return;
+    }
+
+    if (!deliveryCity) {
+      toast.error("Veuillez sélectionner une ville de livraison");
       return;
     }
 
@@ -91,7 +132,7 @@ const CheckoutPage = () => {
       shippingData.nom.trim() !== '' &&
       shippingData.prenom.trim() !== '' &&
       shippingData.adresse.trim() !== '' &&
-      shippingData.ville.trim() !== '' &&
+      deliveryCity !== '' &&
       shippingData.codePostal.trim() !== '' &&
       shippingData.pays.trim() !== '' &&
       shippingData.telephone.trim() !== ''
@@ -100,7 +141,7 @@ const CheckoutPage = () => {
   
   const total = getCartTotal();
   const shipping = total > 50 ? 0 : 4.99;
-  const orderTotal = total + shipping;
+  const orderTotal = total + deliveryPrice;
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   
   return (
@@ -162,14 +203,24 @@ const CheckoutPage = () => {
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <Label htmlFor="ville">Ville*</Label>
-                    <Input
-                      id="ville"
-                      name="ville"
-                      value={shippingData.ville}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Label htmlFor="ville">Ville de livraison*</Label>
+                    <Select 
+                      value={deliveryCity}
+                      onValueChange={handleCityChange}
+                    >
+                      <SelectTrigger id="ville">
+                        <SelectValue placeholder="Sélectionnez une ville" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.keys(DELIVERY_PRICES).sort().map(city => (
+                          <SelectItem key={city} value={city}>
+                            {city} {DELIVERY_PRICES[city as keyof typeof DELIVERY_PRICES] === 0 
+                              ? "(Gratuit)" 
+                              : `(+${DELIVERY_PRICES[city as keyof typeof DELIVERY_PRICES]}€)`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="codePostal">Code postal*</Label>
@@ -288,8 +339,8 @@ const CheckoutPage = () => {
                     <p>{total.toFixed(2)} €</p>
                   </div>
                   <div className="flex justify-between">
-                    <p>Livraison</p>
-                    <p>{shipping === 0 ? 'Gratuit' : `${shipping.toFixed(2)} €`}</p>
+                    <p>Frais de livraison ({deliveryCity || 'Non sélectionné'})</p>
+                    <p>{deliveryPrice === 0 && !deliveryCity ? 'Non calculé' : deliveryPrice === 0 ? 'Gratuit' : `${deliveryPrice.toFixed(2)} €`}</p>
                   </div>
                   <div className="flex justify-between font-bold text-lg">
                     <p>Total</p>
@@ -301,7 +352,8 @@ const CheckoutPage = () => {
               <div className="bg-gray-50 p-4 rounded-lg border">
                 <h3 className="font-medium mb-2">Informations sur la livraison</h3>
                 <ul className="text-sm space-y-1 text-muted-foreground">
-                  <li>• Livraison gratuite à partir de 50€ d'achat</li>
+                  <li>• Livraison gratuite à partir de 50€ d'achat (frais d'expédition uniquement)</li>
+                  <li>• Les frais de livraison varient selon la ville</li>
                   <li>• Livraison en 3-5 jours ouvrés</li>
                   <li>• Retours gratuits sous 30 jours</li>
                   <li>• Paiements sécurisés</li>

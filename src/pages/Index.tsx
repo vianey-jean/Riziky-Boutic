@@ -108,179 +108,98 @@ const Index = () => {
   }, [featuredProducts]);
 
   return (
-    // <Layout>
-    //   <div className="container mx-auto px-4 py-8">
-    //     <h1 className="text-4xl font-bold mb-8 text-red-800">
-    //       Bienvenue sur Riziky Boutique
-    //     </h1>
-        
-    //     {/* 🔥 Produits Vedettes */}
-    //     <div className="mb-12">
-    //       <h2 className="text-2xl font-semibold mb-6 text-red-800">Produits Vedettes</h2>
-    //       {isLoading ? (
-    //         <div className="text-center py-10">Chargement des produits vedettes...</div>
-    //       ) : featuredProducts.length > 0 ? (
-    //         <Carousel>
-    //           <CarouselContent>
-    //             {featuredProducts.map((product) => (
-    //               <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/4">
-    //                 <div className="p-1">
-    //                   <Card>
-    //                     <CardContent className="flex aspect-square items-center justify-center p-0">
-    //                       <div className="w-full">
-    //                         <img
-    //                           src={`${AUTH_BASE_URL}${product.image}`}
-    //                           alt={product.name}
-    //                           className="w-full h-48 object-cover"
-    //                           onError={(e) => {
-    //                             const target = e.target as HTMLImageElement;
-    //                             target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
-    //                           }}
-    //                         />
-    //                         <div className="p-4">
-    //                           <h3 className="font-medium">{product.name}</h3>
-    //                           {product.promotion ? (
-    //                             <div>
-    //                               <p className="mt-1 text-sm text-gray-500 line-through">
-    //                                 {typeof product.originalPrice === 'number'
-    //                                   ? product.originalPrice.toFixed(2)
-    //                                   : product.price.toFixed(2)}{' '}
-    //                                 €
-    //                               </p>
-    //                               <div className="flex items-center gap-2">
-    //                                 <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
-    //                                   -{product.promotion}%
-    //                                 </span>
-    //                                 <p className="mt-1 font-bold">{product.price.toFixed(2)} €</p>
-    //                               </div>
-    //                             </div>
-    //                           ) : (
-    //                             <p className="mt-1 font-bold">{product.price.toFixed(2)} €</p>
-    //                           )}
-    //                         </div>
-    //                       </div>
-    //                     </CardContent>
-    //                   </Card>
-    //                 </div>
-    //               </CarouselItem>
-    //             ))}
-    //           </CarouselContent>
-    //           <CarouselPrevious data-carousel-previous />
-    //           <CarouselNext data-carousel-next />
-    //         </Carousel>
-    //       ) : (
-    //         <div className="text-center py-10">Aucun produit vedette disponible</div>
-    //       )}
-    //     </div>
-    //        {/* 📦 Tous les Produits */}
-    //       <div className="mb-12">
-    //       <ProductGrid 
-    //         products={filteredProducts} 
-    //         title={searchParams.get('q') ? `Résultats pour : "${searchParams.get('q')}"` : "Tous nos produits"} 
-    //       />
-    //     </div>
-        
-    //     {/* 🆕 Nouveautés */}
-    //     <div className="mb-12">
-    //       <ProductGrid products={newArrivals} title="Nouveautés" />
-    //     </div>
-
-       
-    //   </div>
-    // </Layout>
     <Layout>
-  <div className="container mx-auto px-4 py-8">
-    <h1 className="text-4xl font-bold mb-8 text-red-800">
-      Bienvenue sur Riziky Boutique
-    </h1>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold mb-8 text-red-800">
+          Bienvenue sur Riziky Boutique
+        </h1>
 
-    {/* 🔍 Résultats de recherche */}
-    {searchParams.get('q') && (
-      <div className="mb-12">
-        <ProductGrid
-          products={filteredProducts}
-          title={`Résultats pour : "${searchParams.get('q')}"`}
-        />
-      </div>
-    )}
-
-    {/* 🔥 Produits Vedettes (caché si recherche) */}
-    {!searchParams.get('q') && (
-      <div className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6 text-red-800">
-          Produits Vedettes
-        </h2>
-        {isLoading ? (
-          <div className="text-center py-10">Chargement des produits vedettes...</div>
-        ) : featuredProducts.length > 0 ? (
-          <Carousel>
-            <CarouselContent>
-              {featuredProducts.map((product) => (
-                <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/4">
-                  <div className="p-1">
-                    <Card>
-                      <CardContent className="flex aspect-square items-center justify-center p-0">
-                        <div className="w-full">
-                          <img
-                            src={`${AUTH_BASE_URL}${product.image}`}
-                            alt={product.name}
-                            className="w-full h-48 object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
-                            }}
-                          />
-                          <div className="p-4">
-                            <h3 className="font-medium">{product.name}</h3>
-                            {product.promotion ? (
-                                                 
-                                <div className="flex items-center gap-2">
-                                <p className="mt-1 text-sm text-gray-500 line-through">
-                                  {typeof product.originalPrice === 'number'
-                                    ? product.originalPrice.toFixed(2)
-                                    : product.price.toFixed(2)}{' '}
-                                  €
-                                </p>
-                                <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
-                                    -{product.promotion}%
-                                  </span>
-                                  <p className="mt-1 font-bold">{product.price.toFixed(2)} €</p>
-                                </div>
-                            ) : (
-                              <p className="mt-1 font-bold">{product.price.toFixed(2)} €</p>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious data-carousel-previous />
-            <CarouselNext data-carousel-next />
-          </Carousel>
-        ) : (
-          <div className="text-center py-10">Aucun produit vedette disponible</div>
+        {/* 🔍 Résultats de recherche */}
+        {searchParams.get('q') && (
+          <div className="mb-12">
+            <ProductGrid
+              products={filteredProducts}
+              title={`Résultats pour : "${searchParams.get('q')}"`}
+            />
+          </div>
         )}
+
+        {/* 🔥 Produits Vedettes (caché si recherche) */}
+        {!searchParams.get('q') && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-semibold mb-6 text-red-800">
+              Produits Vedettes
+            </h2>
+            {isLoading ? (
+              <div className="text-center py-10">Chargement des produits vedettes...</div>
+            ) : featuredProducts.length > 0 ? (
+              <Carousel>
+                <CarouselContent>
+                  {featuredProducts.map((product) => (
+                    <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/4">
+                      <div className="p-1">
+                        <Card>
+                          <CardContent className="flex aspect-square items-center justify-center p-0">
+                            <div className="w-full">
+                              <img
+                                src={`${AUTH_BASE_URL}${product.image}`}
+                                alt={product.name}
+                                className="w-full h-48 object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
+                                }}
+                              />
+                              <div className="p-4">
+                                <h3 className="font-medium">{product.name}</h3>
+                                {product.promotion ? (
+                                                     
+                                    <div className="flex items-center gap-2">
+                                    <p className="mt-1 text-sm text-gray-500 line-through">
+                                      {typeof product.originalPrice === 'number'
+                                        ? product.originalPrice.toFixed(2)
+                                        : product.price.toFixed(2)}{' '}
+                                      €
+                                    </p>
+                                    <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                                        -{product.promotion}%
+                                      </span>
+                                      <p className="mt-1 font-bold">{product.price.toFixed(2)} €</p>
+                                    </div>
+                                ) : (
+                                  <p className="mt-1 font-bold">{product.price.toFixed(2)} €</p>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious data-carousel-previous />
+                <CarouselNext data-carousel-next />
+              </Carousel>
+            ) : (
+              <div className="text-center py-10">Aucun produit vedette disponible</div>
+            )}
+          </div>
+        )}
+
+        {/* 🆕 Nouveautés */}
+        <div className="mb-12">
+          <ProductGrid products={newArrivals} title="Nouveautés" />
+        </div>
+       {/* 📦 Tous les Produits */}
+        <div className="mb-12">
+          <ProductGrid 
+            products={allProducts} 
+            title="Tous nos produits" 
+          />
+        </div>
+
       </div>
-    )}
-
-    {/* 🆕 Nouveautés */}
-    <div className="mb-12">
-      <ProductGrid products={newArrivals} title="Nouveautés" />
-    </div>
-   {/* 📦 Tous les Produits */}
-<div className="mb-12">
-  <ProductGrid 
-    products={allProducts} 
-    title="Tous nos produits" 
-  />
-</div>
-
-  </div>
-</Layout>
-
+    </Layout>
   );
 };
 

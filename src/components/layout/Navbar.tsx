@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +11,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose
+} from "@/components/ui/sheet";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from "@/components/ui/accordion";
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package } from 'lucide-react';
+import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package, Menu } from 'lucide-react';
 import { productsAPI, Product } from '@/services/api';
 import { debounce } from 'lodash';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Fonction améliorée pour normaliser les chaînes de caractères (supprime les accents et met en minuscule)
 const normalizeString = (str: string) => {
@@ -34,12 +46,18 @@ const Navbar = () => {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isMobile = useIsMobile();
 
   const cartItemsCount = cart.reduce((count, item) => count + item.quantity, 0);
+
+  // Liste des catégories
+  const categories = ["perruques", "tissages", "queue de cheval", "peigne chauffante", "colle - dissolvant"];
 
   // Ferme les résultats si clic en dehors
   useEffect(() => {
@@ -130,6 +148,12 @@ const Navbar = () => {
     navigate(`/produit/${productId}`);
   };
 
+  // const handleCategoryClick = (category: string) => {
+  //   navigate(`/categorie/${category}`);
+  //   setCategoriesOpen(false);
+  //   setIsOpen(false);
+  // };
+
   const renderSearchResults = () => (
     <>
       {showResults && searchResults.length > 0 && (
@@ -189,12 +213,12 @@ const Navbar = () => {
               ) : (
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               )}
-              
+              {renderSearchResults()}
             </div>
           </div>
 
-          {/* Icônes utilisateur */}
-          <div className="flex items-center space-x-4">
+          {/* Icônes utilisateur pour desktop */}
+          <div className="hidden md:flex items-center space-x-4">
             <Link to="/favoris" className="relative">
               <Button variant="ghost" size="icon">
                 <Heart className="h-5 w-5" />
@@ -225,8 +249,8 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
-                  <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
-                  <DropdownMenuLabel className="font-normal text-xs">
+                  <DropdownMenuLabel>Mon compte :</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-blue-600 font-normal-bold ">
                     {user?.nom} ({user?.role === 'admin' ? 'Admin' : 'Client'})
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -255,8 +279,8 @@ const Navbar = () => {
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Déconnexion</span>
+                    <LogOut className="text-red-600 mr-2 h-4 w-4" />
+                    <span className="text-red-600 font-bold">Déconnexion</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -267,6 +291,134 @@ const Navbar = () => {
                 </Button>
               </Link>
             )}
+          </div>
+
+          {/* Menu mobile */}
+          <div className="flex md:hidden items-center space-x-4">
+            <Link to="/panier" className="relative">
+              <Button variant="ghost" size="icon">
+                <ShoppingCart className="h-5 w-5" />
+              </Button>
+              {cartItemsCount > 0 && (
+                <Badge variant="destructive" className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 text-xs rounded-full">
+                  {cartItemsCount}
+                </Badge>
+              )}
+            </Link>
+
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <nav className="flex flex-col h-full">
+                  <div className="flex-1 py-4">
+                    <div className="mb-6">
+                      <Input
+                        type="text"
+                        placeholder="Rechercher des produits..."
+                        className="w-full pl-10"
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                      />
+                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    </div>
+
+                    <div className="space-y-6">    
+                      <div>
+                        <SheetClose asChild>
+                          <Link 
+                            to="/favoris" 
+                            className="flex items-center hover:text-primary"
+                          >
+                            <Heart className="mr-2 h-4 w-4" />
+                            <span>Mes favoris</span>
+                            {favoriteCount > 0 && (
+                              <Badge variant="outline" className="ml-2 text-red-600">
+                                {favoriteCount}
+                              </Badge>
+                            )}
+                          </Link>
+                        </SheetClose>
+                      </div>
+                      {isAuthenticated && (
+                        <div className="pb-4 border-b">
+                          <h3 className="text-sm font-medium mb-3">Mon compte</h3>
+                          <ul className="space-y-3">
+                            <li>
+                              <SheetClose asChild>
+                                <Link 
+                                  to="/profil" 
+                                  className="flex items-center text-sm hover:text-primary"
+                                >
+                                  <User className="mr-2 h-4 w-4" />
+                                  <span>Profil</span>
+                                </Link>
+                              </SheetClose>
+                            </li>
+                            <li>
+                              <SheetClose asChild>
+                                <Link 
+                                  to="/commandes" 
+                                  className="flex items-center text-sm hover:text-primary"
+                                >
+                                  <Package className="mr-2 h-4 w-4" />
+                                  <span>Mes commandes</span>
+                                </Link>
+                              </SheetClose>
+                            </li>
+                            {isAdmin && (
+                              <li>
+                                <SheetClose asChild>
+                                  <Link 
+                                    to="/admin/produits" 
+                                    className="flex items-center text-sm hover:text-primary"
+                                  >
+                                    <Settings className="mr-2 h-4 w-4" />
+                                    <span>Administration</span>
+                                  </Link>
+                                </SheetClose>
+                              </li>
+                            )}
+                            <li>
+                              <button 
+                                className="flex items-center text-sm text-red-600 hover:text-red-800"
+                                onClick={() => {
+                                  logout();
+                                  setIsOpen(false);
+                                }}
+                              >
+                                <LogOut className="mr-2 h-4 w-4" />
+                                <span>Déconnexion</span>
+                              </button>
+                            </li>
+                          </ul>
+                        </div>
+                      )}
+
+                      {!isAuthenticated && (
+                        <div className="pb-4 border-b">
+                          <SheetClose asChild>
+                            <Link 
+                              to="/login" 
+                              className="flex w-full justify-center items-center py-2 px-4 bg-red-700 text-white rounded hover:bg-red-800 transition-colors"
+                            >
+                              Se connecter
+                            </Link>
+                          </SheetClose>
+                        </div>
+                      )}
+
+                      
+
+                  
+                    </div>
+                  </div>
+                </nav>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
 
@@ -287,17 +439,41 @@ const Navbar = () => {
           {renderSearchResults()}
         </div>
 
-        {/* Liens catégories */}
-        <div className="mt-4 flex space-x-4 overflow-x-auto py-2">
-          {["electronique", "mode", "maison", "beaute", "sport", "bijoux"].map(cat => (
+        {/* Liens catégories - Desktop */}
+        <div className="hidden md:flex mt-4 space-x-4 overflow-x-auto py-2">
+          {categories.map((cat) => (
             <Link
               key={cat}
               to={`/categorie/${cat}`}
-              className="text-sm whitespace-nowrap text-red-800 hover:text-red-600"
+              className="text-sm whitespace-nowrap text-red-800 hover:text-red-600 capitalize"
             >
               {cat.charAt(0).toUpperCase() + cat.slice(1)}
             </Link>
           ))}
+        </div>
+
+        {/* Catégories - Mobile (collapsed by default) */}
+        <div className="md:hidden mt-4">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="categories">
+              <AccordionTrigger className="py-2">
+                Catégories
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat}
+                      to={`/categorie/${cat}`}
+                      className="text-sm py-1 px-2 rounded-md bg-gray-50 hover:bg-gray-100 capitalize"
+                    >
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </Link>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </div>
     </nav>

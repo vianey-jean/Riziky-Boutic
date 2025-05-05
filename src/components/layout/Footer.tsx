@@ -38,10 +38,10 @@ const Footer = () => {
           
           <div>
             <h3 className="text-lg font-semibold mb-4">Nous Suivre</h3>
-            <div className="flex space-x-4">
+            <div className="flex flex-col space-x-4">
               <a href="#" className="text-gray-600 hover:text-brand-blue">Facebook</a>
               <a href="#" className="text-gray-600 hover:text-brand-blue">Twitter</a>
-              <a href="#" className="text-gray-600 hover:text-brand-blue">Instagram</a>
+              <a href="#" className="text-gray-600 hover:text-brand-blue ">Instagram</a>
             </div>
             {/* <div className="mt-4">
               <h4 className="text-sm font-medium mb-2">Newsletter</h4>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,16 +17,15 @@ const ProfilePage = () => {
   const { orders, fetchOrders } = useStore();
   const [activeTab, setActiveTab] = useState('info');
   const [loading, setLoading] = useState(false);
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<UpdateProfileData>({
     nom: user?.nom || '',
     prenom: user?.prenom || '',
-    email: user?.email || '',
     adresse: user?.adresse || '',
     ville: user?.ville || '',
     codePostal: user?.codePostal || '',
     pays: user?.pays || '',
     telephone: user?.telephone || '',
-    genre: user?.genre || '',
+    genre: (user?.genre as "homme" | "femme" | "autre") || 'autre',
   });
   
   const navigate = useNavigate();
@@ -39,26 +39,28 @@ const ProfilePage = () => {
       setProfileData({
         nom: user.nom || '',
         prenom: user.prenom || '',
-        email: user.email || '',
         adresse: user.adresse || '',
         ville: user.ville || '',
         codePostal: user.codePostal || '',
         pays: user.pays || '',
         telephone: user.telephone || '',
-        genre: user.genre || '',
+        genre: (user.genre || 'autre') as "homme" | "femme" | "autre",
       });
       
       fetchOrders();
     }
   }, [isAuthenticated, authLoading, user]);
   
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setProfileData({ ...profileData, [name]: value });
-  };
-  
-  const handleGenreChange = (value: string) => {
-    setProfileData({ ...profileData, genre: value });
+    
+    if (name === 'genre') {
+      // Ensure genre value is one of the allowed types
+      const genreValue = value as "homme" | "femme" | "autre";
+      setProfileData(prev => ({ ...prev, [name]: genreValue }));
+    } else {
+      setProfileData(prev => ({ ...prev, [name]: value }));
+    }
   };
   
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -76,7 +78,7 @@ const ProfilePage = () => {
         codePostal: profileData.codePostal,
         pays: profileData.pays,
         telephone: profileData.telephone,
-        genre: profileData.genre as 'homme' | 'femme' | 'autre' | undefined,
+        genre: profileData.genre as 'homme' | 'femme' | 'autre',
       };
       
       await authAPI.updateProfile(user.id, updatedProfile);
@@ -129,8 +131,7 @@ const ProfilePage = () => {
                   <PersonalInfoForm
                     profileData={profileData}
                     loading={loading}
-                    handleProfileChange={handleProfileChange}
-                    handleGenreChange={handleGenreChange}
+                    handleProfileChange={handleChange}
                     handleProfileSubmit={handleProfileSubmit}
                   />
                 </Card>

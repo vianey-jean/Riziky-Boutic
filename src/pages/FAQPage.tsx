@@ -215,7 +215,7 @@ const FAQPage = () => {
               <h3 className="font-semibold mb-1">Chat en ligne</h3>
               <p className="text-gray-600 text-sm mb-2">Assistance immédiate</p>
               <Button className="bg-red-800 hover:bg-red-700">
-                  <Link to="/chat">Démarrer un chat</Link>
+                Démarrer un chat
               </Button>
             </div>
           </div>
