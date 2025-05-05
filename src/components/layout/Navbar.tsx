@@ -198,7 +198,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
         <Link to="/" className="flex items-center">
             <img 
-              src="../logo/logo.png" 
+              src="/images/logo/logo.png" 
               alt="Riziky Boutique" 
               className="h-20 w-auto"
             />
