@@ -18,7 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from '@/components/ui/sonner';
 import CreditCardForm from '@/components/checkout/CreditCardForm';
 import { ShippingAddress } from '@/services/api';
-
+import { Link } from 'react-router-dom';
 // Définition des prix de livraison par ville
 const DELIVERY_PRICES = {
   "Saint-Benoît": 20,
@@ -297,6 +297,11 @@ const CheckoutPage = () => {
                 >
                   {loading ? 'Traitement en cours...' : 'Confirmer la commande'}
                 </Button>
+                <div className="flex justify-center mt-4">
+                  <Link to="/panier" className="text-brand-blue hover:underline text-sm flex items-center">
+                    Annuler vos commande
+                  </Link>
+                </div>
               </form>
             </div>
             

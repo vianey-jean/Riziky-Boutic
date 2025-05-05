@@ -63,6 +63,12 @@ const ProfilePage = () => {
     }
   };
   
+  const handleGenreChange = (value: string) => {
+    // Ensure genre value is one of the allowed types
+    const genreValue = value as "homme" | "femme" | "autre";
+    setProfileData(prev => ({ ...prev, genre: genreValue }));
+  };
+  
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -132,6 +138,7 @@ const ProfilePage = () => {
                     profileData={profileData}
                     loading={loading}
                     handleProfileChange={handleChange}
+                    handleGenreChange={handleGenreChange}
                     handleProfileSubmit={handleProfileSubmit}
                   />
                 </Card>

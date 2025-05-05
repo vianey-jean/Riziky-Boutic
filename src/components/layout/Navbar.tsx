@@ -148,17 +148,17 @@ const Navbar = () => {
     navigate(`/produit/${productId}`);
   };
 
-  // const handleCategoryClick = (category: string) => {
-  //   navigate(`/categorie/${category}`);
-  //   setCategoriesOpen(false);
-  //   setIsOpen(false);
-  // };
+   const handleCategoryClick = (category: string) => {
+   navigate(`/categorie/${category}`);
+   setCategoriesOpen(false);
+   setIsOpen(false);
+  };
 
   const renderSearchResults = () => (
     <>
       {showResults && searchResults.length > 0 && (
         <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
-          <ul className="py-1">
+          {/* <ul className="py-1">
             {searchResults.map((product) => (
               <li
                 key={product.id}
@@ -181,14 +181,14 @@ const Navbar = () => {
                 </div>
               </li>
             ))}
-          </ul>
+          </ul> */}
         </div>
       )}
-      {showResults && searchTerm.length >= 3 && searchResults.length === 0 && (
+      {/* {showResults && searchTerm.length >= 3 && searchResults.length === 0 && (
         <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 p-4 text-center">
           Aucun produit trouvé pour "{searchTerm}"
         </div>
-      )}
+      )} */}
     </>
   );
 
@@ -196,13 +196,14 @@ const Navbar = () => {
     <nav className="border-b py-4">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
-        <Link to="/">
-          <img
-          src="/images/logo/logo.png"
-           alt="Logo"
-           className="w-[100px] ml-[100px]"
-        />
-        </Link>
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/public/images/logo/logo.png" 
+              alt="Riziky Boutique" 
+              className="h-20 w-auto"
+            />
+           
+          </Link>
 
           {/* Recherche desktop */}
           <div className="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-8">
@@ -255,8 +256,8 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
-                  <DropdownMenuLabel>Mon compte :</DropdownMenuLabel>
-                  <DropdownMenuLabel className="text-blue-600 font-normal-bold ">
+                  <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
+                  <DropdownMenuLabel className="font-normal text-xs">
                     {user?.nom} ({user?.role === 'admin' ? 'Admin' : 'Client'})
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -285,8 +286,8 @@ const Navbar = () => {
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
-                    <LogOut className="text-red-600 mr-2 h-4 w-4" />
-                    <span className="text-red-600 font-bold">Déconnexion</span>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Déconnexion</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -301,6 +302,11 @@ const Navbar = () => {
 
           {/* Menu mobile */}
           <div className="flex md:hidden items-center space-x-4">
+            {/* <Link to="/" className="mr-auto">
+              <h2 className="h-8 w-auto text-red-600 mr-[50px]"> Riziky Boutic</h2>
+               
+            </Link> */}
+            
             <Link to="/panier" className="relative">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-5 w-5" />
@@ -416,10 +422,6 @@ const Navbar = () => {
                           </SheetClose>
                         </div>
                       )}
-
-                      
-
-                  
                     </div>
                   </div>
                 </nav>
