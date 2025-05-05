@@ -196,7 +196,7 @@ const Navbar = () => {
     <nav className="border-b py-4">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
-          <Link to="/"  className="w-[100px] ml-[100px]"><img src="/public/images/logo/logo.png" alt="" /></Link>
+          <Link to="/"  className="w-[100px] ml-[100px]"><img src="./public/images/logo/logo.png" alt="logo" /></Link>
 
           {/* Recherche desktop */}
           <div className="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-8">
