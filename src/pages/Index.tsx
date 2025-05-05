@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { productsAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
 import { useSearchParams } from 'react-router-dom';
+
 const Index = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
