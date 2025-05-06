@@ -1,5 +1,6 @@
 {
   "name": "Riziky Bauté",
+  "homepage": "https://vianey-jean.github.io/Riziky-Boutic",
   "private": true,
   "version": "3.3.0",
   "type": "module",
@@ -8,6 +9,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+     "deploy": "gh-pages -d build",
     "preview": "vite preview"
   },
   "dependencies": {
