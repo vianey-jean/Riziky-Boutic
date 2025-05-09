@@ -41,3 +41,11 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Added styling for product images */
+.product-image {
+  object-fit: contain;
+  width: 100%;
+  height: auto;
+}
+

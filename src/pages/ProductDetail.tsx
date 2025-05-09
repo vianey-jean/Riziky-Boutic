@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -10,9 +11,7 @@ const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
   const { products, addToCart, toggleFavorite, isFavorite } = useStore();
   // 🔁 URL de base récupérée depuis le .env
-const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-  
+  const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const product = products.find(p => p.id === productId);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -54,15 +53,12 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
               <img
                 src={`${AUTH_BASE_URL}${productImages[selectedImageIndex]}`}
                 alt={product.name}
-                className="w-full h-auto object-cover rounded-lg"
-                style={{ height: "400px" }}
+                className="w-full h-[400px] object-contain rounded-lg"
               />
             </div>
 
             {productImages.length > 1 && (
-              <div 
-             
-              className="flex space-x-2 mt-2 overflow-x-auto py-2">
+              <div className="flex justify-center space-x-2 mt-2 overflow-x-auto py-2">
                 {productImages.map((image, index) => (
                   <div
                     key={index}
@@ -74,7 +70,7 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
                     <img
                       src={`${AUTH_BASE_URL}${image}`}
                       alt={`${product.name} - image ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 ))}

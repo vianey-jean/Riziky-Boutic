@@ -110,7 +110,7 @@ const Index = () => {
           </div>
         )}
 
-        {/* 🔥 Produits Vedettes (affiché uniquement s'il y a au moins un produit vedette et si aucune recherche n'est effectuée) */}
+        {/* 🔥 Produits Vedettes */}
         {!searchParams.get('q') && featuredProducts.length > 0 && (
           <div className="mb-12">
             <h2 className="text-2xl font-semibold mb-6 text-red-800">Produits Vedettes</h2>
@@ -131,7 +131,7 @@ const Index = () => {
                               <img
                                 src={`${AUTH_BASE_URL}${product.image}`}
                                 alt={product.name}
-                                className="w-full h-48 object-cover"
+                                className="w-full h-48 object-contain"
                                 onError={e => {
                                   const target = e.target as HTMLImageElement;
                                   target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;

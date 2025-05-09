@@ -27,7 +27,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <img 
           src={`${baseImageUrl}${displayImage}`} 
           alt={product.name} 
-          className="h-48 w-full object-cover transition-transform hover:scale-105" 
+          className="h-48 w-full object-contain transition-transform hover:scale-105" 
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
