@@ -699,13 +699,11 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
                   <SelectValue placeholder="Sélectionnez une catégorie" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Électronique">Électronique</SelectItem>
-                  <SelectItem value="Mode">Mode</SelectItem>
-                  <SelectItem value="Maison">Maison</SelectItem>
-                  <SelectItem value="Beauté">Beauté</SelectItem>
-                  <SelectItem value="Sport">Sport</SelectItem>
-                  <SelectItem value="Bijoux">Bijoux</SelectItem>
-                  <SelectItem value="Plein Air">Plein Air</SelectItem>
+                  <SelectItem value="Perruques">Perruques</SelectItem>
+                  <SelectItem value="Tissages">Tissages</SelectItem>
+                  <SelectItem value="Queue de cheval">Queue de cheval</SelectItem>
+                  <SelectItem value="Peigne chauffance">Peigne chauffance</SelectItem>
+                  <SelectItem value="Colle - dissolvant">Colle - dissolvant</SelectItem>
                 </SelectContent>
               </Select>
             </div>

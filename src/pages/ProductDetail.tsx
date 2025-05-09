@@ -60,7 +60,9 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
             </div>
 
             {productImages.length > 1 && (
-              <div className="flex space-x-2 mt-2 overflow-x-auto py-2">
+              <div 
+             
+              className="flex space-x-2 mt-2 overflow-x-auto py-2">
                 {productImages.map((image, index) => (
                   <div
                     key={index}
@@ -70,7 +72,7 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
                     onClick={() => setSelectedImageIndex(index)}
                   >
                     <img
-                      src={`$${AUTH_BASE_URL}${image}`}
+                      src={`${AUTH_BASE_URL}${image}`}
                       alt={`${product.name} - image ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
