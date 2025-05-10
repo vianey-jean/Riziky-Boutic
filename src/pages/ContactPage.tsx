@@ -205,7 +205,7 @@ const ContactPage = () => {
                 
                 <div>
                   <h3 className="font-medium text-red-800">Email</h3>
-                  <p className="text-gray-600">contact@franceboutique.fr</p>
+                  <p className="text-gray-600">contact@Riziky-Boutic.fr</p>
                 </div>
                 
                 <div>

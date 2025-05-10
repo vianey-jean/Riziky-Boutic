@@ -21,7 +21,7 @@ const CustomerServicePage = () => {
             </div>
             <h2 className="text-lg font-semibold mb-2">Email</h2>
             <p className="text-gray-500 mb-4">Nous répondons sous 24h</p>
-            <p className="font-medium text-red-800">contact@franceboutique.fr</p>
+            <p className="font-medium text-red-800">contact@Riziky-Boutic.fr</p>
           </Card>
           
           <Card className="p-6 flex flex-col items-center text-center">

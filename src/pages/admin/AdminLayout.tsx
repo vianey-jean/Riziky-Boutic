@@ -61,7 +61,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         {/* Sidebar Content */}
         <div className="p-4">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold mb-1">FranceBoutique</h1>
+            <h1 className="text-2xl font-bold mb-1">Riziky-Boutic</h1>
             <p className="text-gray-400 text-sm">Administration</p>
           </div>
           

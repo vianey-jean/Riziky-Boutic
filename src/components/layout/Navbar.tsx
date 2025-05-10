@@ -447,7 +447,7 @@ const Navbar = () => {
         </div>
 
         {/* Liens catégories - Desktop */}
-        <div className="hidden md:flex mt-4 space-x-4 overflow-x-auto py-2">
+        <div className="hidden md:flex mt-4 space-x-4 overflow-x-auto py-2 justify-center">
           {categories.map((cat) => (
             <Link
               key={cat}
@@ -460,10 +460,10 @@ const Navbar = () => {
         </div>
 
         {/* Catégories - Mobile (collapsed by default) */}
-        <div className="md:hidden mt-4">
+        <div className="md:hidden mt-4  ">
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="categories">
-              <AccordionTrigger className="py-2">
+              <AccordionTrigger className="py-2 justify-center">
                 Catégories
               </AccordionTrigger>
               <AccordionContent>

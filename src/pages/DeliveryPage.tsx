@@ -76,7 +76,7 @@ const DeliveryPage = () => {
             
             <p>
               Pour toute question concernant votre livraison, n'hésitez pas à contacter notre 
-              service client à <span className="font-medium">livraison@franceboutique.fr</span> ou par téléphone
+              service client à <span className="font-medium">livraison@Riziky-Boutic.fr</span> ou par téléphone
               au <span className="font-medium">01 23 45 67 89</span> (du lundi au vendredi de 9h à 18h).
             </p>
           </div>

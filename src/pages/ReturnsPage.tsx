@@ -13,7 +13,7 @@ const ReturnsPage = () => {
           
           <div className="space-y-4">
             <p>
-              Chez FranceBoutique, nous voulons que vous soyez entièrement satisfait de votre achat. 
+              Chez Riziky-Boutic, nous voulons que vous soyez entièrement satisfait de votre achat. 
               Si vous n'êtes pas satisfait pour quelque raison que ce soit, vous pouvez retourner votre article 
               dans les 30 jours suivant la réception.
             </p>
@@ -46,7 +46,7 @@ const ReturnsPage = () => {
                   <h3 className="font-semibold">Contactez-nous</h3>
                 </div>
                 <p className="text-gray-600 text-sm">
-                  Contactez notre service client par email à retours@franceboutique.fr ou par téléphone au 01 23 45 67 89 
+                  Contactez notre service client par email à retours@Riziky-Boutic.fr ou par téléphone au 01 23 45 67 89 
                   pour nous informer de votre souhait de retourner un article. Nous vous fournirons un numéro de retour.
                 </p>
               </div>
