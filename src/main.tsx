@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
 
+// Polyfill for global used by simple-peer
+window.global = window;
+
 // Create a client
 const queryClient = new QueryClient();
 
