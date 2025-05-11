@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -149,17 +148,17 @@ const Navbar = () => {
     navigate(`/produit/${productId}`);
   };
 
-  const handleCategoryClick = (category: string) => {
-    navigate(`/categorie/${category}`);
-    setCategoriesOpen(false);
-    setIsOpen(false);
+   const handleCategoryClick = (category: string) => {
+   navigate(`/categorie/${category}`);
+   setCategoriesOpen(false);
+   setIsOpen(false);
   };
 
   const renderSearchResults = () => (
     <>
       {showResults && searchResults.length > 0 && (
         <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
-          <ul className="py-1">
+          {/* <ul className="py-1">
             {searchResults.map((product) => (
               <li
                 key={product.id}
@@ -182,14 +181,14 @@ const Navbar = () => {
                 </div>
               </li>
             ))}
-          </ul>
+          </ul> */}
         </div>
       )}
-      {showResults && searchTerm.length >= 3 && searchResults.length === 0 && (
+      {/* {showResults && searchTerm.length >= 3 && searchResults.length === 0 && (
         <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 p-4 text-center">
           Aucun produit trouvé pour "{searchTerm}"
         </div>
-      )}
+      )} */}
     </>
   );
 
