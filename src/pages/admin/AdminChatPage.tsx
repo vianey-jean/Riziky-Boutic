@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Send, Edit, Trash2, Smile } from 'lucide-react';
+import { Send, Edit, Trash2, Smile, PhoneCall, Video, PhoneOff } from 'lucide-react';
 import { adminChatAPI, Message } from '@/services/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/sonner';
@@ -21,6 +21,9 @@ import {
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { VideoCallProvider, useVideoCall } from '@/contexts/VideoCallContext';
+import CallNotification from '@/components/admin/CallNotification';
+import CallInterface from '@/components/admin/CallInterface';
 
 // Types pour le chat admin
 interface AdminUser {
@@ -37,7 +40,7 @@ interface Conversation {
   participants: string[];
 }
 
-const AdminChatPage = () => {
+const AdminChatContent = () => {
   const { user: currentUser } = useAuth();
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [messageText, setMessageText] = useState('');
@@ -45,6 +48,7 @@ const AdminChatPage = () => {
   const [editText, setEditText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
+  const { initiateCall, callState } = useVideoCall();
 
   // Récupérer la liste des administrateurs
   const { data: admins = [], isLoading: isLoadingAdmins } = useQuery({
@@ -223,6 +227,16 @@ const AdminChatPage = () => {
     }
   };
 
+  const handleAudioCall = () => {
+    if (!selectedAdmin || !selectedAdmin.isOnline) return;
+    initiateCall(selectedAdmin.id, false);
+  };
+  
+  const handleVideoCall = () => {
+    if (!selectedAdmin || !selectedAdmin.isOnline) return;
+    initiateCall(selectedAdmin.id, true);
+  };
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString('fr-FR', {
@@ -255,8 +269,15 @@ const AdminChatPage = () => {
     setEditText((prev) => prev + emoji.native);
   };
 
+  // Display the call interface when in a call
+  if (callState.isInCall) {
+    return <CallInterface />;
+  }
+
   return (
-    <AdminLayout>
+    <>
+      <CallNotification />
+      
       <h1 className="text-2xl font-bold mb-6">Chat entre administrateurs</h1>
       
       <div className="grid md:grid-cols-4 gap-6 h-[70vh]">
@@ -275,7 +296,7 @@ const AdminChatPage = () => {
               </div>
             ) : (
               admins.map((admin: AdminUser) => (
-                <div key={admin.id}>
+                <div key={`admin-${admin.id}-${admin.email}`}>
                   <button
                     className={`w-full p-3 flex items-center hover:bg-gray-100 ${
                       selectedAdmin?.id === admin.id ? 'bg-gray-100' : ''
@@ -308,21 +329,45 @@ const AdminChatPage = () => {
         <Card className="md:col-span-3 flex flex-col">
           {selectedAdmin ? (
             <>
-              <div className="p-4 border-b flex items-center space-x-3">
-                <div className="relative">
-                  <div className="w-10 h-10 bg-red-800 text-white rounded-full flex items-center justify-center">
-                    {selectedAdmin.nom.charAt(0)}
+              <div className="p-4 border-b flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <div className="w-10 h-10 bg-red-800 text-white rounded-full flex items-center justify-center">
+                      {selectedAdmin.nom.charAt(0)}
+                    </div>
+                    <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
+                      selectedAdmin.isOnline ? 'bg-green-500' : 'bg-red-500'
+                    }`}></div>
                   </div>
-                  <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
-                    selectedAdmin.isOnline ? 'bg-green-500' : 'bg-red-500'
-                  }`}></div>
+                  <div>
+                    <h2 className="font-semibold">{selectedAdmin.nom}</h2>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedAdmin.isOnline ? 'En ligne' : `Dernier accès ${getTimeAgo(selectedAdmin.lastSeen)}`}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="font-semibold">{selectedAdmin.nom}</h2>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedAdmin.isOnline ? 'En ligne' : `Dernier accès ${getTimeAgo(selectedAdmin.lastSeen)}`}
-                  </p>
-                </div>
+                
+                {/* Call buttons - only shown when admin is online */}
+                {selectedAdmin.isOnline && (
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={handleAudioCall}
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                    >
+                      <PhoneCall className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={handleVideoCall}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    >
+                      <Video className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
               
               <ScrollArea className="flex-1 p-4">
@@ -471,6 +516,16 @@ const AdminChatPage = () => {
           )}
         </Card>
       </div>
+    </>
+  );
+};
+
+const AdminChatPage = () => {
+  return (
+    <AdminLayout>
+      <VideoCallProvider>
+        <AdminChatContent />
+      </VideoCallProvider>
     </AdminLayout>
   );
 };
