@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { reviewsAPI, Review } from '@/services/api';
+import { reviewsAPI, Review, ReviewFormData } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
@@ -42,12 +42,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     fetchReviews();
   }, [productId]);
   
-  const handleAddReview = async (reviewData: {
-    productId: string;
-    productRating: number;
-    deliveryRating: number;
-    comment: string;
-  }) => {
+  const handleAddReview = async (reviewData: ReviewFormData) => {
     try {
       await reviewsAPI.addReview(reviewData);
       fetchReviews(); // Recharger les commentaires
@@ -76,7 +71,15 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     };
   };
   
+  // Compter le nombre total de photos dans tous les commentaires
+  const countTotalPhotos = () => {
+    return reviews.reduce((count, review) => {
+      return count + (review.photos?.length || 0);
+    }, 0);
+  };
+  
   const { productAvg, deliveryAvg, totalAvg } = calculateAverages();
+  const totalPhotoCount = countTotalPhotos();
   
   if (loading) {
     return <div className="py-4 text-center">Chargement des commentaires...</div>;
@@ -103,17 +106,17 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
             <StarRating rating={totalAvg} />
           </div>
           <div className="text-sm text-muted-foreground">
-            {reviews.length} avis
+            {reviews.length} avis {totalPhotoCount > 0 ? `· ${totalPhotoCount} photos` : ''}
           </div>
         </div>
         
         <div className="bg-muted/30 p-4 rounded-lg">
           <h3 className="font-medium mb-2">Produit</h3>
-           <div className="flex justify-center">
-          <div className="flex items-center">
-            <StarRating rating={productAvg} />
-            <span className="ml-2 font-semibold">{productAvg.toFixed(1)}</span>
-          </div>
+          <div className="flex justify-center">
+            <div className="flex items-center">
+              <StarRating rating={productAvg} />
+              <span className="ml-2 font-semibold">{productAvg.toFixed(1)}</span>
+            </div>
           </div>
         </div>
         
@@ -121,11 +124,11 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
           <h3 className="font-medium mb-2">Livraison</h3>
           <div className="flex justify-center">
             <div className="flex items-center">
-            <StarRating rating={deliveryAvg} />
-          <span className="ml-2 font-semibold">{deliveryAvg.toFixed(1)}</span>
+              <StarRating rating={deliveryAvg} />
+              <span className="ml-2 font-semibold">{deliveryAvg.toFixed(1)}</span>
             </div>
+          </div>
         </div>
-      </div>
       </div>
       
       {isAuthenticated && !showForm && (
