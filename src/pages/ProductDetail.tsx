@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/contexts/StoreContext';
 import { Heart, ShoppingCart } from 'lucide-react';
 import ProductGrid from '@/components/products/ProductGrid';
+import ProductReviews from '@/components/reviews/ProductReviews';
 
 const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -142,6 +143,11 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
+        
+        {/* Section des commentaires */}
+        {productId && (
+          <ProductReviews productId={productId} />
+        )}
 
         {/* Produits similaires */}
         <div className="mt-12">
