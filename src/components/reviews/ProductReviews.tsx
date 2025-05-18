@@ -136,7 +136,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
           <Button 
             variant="outline" 
             onClick={() => setShowForm(true)}
-            className="w-full md:w-auto"
+            className="w-full md:w-auto text-red-800"
           >
             Donnez votre avis
           </Button>

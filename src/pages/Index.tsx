@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { productsAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
 import { useSearchParams } from 'react-router-dom';
+import TestimonialSection from '@/components/reviews/TestimonialSection';
 
 const Index = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -183,6 +184,10 @@ const Index = () => {
         <div className="mb-12">
           <ProductGrid products={allProducts} title="Tous nos produits" />
         </div>
+
+        {/* 📝 Témoignages - Remplacé par le nouveau composant TestimonialSection */}
+        <TestimonialSection />
+
       </div>
     </Layout>
   );

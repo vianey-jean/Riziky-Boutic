@@ -190,7 +190,7 @@ const ReviewPhotoThumbnails: React.FC<ReviewPhotoThumbnailsProps> = ({
           ))}
 
           {/* Dernière vignette avec icône Galerie */}
-          <Dialog>
+          {/* <Dialog>
             <DialogTrigger asChild>
               <div className="flex items-center justify-center w-16 h-16 rounded bg-muted cursor-pointer hover:bg-muted/80 transition-colors flex-shrink-0">
                 <GalleryHorizontal size={20} />
@@ -209,7 +209,7 @@ const ReviewPhotoThumbnails: React.FC<ReviewPhotoThumbnailsProps> = ({
                 ))}
               </div>
             </DialogContent>
-          </Dialog>
+          </Dialog> */}
         </div>
 
         {/* Flèche droite */}

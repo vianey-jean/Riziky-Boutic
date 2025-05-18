@@ -54,10 +54,11 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ reviews }) => {
             <p className="mt-2 text-sm">{review.comment}</p>
           )}
           
-          {review.photos && review.photos.length > 0 && (
-            <div className="mt-3">
-              <ReviewPhotoThumbnails photos={review.photos} reviewId={review.id} />
-              
+          {/* {review.photos && review.photos.length > 0 && (
+            <div className="mt-3 ">
+              <div className= " justify-center ">
+                <ReviewPhotoThumbnails  photos={review.photos} reviewId={review.id} />
+              </div>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -68,7 +69,28 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ reviews }) => {
                 Voir toutes les photos et détails
               </Button>
             </div>
-          )}
+          )} */}
+          {review.photos && review.photos.length > 0 && (
+  <div className="mt-3">
+    {/* Conteneur flex pour centrer horizontalement le composant ReviewPhotoThumbnails */}
+    <div className="flex justify-center w-full">
+      <ReviewPhotoThumbnails photos={review.photos} reviewId={review.id} />
+    </div>
+
+    {/* Bouton en dessous, centré également si souhaité */}
+    <div className="flex justify-center mt-2">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={() => setSelectedReviewId(review.id)}
+      >
+        <GalleryHorizontal className="mr-1 h-4 w-4" />
+        Voir toutes les photos et détails
+      </Button>
+    </div>
+  </div>
+)}
+
         </div>
       ))}
       
