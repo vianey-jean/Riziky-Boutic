@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string): Promise<void> => {
     try {
-      console.log("Tentative de connexion avec:", { email, password });
+      console.log("Tentative de connexion avec:", { email });
       const response = await authAPI.login({ email, password });
       localStorage.setItem('authToken', response.data.token);
       setUser(response.data.user);
@@ -131,7 +131,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         style: { backgroundColor: 'red', color: 'white' },
       });
      
-
       throw error;
     }
   };

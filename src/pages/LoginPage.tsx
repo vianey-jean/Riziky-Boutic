@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -84,9 +85,6 @@ const LoginPage = () => {
       // La redirection est gérée dans le contexte Auth
     } catch (error) {
       console.error("Erreur de connexion:", error);
-      //toast.error("Mot de passe incorrect", {
-        //style: { backgroundColor: 'red', color: 'white' },
-     // });
     } finally {
       setIsLoading(false);
     }

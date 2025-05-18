@@ -1,5 +1,26 @@
 # Welcome to your Lovable project
 
+## Pour connecté sur l'app:
+
+    email: admin@example.com,
+    password: Admin123@,
+
+   ou 
+
+    email: client@example.com,
+    password: Azerty123@,
+
+    ou
+
+    email: bekotoj@yahoo.fr,
+    password: admin123@,
+    
+    ou
+
+    email: service.client@example.com,
+    password: Service123@,
+  
+
 ## Project info
 
 **URL**: https://riziky-boutic.vercel.app/

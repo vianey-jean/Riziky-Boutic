@@ -36,6 +36,7 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -79,9 +80,12 @@ const RegisterPage = () => {
     }
     
     try {
+      setIsLoading(true);
       await register(data.nom, data.email, data.password);
     } catch (error) {
       console.error('Erreur d\'inscription:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -193,8 +197,8 @@ const RegisterPage = () => {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={emailExists}>
-                  S'inscrire
+                <Button type="submit" className="w-full" disabled={emailExists || isLoading}>
+                  {isLoading ? "Inscription en cours..." : "S'inscrire"}
                 </Button>
               </form>
             </Form>
