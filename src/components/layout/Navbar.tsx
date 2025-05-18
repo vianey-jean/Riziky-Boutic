@@ -29,6 +29,8 @@ import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package, Menu } fr
 import { productsAPI, Product } from '@/services/api';
 import { debounce } from 'lodash';
 import { useIsMobile } from '@/hooks/use-mobile';
+import logo from "@/assets/logo.png"; // Corrige le chemin selon la structure de ton projet
+
 
 // Fonction améliorée pour normaliser les chaînes de caractères (supprime les accents et met en minuscule)
 const normalizeString = (str: string) => {
@@ -198,8 +200,9 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
         <Link to="/" className="flex items-center">
             <img 
-              src="/images/logo/logo.png" 
-              alt="Riziky Boutique" 
+              src={logo}  
+              alt= "Riziky Boutique"
+              
               className="h-20 w-auto text-red-600 text-3xl font-bold"
             />
           </Link>
