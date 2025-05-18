@@ -26,8 +26,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <Link to={`/produit/${product.id}`} className="overflow-hidden">
         <img 
           src={`${baseImageUrl}${displayImage}`} 
-          alt={product.name} 
+          alt={`Photo de ${product.name}`} 
           className="h-48 w-full object-contain transition-transform hover:scale-105" 
+          loading="lazy"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
@@ -42,22 +43,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="flex-grow"></div>
         
         <div className="flex justify-between items-center mt-2">
-        {product.promotion ? (
-                                                 
-          <div className="flex items-center gap-2">
-            <p className="mt-1 text-sm text-gray-500 line-through">
-              {typeof product.originalPrice === 'number'
-                ? product.originalPrice.toFixed(2)
-                : product.price.toFixed(2)}{' '}
-                   €
-            </p>
-               <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+          {product.promotion ? (
+            <div className="flex items-center gap-2">
+              <p className="mt-1 text-sm text-gray-500 line-through">
+                {typeof product.originalPrice === 'number'
+                  ? product.originalPrice.toFixed(2)
+                  : product.price.toFixed(2)}{' '}
+                    €
+              </p>
+              <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
                 -{product.promotion}%
-                 </span>
-            <p className="mt-1 font-bold ">{product.price.toFixed(2)} €</p>
-          </div>
-         ) : (
-           <p className="mt-1 font-bold">{product.price.toFixed(2)} €</p>
+              </span>
+              <p className="mt-1 font-bold ">{product.price.toFixed(2)} €</p>
+            </div>
+          ) : (
+            <p className="mt-1 font-bold">{product.price.toFixed(2)} €</p>
           )}
           <div className="flex space-x-2">
             <Button 
@@ -65,6 +65,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               size="icon" 
               onClick={() => toggleFavorite(product)}
               className={isProductFavorite ? 'text-red-500' : ''}
+              aria-label={isProductFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
             >
               <Heart className="h-4 w-4" />
             </Button>
@@ -72,6 +73,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               size="icon"
               onClick={() => addToCart(product)}
               disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
+              aria-label="Ajouter au panier"
             >
               <ShoppingCart className="h-4 w-4" />
             </Button>

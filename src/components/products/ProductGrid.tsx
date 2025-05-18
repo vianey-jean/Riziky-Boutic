@@ -10,11 +10,13 @@ interface ProductGridProps {
 
 const ProductGrid: React.FC<ProductGridProps> = ({ products, title }) => {
   return (
-    <div>
+    <section className="product-section">
       {title && <h2 className="text-2xl font-semibold mb-6 text-red-800">{title}</h2>}
-      <div className="product-grid">
+      <div className="product-grid" role="list" aria-label="Liste de produits">
         {products.map(product => (
-          <ProductCard key={product.id} product={product} />
+          <div key={product.id} role="listitem">
+            <ProductCard product={product} />
+          </div>
         ))}
       </div>
       {products.length === 0 && (
@@ -22,7 +24,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, title }) => {
           <p className="text-muted-foreground">Aucun produit trouvé</p>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
