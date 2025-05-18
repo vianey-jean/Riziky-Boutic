@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Review, reviewsAPI } from '@/services/api';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import StarRating from './StarRating';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -49,6 +49,7 @@ const ReviewDetail: React.FC<ReviewDetailProps> = ({ reviewId, onClose, isOpen }
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Détails du commentaire</DialogTitle>
+          <DialogDescription>Informations détaillées sur l'avis client</DialogDescription>
         </DialogHeader>
         
         {loading ? (
