@@ -13,7 +13,7 @@
     ou
 
     email: bekotoj@yahoo.fr,
-    password: admin123@,
+    password: Admin123@,
     
     ou
 
