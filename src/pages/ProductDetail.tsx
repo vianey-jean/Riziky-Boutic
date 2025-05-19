@@ -1,23 +1,35 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/contexts/StoreContext';
 import { Heart, ShoppingCart } from 'lucide-react';
 import ProductGrid from '@/components/products/ProductGrid';
 import ProductReviews from '@/components/reviews/ProductReviews';
+import { getRealId } from '@/services/secureIds';
+import { toast } from '@/components/ui/sonner';
 
 const ProductDetail = () => {
-  const { productId } = useParams<{ productId: string }>();
+  const { productId: secureProductId } = useParams<{ productId: string }>();
+  const navigate = useNavigate();
   const { products, addToCart, toggleFavorite, isFavorite } = useStore();
-  // 🔁 URL de base récupérée depuis le .env
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const PLACEHOLDER_IMAGE = '/placeholder.svg';
-
+  
+  // Récupérer l'ID réel à partir de l'ID sécurisé
+  const productId = secureProductId ? getRealId(secureProductId) : undefined;
   const product = products.find(p => p.id === productId);
+  
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [remainingTime, setRemainingTime] = useState<string>("");
+
+  // Rediriger vers la page 404 si l'ID sécurisé est invalide
+  useEffect(() => {
+    if (secureProductId && !productId) {
+      toast.error("Ce lien n'est plus valide");
+      navigate('/not-found', { replace: true });
+    }
+  }, [secureProductId, productId, navigate]);
 
   const relatedProducts = products
     .filter(p => p.category === product?.category && p.id !== product?.id)

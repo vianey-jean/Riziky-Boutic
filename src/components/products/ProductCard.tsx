@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { Product, useStore } from '@/contexts/StoreContext';
+import { getSecureId } from '@/services/secureIds';
 
 interface ProductCardProps {
   product: Product;
@@ -15,6 +15,9 @@ const PLACEHOLDER_IMAGE = '/placeholder.svg';
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart, toggleFavorite, isFavorite } = useStore();
   const isProductFavorite = isFavorite(product.id);
+  
+  // Générer un ID sécurisé pour le produit
+  const secureId = getSecureId(product.id);
   
   // Determine which image to display - first image from images array or fallback to image property
   const displayImage = product.images && product.images.length > 0 
@@ -57,7 +60,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Card className="overflow-hidden h-full flex flex-col">
       <div className="relative">
-        <Link to={`/produit/${product.id}`} className="overflow-hidden">
+        <Link to={`/produit/${secureId}`} className="overflow-hidden">
           <img 
             src={getImageUrl(displayImage)} 
             alt={`Photo de ${product.name}`} 
@@ -85,7 +88,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         )}
       </div>
       <CardContent className="p-4 flex flex-col flex-grow">
-        <Link to={`/produit/${product.id}`} className="block">
+        <Link to={`/produit/${secureId}`} className="block">
           <h3 className="font-medium text-lg mb-1 hover:text-brand-blue transition-colors">{product.name}</h3>
         </Link>
         <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{product.description}</p>

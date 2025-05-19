@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import ProductGrid from '@/components/products/ProductGrid';
@@ -9,6 +8,8 @@ import { productsAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
 import { useSearchParams } from 'react-router-dom';
 import TestimonialSection from '@/components/reviews/TestimonialSection';
+import { Link } from 'react-router-dom';
+import { getSecureId } from '@/services/secureIds';
 
 const Index = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -168,38 +169,40 @@ const Index = () => {
                         <Card>
                           <CardContent className="flex aspect-square items-center justify-center p-0">
                             <div className="w-full">
-                              <img
-                                src={getImageUrl(product.image)}
-                                alt={product.name}
-                                className="w-full h-48 object-contain"
-                                onError={e => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = PLACEHOLDER_IMAGE;
-                                }}
-                              />
-                              <div className="p-4">
-                                <h3 className="font-medium">{product.name}</h3>
-                                {product.promotion ? (
-                                  <div className="flex items-center gap-2 px-[19px]">
-                                    <p className="mt-1 text-sm text-gray-500 line-through">
-                                      {typeof product.originalPrice === 'number'
-                                        ? product.originalPrice.toFixed(2)
-                                        : product.price.toFixed(2)}{' '}
-                                      €
-                                    </p>
-                                    <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
-                                      -{product.promotion}%
-                                    </span>
-                                    <p className="mt-1 font-bold my-0 mx-0 px-0 text-right">
+                              <Link to={`/produit/${getSecureId(product.id)}`} className="block">
+                                <img
+                                  src={getImageUrl(product.image)}
+                                  alt={product.name}
+                                  className="w-full h-48 object-contain"
+                                  onError={e => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = PLACEHOLDER_IMAGE;
+                                  }}
+                                />
+                                <div className="p-4">
+                                  <h3 className="font-medium">{product.name}</h3>
+                                  {product.promotion ? (
+                                    <div className="flex items-center gap-2 px-[19px]">
+                                      <p className="mt-1 text-sm text-gray-500 line-through">
+                                        {typeof product.originalPrice === 'number'
+                                          ? product.originalPrice.toFixed(2)
+                                          : product.price.toFixed(2)}{' '}
+                                        €
+                                      </p>
+                                      <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                                        -{product.promotion}%
+                                      </span>
+                                      <p className="mt-1 font-bold my-0 mx-0 px-0 text-right">
+                                        {product.price.toFixed(2)} €
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <p className="mt-1 font-bold">
                                       {product.price.toFixed(2)} €
                                     </p>
-                                  </div>
-                                ) : (
-                                  <p className="mt-1 font-bold">
-                                    {product.price.toFixed(2)} €
-                                  </p>
-                                )}
-                              </div>
+                                  )}
+                                </div>
+                              </Link>
                             </div>
                           </CardContent>
                         </Card>
@@ -222,15 +225,17 @@ const Index = () => {
               {promotionProducts.map(product => (
                 <Card key={product.id} className="overflow-hidden h-full flex flex-col">
                   <div className="relative">
-                    <img
-                      src={getImageUrl(product.image)}
-                      alt={product.name}
-                      className="h-48 w-full object-contain"
-                      onError={e => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = PLACEHOLDER_IMAGE;
-                      }}
-                    />
+                    <Link to={`/produit/${getSecureId(product.id)}`}>
+                      <img
+                        src={getImageUrl(product.image)}
+                        alt={product.name}
+                        className="h-48 w-full object-contain"
+                        onError={e => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = PLACEHOLDER_IMAGE;
+                        }}
+                      />
+                    </Link>
                     <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
                       -{product.promotion}%
                     </div>
@@ -241,7 +246,9 @@ const Index = () => {
                     )}
                   </div>
                   <CardContent className="p-4 flex-grow">
-                    <h3 className="font-medium text-lg mb-1">{product.name}</h3>
+                    <Link to={`/produit/${getSecureId(product.id)}`}>
+                      <h3 className="font-medium text-lg mb-1">{product.name}</h3>
+                    </Link>
                     <div className="flex items-center gap-2 mt-2">
                       <p className="text-sm text-gray-500 line-through">
                         {typeof product.originalPrice === 'number'
