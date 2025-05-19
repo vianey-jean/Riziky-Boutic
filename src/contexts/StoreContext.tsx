@@ -48,6 +48,34 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loadingOrders, setLoadingOrders] = useState(true);
   const { user, isAuthenticated } = useAuth();
 
+  // Vérification périodique des promotions expirées
+  useEffect(() => {
+    const checkPromotions = () => {
+      const now = new Date();
+      const updatedProducts = products.map(product => {
+        // Si la promotion est expirée, réinitialiser le prix
+        if (product.promotion && product.promotionEnd && new Date(product.promotionEnd) < now) {
+          return {
+            ...product,
+            price: product.originalPrice || product.price,
+            promotion: null,
+            promotionEnd: null
+          };
+        }
+        return product;
+      });
+      
+      // Si des produits ont été mis à jour, mettre à jour l'état
+      if (JSON.stringify(updatedProducts) !== JSON.stringify(products)) {
+        setProducts(updatedProducts);
+      }
+    };
+    
+    // Vérifier toutes les minutes
+    const interval = setInterval(checkPromotions, 60000);
+    return () => clearInterval(interval);
+  }, [products]);
+
   const fetchProducts = async (categoryName?: string) => {
     setLoadingProducts(true);
     try {
@@ -308,6 +336,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const getCartTotal = () => {
     return selectedCartItems.reduce((total, item) => {
+      // Utiliser le prix promotionnel si disponible
       return total + (item.product.price * item.quantity);
     }, 0);
   };
@@ -333,7 +362,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const orderItems = selectedCartItems.map(item => ({
         productId: item.product.id,
-        quantity: item.quantity
+        quantity: item.quantity,
+        price: item.product.price, // Prix déjà avec promotion si applicable
+        name: item.product.name,
+        image: item.product.image,
+        subtotal: item.product.price * item.quantity
       }));
       
       const orderData = {
