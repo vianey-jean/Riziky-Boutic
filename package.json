@@ -56,8 +56,6 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
-    "express-rate-limit": "^7.1.5",
-    "helmet": "^7.1.0",
     "input-otp": "^1.2.4",
     "lodash": "^4.17.21",
     "lucide-react": "^0.462.0",
@@ -76,7 +74,6 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
-    "xss-clean": "^0.1.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
