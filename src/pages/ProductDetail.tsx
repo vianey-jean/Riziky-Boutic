@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -6,35 +7,71 @@ import { useStore } from '@/contexts/StoreContext';
 import { Heart, ShoppingCart } from 'lucide-react';
 import ProductGrid from '@/components/products/ProductGrid';
 import ProductReviews from '@/components/reviews/ProductReviews';
-import { getRealId } from '@/services/secureIds';
+import { getRealId, isValidSecureId, getEntityType } from '@/services/secureIds';
 import { toast } from '@/components/ui/sonner';
 
 const ProductDetail = () => {
+  // Récupérer le paramètre directement de l'URL
   const { productId: secureProductId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { products, addToCart, toggleFavorite, isFavorite } = useStore();
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const PLACEHOLDER_IMAGE = '/placeholder.svg';
   
+  console.log('ProductDetail - Secure ID:', secureProductId);
+  
   // Récupérer l'ID réel à partir de l'ID sécurisé
   const productId = secureProductId ? getRealId(secureProductId) : undefined;
-  const product = products.find(p => p.id === productId);
   
+  console.log('ProductDetail - Real ID:', productId);
+  
+  // Définir tous les useState au début du composant
+  const [product, setProduct] = useState(products.find(p => p.id === productId));
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [remainingTime, setRemainingTime] = useState<string>("");
-
-  // Rediriger vers la page 404 si l'ID sécurisé est invalide
+  const [isValidId, setIsValidId] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Valider l'ID sécurisé et rediriger si invalide
   useEffect(() => {
-    if (secureProductId && !productId) {
+    setIsLoading(true);
+    
+    // Vérifier si l'ID existe
+    if (!secureProductId) {
+      setIsValidId(false);
+      toast.error("Produit non trouvé");
+      navigate('/not-found', { replace: true });
+      return;
+    }
+    
+    // Vérifier si c'est un ID produit valide
+    const isValid = isValidSecureId(secureProductId);
+    const entityType = getEntityType(secureProductId);
+    
+    console.log('ProductDetail - Validation:', { isValid, entityType, productId });
+    
+    if (!isValid) {
+      setIsValidId(false);
       toast.error("Ce lien n'est plus valide");
       navigate('/not-found', { replace: true });
+    } else {
+      // Trouver le produit correspondant à l'ID réel
+      const foundProduct = products.find(p => p.id === productId);
+      if (foundProduct) {
+        setProduct(foundProduct);
+        setIsValidId(true);
+      } else {
+        console.log('ProductDetail - Produit non trouvé:', productId);
+        setIsValidId(false);
+        toast.error("Produit introuvable");
+        navigate('/not-found', { replace: true });
+      }
     }
-  }, [secureProductId, productId, navigate]);
+    
+    setIsLoading(false);
+  }, [secureProductId, productId, products, navigate]);
 
-  const relatedProducts = products
-    .filter(p => p.category === product?.category && p.id !== product?.id)
-    .slice(0, 4);
-
+  // Timer pour les promotions
   useEffect(() => {
     if (product && product.promotion && product.promotionEnd) {
       const updateRemainingTime = () => {
@@ -60,8 +97,20 @@ const ProductDetail = () => {
       return () => clearInterval(interval);
     }
   }, [product]);
+  
+  // Si le produit est en cours de chargement, afficher un indicateur
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-64">
+          <p className="text-lg">Chargement du produit...</p>
+        </div>
+      </Layout>
+    );
+  }
 
-  if (!product) {
+  // Si le produit n'est pas trouvé ou l'ID invalide, afficher un message
+  if (!isValidId || !product) {
     return (
       <Layout>
         <div className="text-center py-20">
@@ -75,7 +124,11 @@ const ProductDetail = () => {
     );
   }
 
-  const isProductFavorite = isFavorite(product.id);
+  const relatedProducts = products
+    .filter(p => p.category === product?.category && p.id !== product?.id)
+    .slice(0, 4);
+
+  const isProductFavorite = productId ? isFavorite(productId) : false;
   const isPromotionActive = product.promotion && 
     product.promotionEnd && 
     new Date(product.promotionEnd) > new Date();

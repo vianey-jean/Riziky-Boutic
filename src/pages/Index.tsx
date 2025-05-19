@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import ProductGrid from '@/components/products/ProductGrid';
@@ -134,6 +135,11 @@ const Index = () => {
     return `${AUTH_BASE_URL}${imagePath}`;
   };
 
+  // Fonction pour générer un ID sécurisé pour chaque produit
+  const getProductUrl = (productId: string) => {
+    return `/${getSecureId(productId, 'product')}`;
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -169,7 +175,7 @@ const Index = () => {
                         <Card>
                           <CardContent className="flex aspect-square items-center justify-center p-0">
                             <div className="w-full">
-                              <Link to={`/produit/${getSecureId(product.id)}`} className="block">
+                              <Link to={getProductUrl(product.id)} className="block">
                                 <img
                                   src={getImageUrl(product.image)}
                                   alt={product.name}
@@ -225,7 +231,7 @@ const Index = () => {
               {promotionProducts.map(product => (
                 <Card key={product.id} className="overflow-hidden h-full flex flex-col">
                   <div className="relative">
-                    <Link to={`/produit/${getSecureId(product.id)}`}>
+                    <Link to={getProductUrl(product.id)}>
                       <img
                         src={getImageUrl(product.image)}
                         alt={product.name}
@@ -246,7 +252,7 @@ const Index = () => {
                     )}
                   </div>
                   <CardContent className="p-4 flex-grow">
-                    <Link to={`/produit/${getSecureId(product.id)}`}>
+                    <Link to={getProductUrl(product.id)}>
                       <h3 className="font-medium text-lg mb-1">{product.name}</h3>
                     </Link>
                     <div className="flex items-center gap-2 mt-2">

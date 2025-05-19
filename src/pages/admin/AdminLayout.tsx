@@ -12,6 +12,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { getSecureRoute } from '@/services/secureIds';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -29,20 +30,37 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     }
   }, [user]);
   
+  // Obtenir les routes sécurisées
+  const secureRoutes = {
+    produits: getSecureRoute('/admin/produits'),
+    utilisateurs: getSecureRoute('/admin/utilisateurs'),
+    messages: getSecureRoute('/admin/messages'),
+    commandes: getSecureRoute('/admin/commandes'),
+    chat: getSecureRoute('/admin'),
+    serviceClient: getSecureRoute('/admin/service-client'),
+    parametres: getSecureRoute('/admin/parametres'),
+  };
+  
   const navItems = [
-    { name: 'Produits', path: '/admin/produits', icon: Package },
-    { name: 'Utilisateurs', path: '/admin/utilisateurs', icon: Users },
-    { name: 'Messages', path: '/admin/messages', icon: MessageCircle },
-    { name: 'Commandes', path: '/admin/commandes', icon: Truck },
-    { name: 'Chat Admin', path: '/admin', icon: ShoppingBag },
+    { name: 'Produits', path: secureRoutes.produits, realPath: '/admin/produits', icon: Package },
+    { name: 'Utilisateurs', path: secureRoutes.utilisateurs, realPath: '/admin/utilisateurs', icon: Users },
+    { name: 'Messages', path: secureRoutes.messages, realPath: '/admin/messages', icon: MessageCircle },
+    { name: 'Commandes', path: secureRoutes.commandes, realPath: '/admin/commandes', icon: Truck },
+    { name: 'Chat Admin', path: secureRoutes.chat, realPath: '/admin', icon: ShoppingBag },
     // Conditional item for service client admin
     ...(isServiceAdmin ? [{ 
       name: 'Service Client', 
-      path: '/admin/service-client', 
+      path: secureRoutes.serviceClient, 
+      realPath: '/admin/service-client',
       icon: MessageSquare 
     }] : []),
-    { name: 'Paramètres', path: '/admin/parametres', icon: Settings },
+    { name: 'Paramètres', path: secureRoutes.parametres, realPath: '/admin/parametres', icon: Settings },
   ];
+
+  // Verifier si le chemin actuel correspond à un chemin réel (pour la mise en surbrillance du menu)
+  const isActivePath = (realPath: string) => {
+    return location.pathname === realPath || location.pathname.startsWith(realPath + '/');
+  };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -71,7 +89,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 key={item.path}
                 to={item.path}
                 className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
-                  location.pathname === item.path
+                  isActivePath(item.realPath)
                     ? 'bg-red-800 text-white'
                     : 'text-gray-300 hover:bg-gray-800'
                 }`}

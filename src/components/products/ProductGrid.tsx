@@ -12,7 +12,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, title }) => {
   return (
     <section className="product-section">
       {title && <h2 className="text-2xl font-semibold mb-6 text-red-800">{title}</h2>}
-      <div className="product-grid" role="list" aria-label="Liste de produits">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" role="list" aria-label="Liste de produits">
         {products.map(product => (
           <div key={product.id} role="listitem">
             <ProductCard product={product} />

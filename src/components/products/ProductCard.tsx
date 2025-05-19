@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { getSecureId } from '@/services/secureIds';
 interface ProductCardProps {
   product: Product;
 }
+
 const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const PLACEHOLDER_IMAGE = '/placeholder.svg';
 
@@ -16,8 +18,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart, toggleFavorite, isFavorite } = useStore();
   const isProductFavorite = isFavorite(product.id);
   
-  // Générer un ID sécurisé pour le produit
-  const secureId = getSecureId(product.id);
+  // Générer un ID sécurisé pour le produit (sera persistant grâce aux améliorations)
+  const secureId = getSecureId(product.id, 'product');
   
   // Determine which image to display - first image from images array or fallback to image property
   const displayImage = product.images && product.images.length > 0 
@@ -60,7 +62,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Card className="overflow-hidden h-full flex flex-col">
       <div className="relative">
-        <Link to={`/produit/${secureId}`} className="overflow-hidden">
+        <Link to={`/${secureId}`} className="overflow-hidden">
           <img 
             src={getImageUrl(displayImage)} 
             alt={`Photo de ${product.name}`} 
@@ -88,7 +90,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         )}
       </div>
       <CardContent className="p-4 flex flex-col flex-grow">
-        <Link to={`/produit/${secureId}`} className="block">
+        <Link to={`/${secureId}`} className="block">
           <h3 className="font-medium text-lg mb-1 hover:text-brand-blue transition-colors">{product.name}</h3>
         </Link>
         <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{product.description}</p>
@@ -103,9 +105,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   : product.price.toFixed(2)}{' '}
                     €
               </p>
-              {/* <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
-                -{product.promotion}%
-              </span> */}
               <p className="mt-1 font-bold ">{product.price.toFixed(2)} €</p>
             </div>
           ) : (
