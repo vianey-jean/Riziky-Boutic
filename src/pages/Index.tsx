@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import ProductGrid from '@/components/products/ProductGrid';
@@ -12,11 +13,13 @@ import TestimonialSection from '@/components/reviews/TestimonialSection';
 const Index = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [promotionProducts, setPromotionProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const PLACEHOLDER_IMAGE = '/placeholder.svg';
   
   useEffect(() => {
     const fetchData = async () => {
@@ -55,11 +58,22 @@ const Index = () => {
           );
           setNewArrivals(sortedByDate.slice(0, 8));
         }
+
+        // Récupérer et filtrer les produits en promotion avec une date de fin valide
+        const now = new Date();
+        const promoProducts = products.filter(product => 
+          product.promotion && 
+          product.promotionEnd && 
+          new Date(product.promotionEnd) > now
+        );
+        setPromotionProducts(promoProducts.slice(0, 8));
+        
       } catch (error) {
         console.error('Erreur lors du chargement des produits:', error);
         toast.error('Impossible de charger les produits');
         setFeaturedProducts([]);
         setNewArrivals([]);
+        setPromotionProducts([]);
         setAllProducts([]);
         setFilteredProducts([]);
       } finally {
@@ -93,6 +107,31 @@ const Index = () => {
     }, 3000);
     return () => clearInterval(interval);
   }, [featuredProducts]);
+
+  const getPromotionTimeLeft = (endDate: string) => {
+    const end = new Date(endDate);
+    const now = new Date();
+    const diffInMs = end.getTime() - now.getTime();
+    if (diffInMs <= 0) return "Expirée";
+    
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInMins = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${diffInHours}h ${diffInMins}m`;
+  };
+
+  // Fonction pour construire l'URL de l'image de manière sécurisée
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return PLACEHOLDER_IMAGE;
+    
+    // Si l'image commence déjà par http, c'est une URL complète
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Sinon, on ajoute le BASE_URL
+    return `${AUTH_BASE_URL}${imagePath}`;
+  };
 
   return (
     <Layout>
@@ -130,12 +169,12 @@ const Index = () => {
                           <CardContent className="flex aspect-square items-center justify-center p-0">
                             <div className="w-full">
                               <img
-                                src={`${AUTH_BASE_URL}${product.image}`}
+                                src={getImageUrl(product.image)}
                                 alt={product.name}
                                 className="w-full h-48 object-contain"
                                 onError={e => {
                                   const target = e.target as HTMLImageElement;
-                                  target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
+                                  target.src = PLACEHOLDER_IMAGE;
                                 }}
                               />
                               <div className="p-4">
@@ -175,6 +214,52 @@ const Index = () => {
           </div>
         )}
 
+        {/* 🛍️ Produits en promotion */}
+        {!searchParams.get('q') && promotionProducts.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-semibold mb-6 text-red-800">Promotions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {promotionProducts.map(product => (
+                <Card key={product.id} className="overflow-hidden h-full flex flex-col">
+                  <div className="relative">
+                    <img
+                      src={getImageUrl(product.image)}
+                      alt={product.name}
+                      className="h-48 w-full object-contain"
+                      onError={e => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = PLACEHOLDER_IMAGE;
+                      }}
+                    />
+                    <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      -{product.promotion}%
+                    </div>
+                    {product.promotionEnd && (
+                      <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                        Expire dans: {getPromotionTimeLeft(product.promotionEnd)}
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-4 flex-grow">
+                    <h3 className="font-medium text-lg mb-1">{product.name}</h3>
+                    <div className="flex items-center gap-2 mt-2">
+                      <p className="text-sm text-gray-500 line-through">
+                        {typeof product.originalPrice === 'number'
+                          ? product.originalPrice.toFixed(2)
+                          : product.price.toFixed(2)}{' '}
+                        €
+                      </p>
+                      <p className="font-bold text-red-600">
+                        {product.price.toFixed(2)} €
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 🆕 Nouveautés */}
         <div className="mb-12">
           <ProductGrid products={newArrivals} title="Nouveautés" />
@@ -185,9 +270,8 @@ const Index = () => {
           <ProductGrid products={allProducts} title="Tous nos produits" />
         </div>
 
-        {/* 📝 Témoignages - Remplacé par le nouveau composant TestimonialSection */}
+        {/* 📝 Témoignages */}
         <TestimonialSection />
-
       </div>
     </Layout>
   );

@@ -13,13 +13,41 @@ const ProductDetail = () => {
   const { products, addToCart, toggleFavorite, isFavorite } = useStore();
   // 🔁 URL de base récupérée depuis le .env
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const PLACEHOLDER_IMAGE = '/placeholder.svg';
 
   const product = products.find(p => p.id === productId);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [remainingTime, setRemainingTime] = useState<string>("");
 
   const relatedProducts = products
     .filter(p => p.category === product?.category && p.id !== product?.id)
     .slice(0, 4);
+
+  useEffect(() => {
+    if (product && product.promotion && product.promotionEnd) {
+      const updateRemainingTime = () => {
+        const end = new Date(product.promotionEnd!);
+        const now = new Date();
+        const diffInMs = end.getTime() - now.getTime();
+        
+        if (diffInMs <= 0) {
+          setRemainingTime("Promotion expirée");
+          return;
+        }
+        
+        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+        const diffInMins = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
+        const diffInSecs = Math.floor((diffInMs % (1000 * 60)) / 1000);
+        
+        setRemainingTime(`${diffInHours}h ${diffInMins}m ${diffInSecs}s`);
+      };
+      
+      updateRemainingTime();
+      const interval = setInterval(updateRemainingTime, 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [product]);
 
   if (!product) {
     return (
@@ -36,6 +64,9 @@ const ProductDetail = () => {
   }
 
   const isProductFavorite = isFavorite(product.id);
+  const isPromotionActive = product.promotion && 
+    product.promotionEnd && 
+    new Date(product.promotionEnd) > new Date();
 
   const productImages =
     product.images && product.images.length > 0
@@ -43,6 +74,19 @@ const ProductDetail = () => {
       : product.image
         ? [product.image]
         : [];
+        
+  // Fonction pour construire l'URL de l'image de manière sécurisée
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return PLACEHOLDER_IMAGE;
+    
+    // Si l'image commence déjà par http, c'est une URL complète
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Sinon, on ajoute le BASE_URL
+    return `${AUTH_BASE_URL}${imagePath}`;
+  };
 
   return (
     <Layout>
@@ -50,12 +94,23 @@ const ProductDetail = () => {
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Images produit */}
           <div className="flex-1">
-            <div className="mb-4">
+            <div className="mb-4 relative">
               <img
-                src={`${AUTH_BASE_URL}${productImages[selectedImageIndex]}`}
+                src={getImageUrl(productImages[selectedImageIndex])}
                 alt={product.name}
                 className="w-full h-[400px] object-contain rounded-lg"
+                onError={(e) => {
+                  console.log("Erreur de chargement d'image détaillée, utilisation du placeholder");
+                  const target = e.target as HTMLImageElement;
+                  target.src = PLACEHOLDER_IMAGE;
+                }}
               />
+              
+              {isPromotionActive && (
+                <div className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">
+                  -{product.promotion}%
+                </div>
+              )}
             </div>
 
             {productImages.length > 1 && (
@@ -69,9 +124,13 @@ const ProductDetail = () => {
                     onClick={() => setSelectedImageIndex(index)}
                   >
                     <img
-                      src={`${AUTH_BASE_URL}${image}`}
+                      src={getImageUrl(image)}
                       alt={`${product.name} - image ${index + 1}`}
                       className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = PLACEHOLDER_IMAGE;
+                      }}
                     />
                   </div>
                 ))}
@@ -82,9 +141,36 @@ const ProductDetail = () => {
           {/* Infos produit */}
           <div className="flex-1">
             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-            <p className="text-xl font-bold mb-4">
-              {Number(product.price).toFixed(2)} €
-            </p>
+            
+            {isPromotionActive ? (
+              <div className="mb-4">
+                <div className="flex items-center gap-2">
+                  <p className="text-xl text-gray-500 line-through">
+                    {typeof product.originalPrice === 'number'
+                      ? product.originalPrice.toFixed(2)
+                      : product.price.toFixed(2)}{' '}
+                    €
+                  </p>
+                  <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-sm font-bold">
+                    -{product.promotion}%
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-red-600">
+                  {product.price.toFixed(2)} €
+                </p>
+                {remainingTime && (
+                  <div className="mt-2 bg-gray-100 p-2 rounded">
+                    <p className="text-sm font-medium">
+                      La promotion se termine dans: <span className="font-bold">{remainingTime}</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xl font-bold mb-4">
+                {product.price.toFixed(2)} €
+              </p>
+            )}
 
             <div className="border-t border-b py-4 my-6">
               <p className="text-gray-700 mb-4">{product.description}</p>

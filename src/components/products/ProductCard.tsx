@@ -10,31 +10,80 @@ interface ProductCardProps {
   product: Product;
 }
 const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const PLACEHOLDER_IMAGE = '/placeholder.svg';
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart, toggleFavorite, isFavorite } = useStore();
   const isProductFavorite = isFavorite(product.id);
-  const baseImageUrl = `${AUTH_BASE_URL}`;
   
   // Determine which image to display - first image from images array or fallback to image property
   const displayImage = product.images && product.images.length > 0 
     ? product.images[0] 
     : product.image;
+    
+  // Calculate time left for promotion
+  const getPromotionTimeLeft = (endDate: string) => {
+    if (!endDate) return "";
+    
+    const end = new Date(endDate);
+    const now = new Date();
+    const diffInMs = end.getTime() - now.getTime();
+    
+    if (diffInMs <= 0) return "Expirée";
+    
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInMins = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${diffInHours}h ${diffInMins}m`;
+  };
+  
+  const isPromotionActive = product.promotion && 
+    product.promotionEnd && 
+    new Date(product.promotionEnd) > new Date();
+
+  // Fonction pour construire l'URL de l'image de manière sécurisée
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return PLACEHOLDER_IMAGE;
+    
+    // Si l'image commence déjà par http, c'est une URL complète
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Sinon, on ajoute le BASE_URL
+    return `${AUTH_BASE_URL}${imagePath}`;
+  };
 
   return (
     <Card className="overflow-hidden h-full flex flex-col">
-      <Link to={`/produit/${product.id}`} className="overflow-hidden">
-        <img 
-          src={`${baseImageUrl}${displayImage}`} 
-          alt={`Photo de ${product.name}`} 
-          className="h-48 w-full object-contain transition-transform hover:scale-105" 
-          loading="lazy"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
-          }}
-        />
-      </Link>
+      <div className="relative">
+        <Link to={`/produit/${product.id}`} className="overflow-hidden">
+          <img 
+            src={getImageUrl(displayImage)} 
+            alt={`Photo de ${product.name}`} 
+            className="h-48 w-full object-contain transition-transform hover:scale-105" 
+            loading="lazy"
+            onError={(e) => {
+              console.log("Erreur de chargement d'image, utilisation du placeholder");
+              const target = e.target as HTMLImageElement;
+              target.src = PLACEHOLDER_IMAGE;
+            }}
+          />
+        </Link>
+        
+        {isPromotionActive && (
+          <>
+            <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+              -{product.promotion}%
+            </div>
+            {product.promotionEnd && (
+              <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                {getPromotionTimeLeft(product.promotionEnd)}
+              </div>
+            )}
+          </>
+        )}
+      </div>
       <CardContent className="p-4 flex flex-col flex-grow">
         <Link to={`/produit/${product.id}`} className="block">
           <h3 className="font-medium text-lg mb-1 hover:text-brand-blue transition-colors">{product.name}</h3>
@@ -51,9 +100,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   : product.price.toFixed(2)}{' '}
                     €
               </p>
-              <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+              {/* <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
                 -{product.promotion}%
-              </span>
+              </span> */}
               <p className="mt-1 font-bold ">{product.price.toFixed(2)} €</p>
             </div>
           ) : (
