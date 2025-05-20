@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useRef, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
 import Peer from 'simple-peer';
@@ -72,36 +73,53 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const peerRef = useRef<ExtendedPeerInstance | null>(null);
   const socketRef = useRef<any>(null);
   const socketErrorShown = useRef<boolean>(false);
+  const connectionAttempts = useRef<number>(0);
   
   // Récupérer l'utilisateur actuel
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const getCurrentUser = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (!userData) return null;
+      return JSON.parse(userData);
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'utilisateur:", error);
+      return null;
+    }
+  };
+  
+  const currentUser = getCurrentUser();
   
   // Initialize socket connection
   useEffect(() => {
     // Use the server URL from environment variables or a fallback
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000';
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://riziky-boutic-server.onrender.com';
     
     logger.log('Connecting to socket server:', apiBaseUrl);
     
     try {
       if (useMockWebRTC) {
         logger.log('Using mock WebRTC mode for development');
-        return;
+        return () => {};
       }
       
       // Connect with retry options and timeout
       socketRef.current = io(apiBaseUrl, {
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
-        timeout: 10000,
-        transports: ['websocket', 'polling']
+        timeout: 20000,
+        transports: ['websocket', 'polling'],
+        auth: {
+          token: currentUser?.token || ''
+        }
       });
       
       // Socket connection error handling
       socketRef.current.on('connect_error', (err: any) => {
         logger.error('Socket connection error:', err);
+        connectionAttempts.current += 1;
+        
         // Only show toast once to avoid spam
-        if (!socketErrorShown.current) {
+        if (!socketErrorShown.current && connectionAttempts.current < 3) {
           toast.error('Erreur de connexion au serveur de chat');
           socketErrorShown.current = true;
         }
@@ -110,6 +128,7 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       socketRef.current.on('connect', () => {
         logger.log('Socket connected successfully');
         socketErrorShown.current = false;
+        connectionAttempts.current = 0;
         
         // Authentifier l'utilisateur quand le socket est connecté
         if (currentUser && currentUser.id) {
@@ -126,13 +145,16 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       socketRef.current.on('callAccepted', async (signal: any) => {
         logger.log('Call accepted, received signal');
-        if (peerRef.current) {
+        if (peerRef.current && signal) {
           try {
             peerRef.current.signal(signal);
           } catch (error) {
             logger.error('Error signaling peer after call accepted:', error);
             endCall();
           }
+        } else {
+          logger.error('Cannot process call acceptance: peer or signal is missing');
+          endCall();
         }
       });
       
@@ -148,12 +170,14 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       socketRef.current.on('peerSignal', (signal: any) => {
         logger.log('Received peer signal:', signal);
-        if (peerRef.current) {
+        if (peerRef.current && signal) {
           try {
             peerRef.current.signal(signal);
           } catch (error) {
             logger.error('Error processing peer signal:', error);
           }
+        } else {
+          logger.error('Cannot process peer signal: peer or signal is missing');
         }
       });
       
@@ -164,6 +188,8 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             to: data.to,
             signal: peerRef.current._localSignal
           });
+        } else {
+          logger.error('Cannot respond to signal request: local signal is missing');
         }
       });
       
@@ -197,6 +223,10 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       logger.log(`Initiating ${isVideo ? 'video' : 'audio'} call to user ${userId}`);
       
+      if (!userId) {
+        throw new Error('ID utilisateur invalide');
+      }
+      
       // For development when server is unavailable
       if (useMockWebRTC) {
         setCallState({
@@ -224,7 +254,14 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
       
+      // Verify socket connection
+      if (!socketRef.current || !socketRef.current.connected) {
+        toast.error('Non connecté au serveur. Veuillez rafraîchir la page et réessayer.');
+        return;
+      }
+      
       // Request permissions first before creating stream
+      let mediaPermissions = true;
       try {
         await navigator.permissions.query({ name: 'microphone' as PermissionName });
         if (isVideo) {
@@ -232,6 +269,7 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       } catch (err) {
         logger.log('Permissions API not supported, trying direct access');
+        mediaPermissions = false;
       }
       
       // Get user media based on call type
@@ -240,70 +278,94 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         audio: true
       };
       
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      
-      if (!stream) {
-        throw new Error('Failed to create media stream');
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        if (!stream) {
+          throw new Error('Failed to create media stream');
+        }
+        
+        setLocalStream(stream);
+      } catch (err: any) {
+        logger.error('Error getting user media:', err);
+        let errorMessage = 'Erreur d\'accès à la caméra ou au microphone';
+        
+        if (err.name === 'NotAllowedError') {
+          errorMessage = 'Permissions refusées pour la caméra ou le microphone';
+        } else if (err.name === 'NotFoundError') {
+          errorMessage = 'Aucun périphérique audio/vidéo détecté';
+        } else if (err.name === 'NotReadableError') {
+          errorMessage = 'Périphérique audio/vidéo déjà utilisé par une autre application';
+        }
+        
+        toast.error(errorMessage);
+        return;
       }
       
-      setLocalStream(stream);
-      
       // Create peer connection
-      const peer = new Peer({
-        initiator: true,
-        trickle: false,
-        stream: stream,
-        config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478' }
-          ]
-        }
-      }) as ExtendedPeerInstance;
-      
-      peer.on('signal', (signal) => {
-        logger.log('Generated signal for peer, sending to remote user');
-        // Store the local signal for potential retrieval later
-        peer._localSignal = signal;
+      try {
+        const peer = new Peer({
+          initiator: true,
+          trickle: false,
+          stream: stream,
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:global.stun.twilio.com:3478' }
+            ]
+          }
+        }) as ExtendedPeerInstance;
         
-        if (socketRef.current && socketRef.current.connected) {
-          socketRef.current.emit('callUser', {
-            userToCall: userId,
-            signal,
-            isVideo,
-          });
-        } else {
-          toast.error('Serveur de chat non connecté');
+        peer.on('signal', (signal) => {
+          logger.log('Generated signal for peer, sending to remote user');
+          // Store the local signal for potential retrieval later
+          peer._localSignal = signal;
+          
+          if (socketRef.current && socketRef.current.connected) {
+            socketRef.current.emit('callUser', {
+              userToCall: userId,
+              signal,
+              isVideo,
+            });
+          } else {
+            toast.error('Serveur de chat non connecté');
+            endCall();
+          }
+        });
+        
+        peer.on('stream', (remoteStream) => {
+          logger.log('Received remote stream');
+          setRemoteStream(remoteStream);
+        });
+        
+        peer.on('error', (err) => {
+          logger.error('Peer connection error:', err);
           endCall();
-        }
-      });
-      
-      peer.on('stream', (remoteStream) => {
-        logger.log('Received remote stream');
-        setRemoteStream(remoteStream);
-      });
-      
-      peer.on('error', (err) => {
-        logger.error('Peer connection error:', err);
-        endCall();
-        toast.error('Erreur de connexion');
-      });
-      
-      peer.on('close', () => {
-        logger.log('Peer connection closed');
-        endCall();
-      });
-      
-      peerRef.current = peer;
-      
-      setCallState({
-        isInCall: true,
-        isCallInitiator: true,
-        isVideo,
-        callWith: userId,
-      });
-      
-      toast.success(`Appel en cours...`);
+          toast.error('Erreur de connexion');
+        });
+        
+        peer.on('close', () => {
+          logger.log('Peer connection closed');
+          endCall();
+        });
+        
+        peerRef.current = peer;
+        
+        setCallState({
+          isInCall: true,
+          isCallInitiator: true,
+          isVideo,
+          callWith: userId,
+        });
+        
+        toast.success(`Appel en cours...`);
+      } catch (peerError: any) {
+        logger.error('Error creating peer connection:', peerError);
+        stream.getTracks().forEach(track => track.stop());
+        setLocalStream(null);
+        toast.error('Erreur de connexion peer-to-peer');
+      }
     } catch (error: any) {
       logger.error('Failed to initiate call:', error);
       
@@ -312,19 +374,18 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         toast.error('Accès au microphone ou à la caméra refusé. Veuillez vérifier les permissions de votre navigateur.');
       } else if (error.name === 'NotFoundError') {
         toast.error('Microphone ou caméra introuvable. Veuillez vérifier que votre matériel est connecté.');
-      } else if (error.message === 'Permissions required') {
-        toast.error('Permissions de microphone ou caméra requises pour passer un appel.');
-      } else if (error.message === 'Stream is undefined') { 
-        toast.error('Erreur lors de l\'accès au microphone ou à la caméra.');
       } else {
-        toast.error('Impossible de démarrer l\'appel. Vérifiez vos permissions de caméra et microphone.');
+        toast.error('Impossible de démarrer l\'appel. ' + error.message);
       }
     }
   };
   
   // Accept an incoming call
   const acceptCall = async () => {
-    if (!incomingCall) return;
+    if (!incomingCall) {
+      toast.error('Aucun appel à accepter');
+      return;
+    }
     
     try {
       logger.log(`Accepting ${incomingCall.isVideo ? 'video' : 'audio'} call from ${incomingCall.from}`);
@@ -358,14 +419,11 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
       
-      // Try to request permissions
-      try {
-        await navigator.permissions.query({ name: 'microphone' as PermissionName });
-        if (incomingCall.isVideo) {
-          await navigator.permissions.query({ name: 'camera' as PermissionName });
-        }
-      } catch (err) {
-        logger.log('Permissions API not supported, trying direct access');
+      // Verify socket connection
+      if (!socketRef.current || !socketRef.current.connected) {
+        toast.error('Non connecté au serveur. Veuillez rafraîchir la page et réessayer.');
+        setIncomingCall(null);
+        return;
       }
       
       // Get user media based on call type
@@ -374,80 +432,105 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         audio: true
       };
       
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      
-      if (!stream) {
-        throw new Error('Failed to create media stream');
-      }
-      
-      setLocalStream(stream);
-      
-      const peer = new Peer({
-        initiator: false,
-        trickle: false,
-        stream: stream,
-        config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478' }
-          ]
-        }
-      }) as ExtendedPeerInstance;
-      
-      peer.on('signal', (signal) => {
-        logger.log('Generated accept signal, sending to caller');
-        // Store the local signal for potential retrieval later
-        peer._localSignal = signal;
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
         
-        if (socketRef.current && socketRef.current.connected) {
-          socketRef.current.emit('acceptCall', {
-            to: incomingCall.from,
-            signal,
-          });
-        } else {
-          toast.error('Serveur de chat non connecté');
-          endCall();
+        if (!stream) {
+          throw new Error('Failed to create media stream');
         }
-      });
-      
-      peer.on('stream', (remoteStream) => {
-        logger.log('Received remote stream from caller');
-        setRemoteStream(remoteStream);
-      });
-      
-      peer.on('error', (err) => {
-        logger.error('Peer connection error:', err);
-        endCall();
-        toast.error('Erreur de connexion');
-      });
-      
-      peer.on('close', () => {
-        logger.log('Peer connection closed');
-        endCall();
-      });
-      
-      // Si le signal existe déjà, on l'utilise directement
-      if (incomingCall.signal) {
-        peer.signal(incomingCall.signal);
-      } else {
-        // Sinon on demande le signal au serveur
-        if (socketRef.current && socketRef.current.connected) {
-          socketRef.current.emit('getCallerSignal', { from: incomingCall.from });
-        } else {
-          throw new Error('Socket not connected');
+        
+        setLocalStream(stream);
+      } catch (err: any) {
+        logger.error('Error getting user media:', err);
+        let errorMessage = 'Erreur d\'accès à la caméra ou au microphone';
+        
+        if (err.name === 'NotAllowedError') {
+          errorMessage = 'Permissions refusées pour la caméra ou le microphone';
+        } else if (err.name === 'NotFoundError') {
+          errorMessage = 'Aucun périphérique audio/vidéo détecté';
         }
+        
+        toast.error(errorMessage);
+        setIncomingCall(null);
+        return;
       }
       
-      peerRef.current = peer;
-      
-      setCallState({
-        isInCall: true,
-        isCallInitiator: false,
-        isVideo: incomingCall.isVideo,
-        callWith: incomingCall.from,
-      });
-      
-      setIncomingCall(null);
+      try {
+        const peer = new Peer({
+          initiator: false,
+          trickle: false,
+          stream: stream,
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:global.stun.twilio.com:3478' }
+            ]
+          }
+        }) as ExtendedPeerInstance;
+        
+        peer.on('signal', (signal) => {
+          logger.log('Generated accept signal, sending to caller');
+          // Store the local signal for potential retrieval later
+          peer._localSignal = signal;
+          
+          if (socketRef.current && socketRef.current.connected && incomingCall) {
+            socketRef.current.emit('acceptCall', {
+              to: incomingCall.from,
+              signal,
+            });
+          } else {
+            toast.error('Serveur de chat non connecté');
+            endCall();
+          }
+        });
+        
+        peer.on('stream', (remoteStream) => {
+          logger.log('Received remote stream from caller');
+          setRemoteStream(remoteStream);
+        });
+        
+        peer.on('error', (err) => {
+          logger.error('Peer connection error:', err);
+          endCall();
+          toast.error('Erreur de connexion');
+        });
+        
+        peer.on('close', () => {
+          logger.log('Peer connection closed');
+          endCall();
+        });
+        
+        peerRef.current = peer;
+        
+        // Si le signal existe déjà, on l'utilise directement
+        if (incomingCall.signal) {
+          peer.signal(incomingCall.signal);
+        } else {
+          // Sinon on demande le signal au serveur
+          if (socketRef.current && socketRef.current.connected) {
+            socketRef.current.emit('getCallerSignal', { from: incomingCall.from });
+          } else {
+            throw new Error('Socket not connected');
+          }
+        }
+        
+        setCallState({
+          isInCall: true,
+          isCallInitiator: false,
+          isVideo: incomingCall.isVideo,
+          callWith: incomingCall.from,
+        });
+        
+        setIncomingCall(null);
+        toast.success('Appel en cours...');
+      } catch (peerError: any) {
+        logger.error('Error creating peer connection:', peerError);
+        stream.getTracks().forEach(track => track.stop());
+        setLocalStream(null);
+        setIncomingCall(null);
+        toast.error('Erreur de connexion peer-to-peer');
+      }
     } catch (error: any) {
       logger.error('Failed to accept call:', error);
       
@@ -461,10 +544,10 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       } else if (error.message === 'Socket not connected') {
         toast.error('La connexion au serveur est perdue. Impossible de répondre à l\'appel.');
       } else {
-        toast.error('Impossible de répondre à l\'appel. Vérifiez vos permissions de caméra et microphone.');
+        toast.error('Impossible de répondre à l\'appel. ' + error.message);
       }
       
-      rejectCall();
+      setIncomingCall(null);
     }
   };
   
@@ -497,22 +580,29 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     // Close peer connection
     if (peerRef.current) {
-      peerRef.current.destroy();
+      try {
+        peerRef.current.destroy();
+      } catch (error) {
+        logger.error('Error destroying peer:', error);
+      }
       peerRef.current = null;
     }
     
     // Stop local media streams
     if (localStream) {
-      localStream.getTracks().forEach(track => {
-        track.stop();
-      });
+      try {
+        localStream.getTracks().forEach(track => {
+          track.stop();
+        });
+      } catch (error) {
+        logger.error('Error stopping local tracks:', error);
+      }
     }
     
     // Reset state
     setLocalStream(null);
     setRemoteStream(null);
     setCallState(initialCallState);
-    setIncomingCall(null);
   };
   
   return (
@@ -532,3 +622,5 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     </VideoCallContext.Provider>
   );
 };
+
+export default VideoCallProvider;
