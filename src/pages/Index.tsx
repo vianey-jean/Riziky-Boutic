@@ -11,6 +11,7 @@ import TestimonialSection from '@/components/reviews/TestimonialSection';
 import { Link } from 'react-router-dom';
 import { getSecureId } from '@/services/secureIds';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Search, ShoppingBag, Clock, TrendingUp, Award, AlertCircle } from 'lucide-react';
 
 const Index = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -368,6 +369,53 @@ const Index = () => {
           </div>
         ) : (
           <TestimonialSection />
+        )}
+
+                {/* Why Choose Us Section */}
+        {!searchParams.get('q') && (
+          <div className="mb-12 bg-gray-50 p-8 rounded-xl">
+            <h2 className="text-2xl font-semibold text-center mb-8 text-red-800">
+              Pourquoi nous choisir?
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-xl shadow-sm text-center">
+                <div className="flex justify-center mb-4">
+                  <Award className="h-12 w-12 text-red-600" />
+                </div>
+                <h3 className="font-medium text-lg mb-2">Qualité Premium</h3>
+                <p className="text-gray-600">
+                  100% cheveux naturels avec une finition impeccable
+                </p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm text-center">
+                <div className="flex justify-center mb-4">
+                  <Clock className="h-12 w-12 text-red-600" />
+                </div>
+                <h3 className="font-medium text-lg mb-2">Livraison Rapide</h3>
+                <p className="text-gray-600">
+                  Livraison gratuite sur l'île entre St Paul et St Suzanne
+                </p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm text-center">
+                <div className="flex justify-center mb-4">
+                  <ShoppingBag className="h-12 w-12 text-red-600" />
+                </div>
+                <h3 className="font-medium text-lg mb-2">Large Sélection</h3>
+                <p className="text-gray-600">
+                  Une variété de styles, couleurs et longueurs pour tous les goûts
+                </p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm text-center">
+                <div className="flex justify-center mb-4">
+                  <TrendingUp className="h-12 w-12 text-red-600" />
+                </div>
+                <h3 className="font-medium text-lg mb-2">Tendances</h3>
+                <p className="text-gray-600">
+                  Designs à la mode et looks contemporains
+                </p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </Layout>
