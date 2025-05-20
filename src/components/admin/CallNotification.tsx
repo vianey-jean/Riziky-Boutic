@@ -9,91 +9,106 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import { createAudioBlobUrl } from '@/utils/audio-utils';
-import ringtone from '@/assets/ringtone.mp3';
+import { playNotificationSound, vibrateDevice } from '@/utils/audio-utils';
 
 const CallNotification = () => {
   const { incomingCall, acceptCall, rejectCall } = useVideoCall();
   const ringtoneRef = useRef<HTMLAudioElement | null>(null);
   const [ringtonePlaying, setRingtonePlaying] = useState(false);
   
-  // Initialiser l'élément audio au chargement du composant
+  // Initialize audio element when component loads
   useEffect(() => {
-    if (!ringtoneRef.current) {
-      try {
-        ringtoneRef.current = new Audio();
-        ringtoneRef.current.loop = true;
-        ringtoneRef.current.preload = 'auto';
-        
-        // Ajouter des écouteurs d'événements pour surveiller l'état de lecture
-        ringtoneRef.current.addEventListener('play', () => {
-          console.log('Ringtone started playing');
-          setRingtonePlaying(true);
-        });
-        
-        ringtoneRef.current.addEventListener('pause', () => {
-          console.log('Ringtone paused');
-          setRingtonePlaying(false);
-        });
-        
-        // Utiliser une source audio statique au lieu d'un blob URL
-        ringtoneRef.current.src = ringtone; // Fichier audio à placer dans le dossier public
-        
-        // Écouteur d'événements pour les erreurs
-        ringtoneRef.current.addEventListener('error', (e) => {
-          console.error("Ringtone error:", e);
-          // Fallback à une notification système si disponible
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("Appel entrant", {
-              icon: "/favicon.ico",
-              silent: false
-            });
-          }
-        });
-      } catch (err) {
-        console.error("Could not create audio element:", err);
-      }
+    // Clean up previous audio element if it exists
+    if (ringtoneRef.current) {
+      ringtoneRef.current.pause();
+      ringtoneRef.current = null;
     }
     
-    // Nettoyage lors du démontage
+    try {
+      // Create a new audio element with error handling
+      const audio = new Audio('/assets/ringtone.mp3');
+      audio.loop = true;
+      audio.preload = 'auto';
+      
+      // Add event listeners to track playback status
+      audio.addEventListener('play', () => {
+        console.log('Ringtone started playing');
+        setRingtonePlaying(true);
+      });
+      
+      audio.addEventListener('pause', () => {
+        console.log('Ringtone paused');
+        setRingtonePlaying(false);
+      });
+      
+      // Add error event listener
+      audio.addEventListener('error', (e) => {
+        //console.error("Ringtone error:", e);
+        
+        // Use fallback notification mechanism
+        fallbackNotification();
+      });
+      
+      // Load audio
+      audio.load();
+      ringtoneRef.current = audio;
+      
+    } catch (err) {
+      console.error("Could not create audio element:", err);
+      fallbackNotification();
+    }
+    
+    // Cleanup on unmount
     return () => {
       if (ringtoneRef.current) {
         ringtoneRef.current.pause();
         ringtoneRef.current.src = '';
+        ringtoneRef.current = null;
       }
     };
   }, []);
   
-  // Jouer ou arrêter la sonnerie en fonction de incomingCall
+  // Play or stop the ringtone based on incomingCall
   useEffect(() => {
     if (incomingCall && ringtoneRef.current) {
       console.log("Playing ringtone for incoming call from:", incomingCall.name);
+      
+      // Use try/catch for play to handle autoplay policy issues
       ringtoneRef.current.play().catch(err => {
         console.error("Could not play ringtone:", err);
-        // Fallback à une vibration si disponible
-        if (navigator.vibrate) {
-          navigator.vibrate([200, 100, 200]);
-        }
-        
-        // Demander la permission pour les notifications
-        if ("Notification" in window && Notification.permission !== "denied") {
-          Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-              new Notification("Appel entrant de " + incomingCall.name, {
-                icon: "/favicon.ico"
-              });
-            }
-          });
-        }
+        fallbackNotification();
       });
     } else if (ringtoneRef.current) {
-      // Arrêter la sonnerie
+      // Stop the ringtone
       ringtoneRef.current.pause();
       ringtoneRef.current.currentTime = 0;
     }
   }, [incomingCall]);
   
-  // Gérer l'acceptation de l'appel avec gestion des erreurs
+  // Fallback notification function
+  const fallbackNotification = () => {
+    // Fallbacks if audio playback fails
+    if (navigator.vibrate) {
+      vibrateDevice();
+    }
+    
+    if ("Notification" in window && Notification.permission !== "denied") {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted" && incomingCall) {
+          new Notification("Appel entrant de " + (incomingCall?.name || "inconnu"), {
+            icon: "/favicon.ico"
+          });
+        }
+      });
+    }
+    
+    // Visual fallback - flash the notification
+    if (incomingCall) {
+      toast.info(`Appel entrant de ${incomingCall.name}`);
+    }
+  };
+  
+  // Handle call acceptance with error handling
   const handleAcceptCall = async () => {
     try {
       console.log("Accepting call from:", incomingCall?.name);
