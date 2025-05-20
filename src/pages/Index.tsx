@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import ProductGrid from '@/components/products/ProductGrid';
@@ -11,6 +10,7 @@ import { useSearchParams } from 'react-router-dom';
 import TestimonialSection from '@/components/reviews/TestimonialSection';
 import { Link } from 'react-router-dom';
 import { getSecureId } from '@/services/secureIds';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Index = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -79,7 +79,10 @@ const Index = () => {
         setAllProducts([]);
         setFilteredProducts([]);
       } finally {
-        setIsLoading(false);
+        // Attendre un peu avant de considérer le chargement comme terminé
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 1000);
       }
     };
     fetchData();
@@ -103,12 +106,14 @@ const Index = () => {
 
   // Défilement automatique toutes les 3 secondes pour le carousel
   useEffect(() => {
+    if (isLoading || featuredProducts.length === 0) return;
+    
     const interval = setInterval(() => {
       const nextButton = document.querySelector('[data-carousel-next]') as HTMLElement;
       if (nextButton) nextButton.click();
     }, 3000);
     return () => clearInterval(interval);
-  }, [featuredProducts]);
+  }, [featuredProducts, isLoading]);
 
   const getPromotionTimeLeft = (endDate: string) => {
     const end = new Date(endDate);
@@ -140,6 +145,22 @@ const Index = () => {
     return `/${getSecureId(productId, 'product')}`;
   };
 
+  // Fonctions pour afficher des placeholders durant le chargement
+  const renderLoadingGrid = (count: number) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {Array.from({ length: count }).map((_, i) => (
+        <Card key={i} className="overflow-hidden h-full flex flex-col">
+          <Skeleton className="h-48 w-full" />
+          <CardContent className="p-4">
+            <Skeleton className="h-6 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-full mb-4" />
+            <Skeleton className="h-5 w-1/3" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -150,10 +171,17 @@ const Index = () => {
         {/* 🔍 Résultats de recherche */}
         {searchParams.get('q') && (
           <div className="mb-12">
-            <ProductGrid
-              products={filteredProducts}
-              title={`Résultats pour : "${searchParams.get('q')}"`}
-            />
+            {isLoading ? (
+              <div>
+                <h2 className="text-2xl font-semibold mb-6 text-red-800">Résultats pour : "{searchParams.get('q')}"</h2>
+                {renderLoadingGrid(4)}
+              </div>
+            ) : (
+              <ProductGrid
+                products={filteredProducts}
+                title={`Résultats pour : "${searchParams.get('q')}"`}
+              />
+            )}
           </div>
         )}
 
@@ -162,8 +190,13 @@ const Index = () => {
           <div className="mb-12">
             <h2 className="text-2xl font-semibold mb-6 text-red-800">Produits Vedettes</h2>
             {isLoading ? (
-              <div className="text-center py-10">Chargement des produits vedettes...</div>
-            ) : (
+              <div className="text-center py-10">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-800"></div>
+                </div>
+                <p>Chargement des produits vedettes...</p>
+              </div>
+            ) : featuredProducts.length > 0 ? (
               <Carousel>
                 <CarouselContent>
                   {featuredProducts.map(product => (
@@ -219,72 +252,123 @@ const Index = () => {
                 <CarouselPrevious data-carousel-previous />
                 <CarouselNext data-carousel-next />
               </Carousel>
+            ) : (
+              <div className="text-center py-10">
+                <p>Aucun produit vedette disponible pour le moment.</p>
+              </div>
             )}
           </div>
         )}
 
-        {/* 🛍️ Produits en promotion */}
+        {/* 🛍️ Produits en promotion - Montrer seulement s'il y a au moins un produit en promotion */}
         {!searchParams.get('q') && promotionProducts.length > 0 && (
           <div className="mb-12">
             <h2 className="text-2xl font-semibold mb-6 text-red-800">Promotions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {promotionProducts.map(product => (
-                <Card key={product.id} className="overflow-hidden h-full flex flex-col">
-                  <div className="relative">
-                    <Link to={getProductUrl(product.id)}>
-                      <img
-                        src={getImageUrl(product.image)}
-                        alt={product.name}
-                        className="h-48 w-full object-contain"
-                        onError={e => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = PLACEHOLDER_IMAGE;
-                        }}
-                      />
-                    </Link>
-                    <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-                      -{product.promotion}%
-                    </div>
-                    {product.promotionEnd && (
-                      <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                        Expire dans: {getPromotionTimeLeft(product.promotionEnd)}
+            {isLoading ? (
+              renderLoadingGrid(4)
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {promotionProducts.map(product => (
+                  <Card key={product.id} className="overflow-hidden h-full flex flex-col">
+                    <div className="relative">
+                      <Link to={getProductUrl(product.id)}>
+                        <img
+                          src={getImageUrl(product.image)}
+                          alt={product.name}
+                          className="h-48 w-full object-contain"
+                          onError={e => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = PLACEHOLDER_IMAGE;
+                          }}
+                        />
+                      </Link>
+                      <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">
+                        -{product.promotion}%
                       </div>
-                    )}
-                  </div>
-                  <CardContent className="p-4 flex-grow">
-                    <Link to={getProductUrl(product.id)}>
-                      <h3 className="font-medium text-lg mb-1">{product.name}</h3>
-                    </Link>
-                    <div className="flex items-center gap-2 mt-2">
-                      <p className="text-sm text-gray-500 line-through">
-                        {typeof product.originalPrice === 'number'
-                          ? product.originalPrice.toFixed(2)
-                          : product.price.toFixed(2)}{' '}
-                        €
-                      </p>
-                      <p className="font-bold text-red-600">
-                        {product.price.toFixed(2)} €
-                      </p>
+                      {product.promotionEnd && (
+                        <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                          Expire dans: {getPromotionTimeLeft(product.promotionEnd)}
+                        </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    <CardContent className="p-4 flex-grow">
+                      <Link to={getProductUrl(product.id)}>
+                        <h3 className="font-medium text-lg mb-1">{product.name}</h3>
+                      </Link>
+                      <div className="flex items-center gap-2 mt-2">
+                        <p className="text-sm text-gray-500 line-through">
+                          {typeof product.originalPrice === 'number'
+                            ? product.originalPrice.toFixed(2)
+                            : product.price.toFixed(2)}{' '}
+                          €
+                        </p>
+                        <p className="font-bold text-red-600">
+                          {product.price.toFixed(2)} €
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {/* 🆕 Nouveautés */}
         <div className="mb-12">
-          <ProductGrid products={newArrivals} title="Nouveautés" />
+          {isLoading ? (
+            <div>
+              <h2 className="text-2xl font-semibold mb-6 text-red-800">Nouveautés</h2>
+              {renderLoadingGrid(4)}
+            </div>
+          ) : (
+            <ProductGrid products={newArrivals} title="Nouveautés" />
+          )}
         </div>
 
         {/* 📦 Tous les Produits */}
         <div className="mb-12">
-          <ProductGrid products={allProducts} title="Tous nos produits" />
+          {isLoading ? (
+            <div>
+              <h2 className="text-2xl font-semibold mb-6 text-red-800">Tous nos produits</h2>
+              {renderLoadingGrid(8)}
+            </div>
+          ) : (
+            <ProductGrid products={allProducts} title="Tous nos produits" />
+          )}
         </div>
 
         {/* 📝 Témoignages */}
-        <TestimonialSection />
+        {isLoading ? (
+          <div className="mb-16">
+            <div className="text-center mb-10">
+              <h2 className="font-cormorant text-3xl md:text-4xl font-bold mb-2 text-brand-charcoal text-red-800">
+                Ce Que Nos Clients Disent
+              </h2>
+              <p className="text-gray-500 text-red-800">Découvrez les expériences de notre communauté</p>
+              <div className="h-px w-24 bg-brand-gold mx-auto mt-4"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[1, 2, 3].map((item) => (
+                <Card key={item} className="bg-white p-8 rounded-lg shadow-sm border border-gray-100">
+                  <div className="animate-pulse">
+                    <Skeleton className="h-5 w-32 mb-4" />
+                    <Skeleton className="h-20 w-full mb-4" />
+                    <div className="flex items-center">
+                      <Skeleton className="h-12 w-12 rounded-full mr-4" />
+                      <div>
+                        <Skeleton className="h-4 w-24 mb-2" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <TestimonialSection />
+        )}
       </div>
     </Layout>
   );
