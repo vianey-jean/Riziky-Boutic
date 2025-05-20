@@ -187,7 +187,11 @@ export const initSecureRoutes = () => {
     '/commandes',
     '/panier',
     '/favoris',
-    '/paiement'
+    '/paiement',
+    // Ajout des routes d'authentification
+    '/login',
+    '/register',
+    '/forgot-password'
   ];
   
   let hasNewRoutes = false;

@@ -72,10 +72,16 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
-      <Route path="/login" element={<LoginPage />} />
       
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      {/* Routes d'authentification sécurisées */}
+      <Route path={secureRoutes.get('/login')?.substring(1)} element={<LoginPage />} />
+      <Route path="/login" element={<Navigate to={secureRoutes.get('/login') || '/'} replace />} />
+      
+      <Route path={secureRoutes.get('/register')?.substring(1)} element={<RegisterPage />} />
+      <Route path="/register" element={<Navigate to={secureRoutes.get('/register') || '/'} replace />} />
+      
+      <Route path={secureRoutes.get('/forgot-password')?.substring(1)} element={<ForgotPasswordPage />} />
+      <Route path="/forgot-password" element={<Navigate to={secureRoutes.get('/forgot-password') || '/'} replace />} />
       
       {/* Route de détail produit avec l'ID sécurisé directement dans le chemin */}
       <Route path="/:productId" element={<ProductDetail />} />

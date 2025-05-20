@@ -158,8 +158,8 @@ const AdminUsersPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user: User & { password?: string, passwordUnique?: string }) => (
-              <TableRow key={user.id}>
+            {users.map((user: User & { password?: string, passwordUnique?: string }, index: number) => (
+              <TableRow key={`user-${user.id}-${index}`}>
                 <TableCell className="font-medium">{user.nom}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{new Date(user.dateCreation).toLocaleDateString('fr-FR')}</TableCell>
