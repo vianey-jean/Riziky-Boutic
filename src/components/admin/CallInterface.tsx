@@ -12,12 +12,13 @@ const CallInterface = () => {
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(true); // To fix accessibility warning
+  const [dialogOpen, setDialogOpen] = useState(true);
   
   // Set up local and remote streams
   useEffect(() => {
     console.log('Call interface - localStream:', !!localStream, 'remoteStream:', !!remoteStream);
     
+    // Gérer le flux vidéo local
     if (localVideoRef.current && localStream) {
       try {
         localVideoRef.current.srcObject = localStream;
@@ -26,6 +27,7 @@ const CallInterface = () => {
       }
     }
     
+    // Gérer le flux vidéo distant
     if (remoteVideoRef.current && remoteStream) {
       try {
         remoteVideoRef.current.srcObject = remoteStream;
@@ -35,6 +37,7 @@ const CallInterface = () => {
     }
   }, [localStream, remoteStream]);
   
+  // Gestion du microphone
   const toggleMic = () => {
     if (localStream) {
       const audioTracks = localStream.getAudioTracks();
@@ -47,6 +50,7 @@ const CallInterface = () => {
     }
   };
   
+  // Gestion de la caméra
   const toggleCamera = () => {
     if (localStream && callState.isVideo) {
       const videoTracks = localStream.getVideoTracks();
@@ -59,11 +63,12 @@ const CallInterface = () => {
     }
   };
   
-  // Handle call end
+  // Gestion de la fin d'appel
   const handleEndCall = () => {
     try {
       endCall();
       setDialogOpen(false);
+      toast.success('Appel terminé');
     } catch (error) {
       console.error('Error ending call:', error);
       toast.error('Erreur lors de la fermeture de l\'appel');
@@ -131,7 +136,7 @@ const CallInterface = () => {
             
             {/* Local Video (Picture-in-Picture) */}
             {callState.isVideo && localStream && (
-              <div className="absolute bottom-4 right-4 w-48 h-auto border-2 border-white rounded-lg overflow-hidden">
+              <div className="absolute bottom-4 right-4 w-48 h-auto border-2 border-white rounded-lg overflow-hidden shadow-lg">
                 <video 
                   ref={localVideoRef} 
                   autoPlay 

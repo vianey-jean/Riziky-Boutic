@@ -260,18 +260,6 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return;
       }
       
-      // Request permissions first before creating stream
-      let mediaPermissions = true;
-      try {
-        await navigator.permissions.query({ name: 'microphone' as PermissionName });
-        if (isVideo) {
-          await navigator.permissions.query({ name: 'camera' as PermissionName });
-        }
-      } catch (err) {
-        logger.log('Permissions API not supported, trying direct access');
-        mediaPermissions = false;
-      }
-      
       // Get user media based on call type
       const constraints = {
         video: isVideo ? { width: 640, height: 480 } : false,
@@ -281,11 +269,6 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        if (!stream) {
-          throw new Error('Failed to create media stream');
-        }
-        
         setLocalStream(stream);
       } catch (err: any) {
         logger.error('Error getting user media:', err);
@@ -305,7 +288,12 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       // Create peer connection
       try {
-        const peer = new Peer({
+        // Correction ici: S'assurer que simple-peer est correctement initialisé
+        if (typeof Peer !== 'function') {
+          throw new Error('La bibliothèque simple-peer n\'est pas correctement initialisée');
+        }
+        
+        const peerOptions = {
           initiator: true,
           trickle: false,
           stream: stream,
@@ -315,7 +303,9 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               { urls: 'stun:global.stun.twilio.com:3478' }
             ]
           }
-        }) as ExtendedPeerInstance;
+        };
+        
+        const peer = new Peer(peerOptions) as ExtendedPeerInstance;
         
         peer.on('signal', (signal) => {
           logger.log('Generated signal for peer, sending to remote user');
@@ -435,11 +425,6 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        if (!stream) {
-          throw new Error('Failed to create media stream');
-        }
-        
         setLocalStream(stream);
       } catch (err: any) {
         logger.error('Error getting user media:', err);
@@ -457,7 +442,12 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
       
       try {
-        const peer = new Peer({
+        // Correction ici aussi pour s'assurer que simple-peer est correctement initialisé
+        if (typeof Peer !== 'function') {
+          throw new Error('La bibliothèque simple-peer n\'est pas correctement initialisée');
+        }
+        
+        const peerOptions = {
           initiator: false,
           trickle: false,
           stream: stream,
@@ -467,7 +457,9 @@ export const VideoCallProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               { urls: 'stun:global.stun.twilio.com:3478' }
             ]
           }
-        }) as ExtendedPeerInstance;
+        };
+        
+        const peer = new Peer(peerOptions) as ExtendedPeerInstance;
         
         peer.on('signal', (signal) => {
           logger.log('Generated accept signal, sending to caller');
