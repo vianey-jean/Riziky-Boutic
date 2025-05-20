@@ -118,45 +118,45 @@ const ProfilePage = () => {
   return (
     <Layout>
       <div className="container px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Mon Compte</h1>
-        
-        <div className="grid gap-6 md:grid-cols-[250px_1fr]">
-       
-          
-          <div className="md:col-span-2">
-            <Tabs defaultValue="informations">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="informations">Informations personnelles</TabsTrigger>
-                <TabsTrigger value="security">Sécurité</TabsTrigger>
-                <TabsTrigger value="preferences">Préférences</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="informations" className="mt-6">
-                <Card>
-                  
-                  <PersonalInfoForm
-                    profileData={profileData}
-                    loading={loading}
-                    handleProfileChange={handleChange}
-                    handleGenreChange={handleGenreChange}
-                    handleProfileSubmit={handleProfileSubmit}
-                  />
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="security" className="mt-6">
-                <PasswordForm 
-                  loading={loading}
-                  onPasswordChange={handlePasswordUpdate}
-                />
-              </TabsContent>
-              
-              <TabsContent value="preferences" className="mt-6">
-                <PreferencesForm />
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
+<div className="max-w-[900px] mx-auto px-4">
+  <h1 className="text-3xl font-bold mb-8">Mon Compte</h1>
+
+  <div className="grid gap-6 md:grid-cols-[250px_1fr]">
+    <div className="md:col-span-2">
+      <Tabs defaultValue="informations">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="informations">Informations personnelles</TabsTrigger>
+          <TabsTrigger value="security">Sécurité</TabsTrigger>
+          <TabsTrigger value="preferences">Préférences</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="informations" className="mt-6">
+          <Card>
+            <PersonalInfoForm
+              profileData={profileData}
+              loading={loading}
+              handleProfileChange={handleChange}
+              handleGenreChange={handleGenreChange}
+              handleProfileSubmit={handleProfileSubmit}
+            />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="security" className="mt-6">
+          <PasswordForm 
+            loading={loading}
+            onPasswordChange={handlePasswordUpdate}
+          />
+        </TabsContent>
+
+        <TabsContent value="preferences" className="mt-6">
+          <PreferencesForm />
+        </TabsContent>
+      </Tabs>
+    </div>
+  </div>
+</div>
+
       </div>
     </Layout>
   );
