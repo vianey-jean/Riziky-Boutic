@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
@@ -17,6 +18,9 @@ type CarouselProps = {
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
+  // Add autoPlay and interval props
+  autoPlay?: boolean
+  interval?: number
 }
 
 type CarouselContextProps = {
@@ -52,6 +56,8 @@ const Carousel = React.forwardRef<
       plugins,
       className,
       children,
+      autoPlay,
+      interval = 5000,
       ...props
     },
     ref
@@ -82,6 +88,29 @@ const Carousel = React.forwardRef<
     const scrollNext = React.useCallback(() => {
       api?.scrollNext()
     }, [api])
+
+    // Add autoplay functionality - fixed TypeScript errors with setTimeout
+    React.useEffect(() => {
+      if (!api || !autoPlay) return
+
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+      
+      const autoPlayFunction = () => {
+        if (api.canScrollNext()) {
+          api.scrollNext();
+        } else {
+          api.scrollTo(0);
+        }
+        
+        timeoutId = setTimeout(autoPlayFunction, interval);
+      };
+      
+      timeoutId = setTimeout(autoPlayFunction, interval);
+      
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+      };
+    }, [api, autoPlay, interval]);
 
     const handleKeyDown = React.useCallback(
       (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -130,6 +159,8 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          autoPlay,
+          interval,
         }}
       >
         <div

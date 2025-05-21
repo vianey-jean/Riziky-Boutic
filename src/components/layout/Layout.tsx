@@ -2,8 +2,9 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import { Shield } from 'lucide-react';
+import { Shield, Award, Clock, CreditCard, TrendingUp, Gift, ThumbsUp } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import CookieConsent from '../prompts/CookieConsent';
 import WelcomePrompt from '../prompts/WelcomePrompt';
 import TrendingProductsPrompt from '../prompts/TrendingProductsPrompt';
@@ -59,6 +60,33 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
     <div className="flex flex-col min-h-screen bg-neutral-50 dark:bg-neutral-950">
       <header className="sticky top-0 z-50">
         <Navbar />
+
+         {/* Barre d'annonces promotionnelles rotatives */}
+        <div className="bg-red-600 text-white py-1.5 overflow-hidden">
+          <Carousel
+            opts={{
+              align: "center",
+              loop: true,
+            }}
+            autoPlay={true}
+            interval={5000}
+            className="w-full"
+          >
+            <CarouselContent className="mx-auto">
+              <CarouselItem className="basis-full flex justify-center items-center text-center text-sm">
+                <ThumbsUp className="h-4 w-4 mr-2" /> Livraison gratuite à partir de 50€ d'achat
+              </CarouselItem>
+              <CarouselItem className="basis-full flex justify-center items-center text-center text-sm">
+                <Gift className="h-4 w-4 mr-2" /> -10% sur votre première commande avec le code WELCOME10
+              </CarouselItem>
+              <CarouselItem className="basis-full flex justify-center items-center text-center text-sm">
+                <Clock className="h-4 w-4 mr-2" /> Satisfait ou remboursé sous 30 jours
+              </CarouselItem>
+            </CarouselContent>
+          </Carousel>
+        </div>
+
+
       </header>
       
       <main className="flex-grow" role="main">
