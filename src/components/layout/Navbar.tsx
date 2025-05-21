@@ -425,12 +425,12 @@ const Navbar = () => {
 
         {/* Liens catégories - Desktop */}
         <div className="hidden md:flex mt-4 space-x-6 overflow-x-auto py-2 justify-center" role="navigation" aria-label="Catégories">
-          <ul className="flex space-x-6">
+          <ul className="flex space-x-6 ">
             {categories.map(cat => (
-              <li key={cat}>
+              <li  key={cat}>
                 <Link 
                   to={`/categorie/${cat}`} 
-                  className="text-sm font-medium whitespace-nowrap text-neutral-700 hover:text-red-600 dark:text-neutral-200 dark:hover:text-red-400 capitalize transition-colors"
+                  className=" text-red-800  text-sm font-medium whitespace-nowrap text-neutral-700 hover:text-red-600 dark:text-neutral-200 dark:hover:text-red-400 capitalize transition-colors"
                 >
                   {cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </Link>
