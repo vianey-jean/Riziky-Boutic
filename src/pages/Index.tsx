@@ -319,7 +319,7 @@ const Index = () => {
         <div className="mb-12">
           {isLoading ? (
             <div>
-              <h2 className="text-2xl font-semibold mb-6 text-red-800">Nouveautés</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-red-800">Nouveauté</h2>
               {renderLoadingGrid(4)}
             </div>
           ) : (
