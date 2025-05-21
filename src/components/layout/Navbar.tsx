@@ -136,15 +136,13 @@ const Navbar = () => {
   };
   const renderSearchResults = () => <>
       {showResults && searchResults.length > 0 && <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
-        {/*  <ul className="py-1">
+             {/*  <ul className="py-1">
+          <ul className="py-1">
             {searchResults.map(product => <li key={product.id} className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => handleProductClick(product.id)}>
                 <div className="flex items-center">
                   <img src={`${import.meta.env.VITE_API_BASE_URL}${product.image}`} alt={product.name} className="w-10 h-10 object-cover rounded mr-3" onError={e => {
-              (e.target as HTMLImageElement).src = `${import.meta.env.VITE_API_BASE_URL}/uploads/placeholder.jpg`;
-            }} />
-                  <div>
-                    <p className="font-medium">{product.name}</p>
-                    <p className="text-sm text-gray-500">{Number(product.price).toFixed(2)} €</p>
+
+                      @@ -148,7 +148,7 @@ const Navbar = () => {
                   </div>
                 </div>
               </li>)}
@@ -249,7 +247,7 @@ const Navbar = () => {
           {/* Menu mobile */}
           <div className="flex md:hidden items-center space-x-4">
             <Link to="/panier" className="relative">
-              <Button variant="ghost" size="icon" className="nav-icon">
+              <Button variant="ghost" size="icon" className="nav-icon bg-violet-500 hover:bg-violet-400 rounded-full">
                 <ShoppingCart className="h-7 w-7" />
               </Button>
               {cartItemsCount > 0 && <Badge variant="destructive" className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 text-xs rounded-full">
@@ -259,7 +257,7 @@ const Navbar = () => {
 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="nav-icon">
+                <Button variant="ghost" size="icon" className="nav-icon text-red-700 font-bold text-6xl">
                   <Menu className="h-7 w-7" />
                 </Button>
               </SheetTrigger>
