@@ -372,7 +372,7 @@ const Index = () => {
         )}
 
                 {/* Why Choose Us Section */}
-        {!searchParams.get('q') && (
+        {/* {!searchParams.get('q') && (
           <div className="mb-12 bg-gray-50 p-8 rounded-xl">
             <h2 className="text-2xl font-semibold text-center mb-8 text-red-800">
               Pourquoi nous choisir?
@@ -416,7 +416,7 @@ const Index = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </Layout>
   );
