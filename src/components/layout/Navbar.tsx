@@ -136,7 +136,7 @@ const Navbar = () => {
   };
   const renderSearchResults = () => <>
       {showResults && searchResults.length > 0 && <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 max-h-60 overflow-auto">
-          <ul className="py-1">
+        {/*  <ul className="py-1">
             {searchResults.map(product => <li key={product.id} className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => handleProductClick(product.id)}>
                 <div className="flex items-center">
                   <img src={`${import.meta.env.VITE_API_BASE_URL}${product.image}`} alt={product.name} className="w-10 h-10 object-cover rounded mr-3" onError={e => {
@@ -148,7 +148,7 @@ const Navbar = () => {
                   </div>
                 </div>
               </li>)}
-          </ul>
+          </ul>  */}
         </div>}
       {showResults && searchTerm.length >= 3 && searchResults.length === 0 && <div className="absolute z-10 w-full bg-white shadow-lg rounded-md mt-2 p-4 text-center">
           Aucun produit trouvé pour "{searchTerm}"
