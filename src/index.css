@@ -112,3 +112,9 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Style personnalisé pour les icônes de la barre de navigation */
+.nav-icon svg {
+  width: 2rem;
+  height: 2rem;
+}
