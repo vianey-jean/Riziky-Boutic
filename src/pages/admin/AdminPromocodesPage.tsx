@@ -151,6 +151,20 @@ const AdminPromocodesPage: React.FC = () => {
     code.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Fonction pour obtenir le nom du produit
+  const getProductName = async (productId: string) => {
+    try {
+      const response = await codePromosAPI.searchProducts(productId);
+      if (response.data && response.data.length > 0) {
+        return response.data[0].name;
+      }
+      return productId;
+    } catch (error) {
+      console.error('Erreur lors de la récupération du nom du produit:', error);
+      return productId;
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
