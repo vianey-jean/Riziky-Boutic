@@ -18,7 +18,8 @@ import applepay from "@/assets/applepay.png";
 import mastercard from "@/assets/mastercard.png"; 
 import american from "@/assets/american.png"; 
 import paypal from "@/assets/paypal.png"; 
-
+import { DynamicIcon } from '@/utils/iconLoader';
+import pubLayoutAPI, { PubLayout } from '@/services/pubLayoutAPI';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -80,6 +81,25 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
 
+  // Charger les publicités depuis l'API
+  const { data: pubLayoutItems = [], isLoading: isLoadingPubLayout } = useQuery({
+    queryKey: ['pub-layout'],
+    queryFn: async (): Promise<PubLayout[]> => {
+      try {
+        return await pubLayoutAPI.getAll();
+      } catch (error) {
+        console.error('Erreur lors du chargement des publicités:', error);
+        // Valeurs par défaut si l'API échoue
+        return [
+          { id: "1", icon: "ThumbsUp", text: "Livraison gratuite à partir de 50€ d'achat" },
+          { id: "2", icon: "Gift", text: "-10% sur votre première commande avec le code WELCOME10" },
+          { id: "3", icon: "Clock", text: "Satisfait ou remboursé sous 30 jours" }
+        ];
+      }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   // État pour suivre si l'utilisateur a scrollé
   const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -101,7 +121,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
       <header className="sticky top-0 z-50">
         <Navbar />
 
-         {/* Barre d'annonces promotionnelles rotatives */}
+        {/* Barre d'annonces promotionnelles rotatives */}
         <div className="bg-red-600 text-white py-1.5 overflow-hidden">
           <Carousel
             opts={{
@@ -113,19 +133,20 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
             className="w-full"
           >
             <CarouselContent className="mx-auto">
-              <CarouselItem className="basis-full flex justify-center items-center text-center text-sm">
-                <ThumbsUp className="h-4 w-4 mr-2" /> Livraison gratuite à partir de 50€ d'achat
-              </CarouselItem>
-              <CarouselItem className="basis-full flex justify-center items-center text-center text-sm">
-                <Gift className="h-4 w-4 mr-2" /> -10% sur votre première commande avec le code WELCOME10
-              </CarouselItem>
-              <CarouselItem className="basis-full flex justify-center items-center text-center text-sm">
-                <Clock className="h-4 w-4 mr-2" /> Satisfait ou remboursé sous 30 jours
-              </CarouselItem>
+              {isLoadingPubLayout ? (
+                <CarouselItem className="basis-full flex justify-center items-center">
+                  <Skeleton className="h-4 w-60" />
+                </CarouselItem>
+              ) : (
+                pubLayoutItems.map((pub) => (
+                  <CarouselItem key={pub.id} className="basis-full flex justify-center items-center text-center text-sm">
+                    <DynamicIcon name={pub.icon} className="h-4 w-4 mr-2" /> {pub.text}
+                  </CarouselItem>
+                ))
+              )}
             </CarouselContent>
           </Carousel>
         </div>
-
 
       </header>
       

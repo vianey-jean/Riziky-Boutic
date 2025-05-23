@@ -10,7 +10,8 @@ import {
   Settings,
   LogOut,
   Percent,
-  MessageSquare
+  MessageSquare,
+  Megaphone
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSecureRoute } from '@/services/secureIds';
@@ -41,7 +42,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     serviceClient: getSecureRoute('/admin/service-client'),
     codePromo: getSecureRoute('/admin/code-promos'),
     parametres: getSecureRoute('/admin/parametres'),
-
+    pubLayout: getSecureRoute('/admin/pub-layout'),
   };
   
   const navItems = [
@@ -49,7 +50,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: 'Utilisateurs', path: secureRoutes.utilisateurs, realPath: '/admin/utilisateurs', icon: Users },
     { name: 'Messages', path: secureRoutes.messages, realPath: '/admin/messages', icon: MessageCircle },
     { name: 'Commandes', path: secureRoutes.commandes, realPath: '/admin/commandes', icon: Truck },
-     { name: 'CodePromo', path: secureRoutes.codePromo, realPath: '/admin/code-promos', icon: Percent },
+    { name: 'CodePromo', path: secureRoutes.codePromo, realPath: '/admin/code-promos', icon: Percent },
+    { name: 'Publicités', path: secureRoutes.pubLayout, realPath: '/admin/pub-layout', icon: Megaphone },
     { name: 'Chat Admin', path: secureRoutes.chat, realPath: '/admin', icon: ShoppingBag },
     // Conditional item for service client admin
     ...(isServiceAdmin ? [{ 
