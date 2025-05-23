@@ -261,6 +261,7 @@ const AdminChatContent = () => {
     return `il y a ${days}j`;
   };
 
+  // Fonctions qui utilisent le picker d'emoji
   const handleEmojiSelect = (emoji: any) => {
     setMessageText((prev) => prev + emoji.native);
   };

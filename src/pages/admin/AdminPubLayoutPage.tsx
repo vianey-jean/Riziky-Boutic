@@ -32,10 +32,12 @@ const AdminPubLayoutPage: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingPub, setEditingPub] = useState<PubLayout | null>(null);
   
-  // Récupérer les données des publicités
+  // Récupérer les données des publicités avec intervalle de rafraîchissement
   const { data: pubLayoutItems = [], isLoading, error } = useQuery({
     queryKey: ['pub-layout'],
-    queryFn: pubLayoutAPI.getAll
+    queryFn: pubLayoutAPI.getAll,
+    refetchInterval: 30 * 1000, // Rafraîchir toutes les 30 secondes
+    refetchOnWindowFocus: true  // Rafraîchir quand la fenêtre reprend le focus
   });
 
   // Formulaire pour ajouter/modifier une publicité

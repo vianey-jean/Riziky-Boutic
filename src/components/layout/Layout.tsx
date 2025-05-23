@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, Suspense } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
@@ -81,7 +80,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
 
-  // Charger les publicités depuis l'API
+  // Charger les publicités depuis l'API avec refetch interval pour avoir les données en temps réel
   const { data: pubLayoutItems = [], isLoading: isLoadingPubLayout } = useQuery({
     queryKey: ['pub-layout'],
     queryFn: async (): Promise<PubLayout[]> => {
@@ -97,7 +96,9 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
         ];
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 secondes - données considérées fraîches pendant 30s
+    refetchInterval: 30 * 1000, // Rafraîchir toutes les 30 secondes pour avoir des données en temps réel
+    refetchOnWindowFocus: true, // Rafraîchir quand la fenêtre reprend le focus
   });
 
   // État pour suivre si l'utilisateur a scrollé
@@ -153,7 +154,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
       <main className="flex-grow" role="main">
         {children}
 
-               {/**Bannière d'avantages, visible uniquement si on n'est pas sur une route avec hidePrompts */} 
+        {/*Bannière d'avantages, visible uniquement si on n'est pas sur une route avec hidePrompts */} 
         {!hidePrompts && (
           <motion.section 
             variants={containerVariants}
@@ -186,7 +187,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
           </motion.section>
         )}
 
-         {/* Badges de confiance */}
+        {/* Badges de confiance */}
         {!hidePrompts && (
           <div className="bg-white dark:bg-neutral-900 py-6 border-t border-b border-neutral-200 dark:border-neutral-800">
             <div className="container mx-auto px-4">
