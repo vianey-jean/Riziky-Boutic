@@ -66,6 +66,10 @@ const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
 const AdminClientChatPage = lazy(() => import('./pages/admin/AdminClientChatPage'));
 
+const AdminCodePromosPage = lazy(() => import('./pages/admin/AdminCodePromosPage'));
+
+
+
 // Création d'un nouveau QueryClient avec configuration optimisée
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,7 +77,7 @@ const queryClient = new QueryClient({
       retry: 1,
       refetchOnWindowFocus: false,
       staleTime: 60000, // 1 minute (données considérées fraiches pendant 1 min)
-      cacheTime: 5 * 60 * 1000, // 5 minutes (conserver les données en cache 5 min)
+      gcTime: 5 * 60 * 1000, // 5 minutes (conserver les données en cache 5 min)
     },
   },
 });
@@ -244,6 +248,8 @@ function AppRoutes() {
             </ProtectedRoute>
           </SecureRoute>
         } />
+
+        <Route path={getSecureRoute('/admin/code-promos')} element={<AdminCodePromosPage />} />
         <Route path="/admin/service-client" element={<Navigate to={secureRoutes.get('/admin/service-client') || '/'} replace />} />
         
         {/* Page 404 */}

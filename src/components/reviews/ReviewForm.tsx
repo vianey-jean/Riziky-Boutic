@@ -1,228 +1,227 @@
 
 import React, { useState, useRef } from 'react';
-import StarRating from './StarRating';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Camera, X } from 'lucide-react';
+import StarRating from './StarRating';
 import { toast } from '@/components/ui/sonner';
-import { ImagePlus, X, Camera } from 'lucide-react';
-import { ReviewFormData } from '@/services/api';
 
-interface ReviewFormProps {
+export interface ReviewFormProps {
   productId: string;
-  onSubmit: (review: ReviewFormData) => Promise<void>;
+  onSubmit: (formData: FormData) => Promise<void>;
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({ productId, onSubmit }) => {
-  const [productRating, setProductRating] = useState(0);
-  const [deliveryRating, setDeliveryRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [productRating, setProductRating] = useState<number>(0);
+  const [deliveryRating, setDeliveryRating] = useState<number>(0);
+  const [comment, setComment] = useState<string>('');
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAddPhoto = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    
+    if (selectedFiles) {
+      // Check if the total number of photos will exceed 4
+      if (photos.length + selectedFiles.length > 4) {
+        toast.error("Vous ne pouvez pas ajouter plus de 4 photos.");
+        return;
+      }
+      
+      const newPhotos = [...photos];
+      const newPhotosPreviews = [...photosPreviews];
+      
+      Array.from(selectedFiles).forEach(file => {
+        // Check if the file is an image
+        if (!file.type.startsWith('image/')) {
+          toast.error(`Le fichier ${file.name} n'est pas une image.`);
+          return;
+        }
+        
+        // Check if the file size is less than 2MB
+        if (file.size > 2 * 1024 * 1024) {
+          toast.error(`L'image ${file.name} est trop volumineuse. La taille maximale est de 2MB.`);
+          return;
+        }
+        
+        newPhotos.push(file);
+        newPhotosPreviews.push(URL.createObjectURL(file));
+      });
+      
+      setPhotos(newPhotos);
+      setPhotosPreviews(newPhotosPreviews);
+      
+      // Reset the input value to allow selecting the same file again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    const newPhotos = [...photos];
+    const newPhotosPreviews = [...photosPreviews];
+    
+    // Revoke the object URL to avoid memory leaks
+    URL.revokeObjectURL(newPhotosPreviews[index]);
+    
+    newPhotos.splice(index, 1);
+    newPhotosPreviews.splice(index, 1);
+    
+    setPhotos(newPhotos);
+    setPhotosPreviews(newPhotosPreviews);
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (productRating === 0 || deliveryRating === 0) {
-      toast.error('Veuillez attribuer une note au produit et à la livraison');
+    if (productRating === 0) {
+      toast.error("Veuillez noter le produit.");
+      return;
+    }
+    
+    if (deliveryRating === 0) {
+      toast.error("Veuillez noter la livraison.");
+      return;
+    }
+    
+    if (!comment.trim()) {
+      toast.error("Veuillez ajouter un commentaire.");
       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      await onSubmit({
-        productId,
-        productRating,
-        deliveryRating,
-        comment: comment.trim(),
-        photos: photoFiles
+      // Create FormData
+      const formData = new FormData();
+      formData.append('productId', productId);
+      formData.append('productRating', productRating.toString());
+      formData.append('deliveryRating', deliveryRating.toString());
+      formData.append('comment', comment);
+      
+      // Add photos to FormData
+      photos.forEach(photo => {
+        formData.append('photos', photo);
       });
       
-      // Réinitialiser le formulaire après soumission réussie
-      setComment('');
+      await onSubmit(formData);
+      
+      // Reset form after successful submission
       setProductRating(0);
       setDeliveryRating(0);
-      setPhotoFiles([]);
-      setPhotoPreviews([]);
+      setComment('');
       
-      toast.success('Votre commentaire a été ajouté avec succès');
+      // Revoke all object URLs
+      photosPreviews.forEach(url => URL.revokeObjectURL(url));
+      
+      setPhotos([]);
+      setPhotosPreviews([]);
+      
     } catch (error) {
-      console.error('Erreur lors de l\'ajout du commentaire:', error);
-      toast.error('Une erreur est survenue lors de l\'ajout de votre commentaire');
+      console.error("Error submitting review:", error);
+      toast.error("Une erreur est survenue lors de la soumission de votre avis.");
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    // Limiter à 4 photos maximum
-    const remainingSlots = 4 - photoFiles.length;
-    if (remainingSlots <= 0) {
-      toast.error('Vous ne pouvez pas ajouter plus de 4 photos');
-      return;
-    }
-    
-    const newFiles: File[] = [];
-    const newPreviews: string[] = [];
-    
-    // Traiter chaque fichier sélectionné
-    Array.from(files).slice(0, remainingSlots).forEach(file => {
-      // Vérifier le type de fichier
-      if (!file.type.startsWith('image/')) {
-        toast.error(`Le fichier ${file.name} n'est pas une image`);
-        return;
-      }
-      
-      // Vérifier la taille du fichier (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`L'image ${file.name} est trop volumineuse. La taille maximale est de 5MB`);
-        return;
-      }
-      
-      // Ajouter le fichier à la liste
-      newFiles.push(file);
-      
-      // Créer une URL pour la prévisualisation
-      const previewUrl = URL.createObjectURL(file);
-      newPreviews.push(previewUrl);
-    });
-    
-    // Mettre à jour les états
-    setPhotoFiles(prev => [...prev, ...newFiles]);
-    setPhotoPreviews(prev => [...prev, ...newPreviews]);
-    
-    // Réinitialiser l'input file pour permettre de sélectionner à nouveau les mêmes fichiers si nécessaire
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-  
-  const removePhoto = (index: number) => {
-    // Supprimer la prévisualisation
-    URL.revokeObjectURL(photoPreviews[index]);
-    
-    // Mettre à jour les listes
-    setPhotoFiles(prev => prev.filter((_, i) => i !== index));
-    setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
-  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 border p-4 rounded-lg">
-      <h3 className="text-lg font-medium mb-4">Votre avis</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">
-            Note du produit <span className="text-red-500">*</span>
-          </label>
-          <StarRating 
-            rating={productRating} 
-            onClick={setProductRating} 
-            readOnly={false} 
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">
-            Note de la livraison <span className="text-red-500">*</span>
-          </label>
-          <StarRating 
-            rating={deliveryRating} 
-            onClick={setDeliveryRating} 
-            readOnly={false} 
+    <form onSubmit={handleSubmitReview} className="space-y-4">
+      <div>
+        <Label htmlFor="product-rating">Note du produit</Label>
+        <div className="mt-1">
+          <StarRating
+            rating={productRating}
+            value={productRating}
+            onChange={setProductRating}
+            id="product-rating"
+            readOnly={false}
           />
         </div>
       </div>
       
       <div>
-        <label htmlFor="comment" className="block text-sm font-medium mb-1">
-          Votre commentaire (300 caractères max)
-        </label>
+        <Label htmlFor="delivery-rating">Note de la livraison</Label>
+        <div className="mt-1">
+          <StarRating
+            rating={deliveryRating}
+            value={deliveryRating}
+            onChange={setDeliveryRating}
+            id="delivery-rating"
+            readOnly={false}
+          />
+        </div>
+      </div>
+      
+      <div>
+        <Label htmlFor="comment">Commentaire</Label>
         <Textarea
           id="comment"
           placeholder="Partagez votre expérience avec ce produit..."
           value={comment}
-          onChange={(e) => setComment(e.target.value.slice(0, 300))}
-          className="min-h-[100px]"
+          onChange={(e) => setComment(e.target.value)}
+          className="h-24"
         />
-        <div className="text-xs text-right mt-1 text-muted-foreground">
-          {comment.length}/300
-        </div>
       </div>
       
       <div>
-        <label className="block text-sm font-medium mb-2">
-          Ajouter des photos (max 4)
-        </label>
-        
-        <div className="flex flex-wrap gap-2 mb-2">
-          {photoPreviews.map((preview, index) => (
+        <Label>Photos (optionnel)</Label>
+        <div className="mt-1 flex flex-wrap gap-2">
+          {photosPreviews.map((url, index) => (
             <div key={index} className="relative">
               <img 
-                src={preview} 
+                src={url} 
                 alt={`Aperçu ${index + 1}`} 
-                className="w-20 h-20 object-cover rounded border"
+                className="w-20 h-20 object-cover rounded-md"
               />
-              <button 
+              <button
                 type="button"
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
                 onClick={() => removePhoto(index)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center"
               >
-                <X size={14} />
+                <X className="h-3 w-3" />
               </button>
             </div>
           ))}
           
-          {photoFiles.length < 4 && (
+          {photos.length < 4 && (
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-20 h-20 border-2 border-dashed rounded flex flex-col items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+              onClick={handleAddPhoto}
+              className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50"
             >
-              <Camera size={24} />
-              <span className="text-xs mt-1">Ajouter</span>
+              <Camera className="h-6 w-6" />
             </button>
           )}
+          
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            multiple
+            className="hidden"
+          />
         </div>
-        
-        <input 
-          type="file" 
-          ref={fileInputRef}
-          onChange={handlePhotoUpload}
-          accept="image/*"
-          multiple
-          className="hidden"
-        />
-        
-        {photoFiles.length < 4 && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full"
-          >
-            <ImagePlus className="mr-1 h-4 w-4" />
-            Sélectionner des photos
-          </Button>
-        )}
-        
-        <p className="text-xs text-muted-foreground mt-1">
-          Formats acceptés: JPEG, PNG, GIF. Taille max: 5MB par photo.
+        <p className="text-xs text-gray-500 mt-1">
+          Vous pouvez ajouter jusqu'à 4 photos (max 2MB chacune)
         </p>
       </div>
       
       <Button 
         type="submit" 
-        className="w-full" 
-        disabled={isSubmitting || productRating === 0 || deliveryRating === 0}
+        disabled={isSubmitting}
+        className="bg-red-800 hover:bg-red-700 text-white"
       >
-        {isSubmitting ? 'Envoi en cours...' : 'Publier mon avis'}
+        {isSubmitting ? 'Envoi en cours...' : 'Soumettre l\'avis'}
       </Button>
     </form>
   );

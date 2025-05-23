@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { reviewsAPI, Review, ReviewFormData } from '@/services/api';
@@ -147,7 +146,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
         <div className="mb-8">
           <ReviewForm 
             productId={productId} 
-            onSubmit={handleAddReview} 
+            onSubmit={(formData: any) => handleAddReview({
+              productId,
+              productRating: formData.productRating,
+              deliveryRating: formData.deliveryRating,
+              comment: formData.comment,
+              photos: formData.photos
+            } as ReviewFormData)} 
           />
           <div className="mt-2 text-right">
             <Button 

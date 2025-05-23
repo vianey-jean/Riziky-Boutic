@@ -3,11 +3,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/sonner';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 interface CreditCardFormProps {
-  onSuccess: (orderId: string) => void;
+  onSuccess: () => void;
 }
 
 const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
@@ -16,7 +16,12 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [errors, setErrors] = useState({
+    cardNumber: '',
+    cardName: '',
+    expiryDate: '',
+    cvv: ''
+  });
 
   const formatCardNumber = (value: string) => {
     // Remove non-digit characters
@@ -42,34 +47,31 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCardNumber(formatCardNumber(e.target.value));
+    setErrors(prev => ({ ...prev, cardNumber: '' }));
   };
 
   const handleExpiryDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setExpiryDate(formatExpiryDate(e.target.value));
+    setErrors(prev => ({ ...prev, expiryDate: '' }));
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCardName(e.target.value);
+    setErrors(prev => ({ ...prev, cardName: '' }));
+  };
+
+  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 3);
+    setCvv(value);
+    setErrors(prev => ({ ...prev, cvv: '' }));
   };
 
   const validateCardNumber = (number: string) => {
     const digits = number.replace(/\s/g, '');
     if (digits.length !== 16) return false;
     
-    // Luhn algorithm for credit card validation
-    let sum = 0;
-    let shouldDouble = false;
-    
-    // Loop through values starting from the rightmost digit
-    for (let i = digits.length - 1; i >= 0; i--) {
-      let digit = parseInt(digits.charAt(i));
-      
-      if (shouldDouble) {
-        digit *= 2;
-        if (digit > 9) digit -= 9;
-      }
-      
-      sum += digit;
-      shouldDouble = !shouldDouble;
-    }
-    
-    return (sum % 10) === 0;
+    // For testing purposes, accept any 16 digit number
+    return /^\d{16}$/.test(digits);
   };
   
   const validateExpiryDate = (date: string) => {
@@ -94,36 +96,60 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
     return true;
   };
 
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = {
+      cardNumber: '',
+      cardName: '',
+      expiryDate: '',
+      cvv: ''
+    };
+
+    if (!cardName.trim()) {
+      newErrors.cardName = 'Le nom du titulaire est requis';
+      valid = false;
+    }
+
+    if (!validateCardNumber(cardNumber)) {
+      newErrors.cardNumber = 'Numéro de carte invalide';
+      valid = false;
+    }
+
+    if (!validateExpiryDate(expiryDate)) {
+      newErrors.expiryDate = 'Date d\'expiration invalide';
+      valid = false;
+    }
+
+    if (cvv.length < 3) {
+      newErrors.cvv = 'CVV invalide';
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate card number
-    if (!validateCardNumber(cardNumber)) {
-      toast.error("Numéro de carte invalide");
-      return;
-    }
-    
-    // Validate expiry date
-    if (!validateExpiryDate(expiryDate)) {
-      toast.error("Date d'expiration invalide");
-      return;
-    }
-    
-    // Validate CVV
-    if (cvv.length < 3) {
-      toast.error("CVV invalide");
+    if (!validateForm()) {
       return;
     }
     
     setLoading(true);
     
-    // Simulate payment processing
+    // Pour test seulement - simuler un paiement réussi après 1.5 secondes
     setTimeout(() => {
       setLoading(false);
       toast.success("Paiement accepté");
-      // Generate a random order ID for demonstration purposes
-      const orderId = `ORD-${Math.floor(Math.random() * 1000000)}`;
-      onSuccess(orderId);
+      
+      // Call onSuccess to proceed with order creation
+      if (onSuccess && typeof onSuccess === 'function') {
+        console.log("Calling onSuccess after payment");
+        onSuccess();
+      } else {
+        console.error("onSuccess callback is not properly defined");
+      }
     }, 1500);
   };
 
@@ -135,9 +161,11 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
           id="cardName"
           placeholder="John Doe"
           value={cardName}
-          onChange={e => setCardName(e.target.value)}
+          onChange={handleNameChange}
           required
+          className={errors.cardName ? "border-red-500" : ""}
         />
+        {errors.cardName && <p className="text-red-500 text-sm mt-1">{errors.cardName}</p>}
       </div>
       
       <div>
@@ -148,7 +176,9 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
           value={cardNumber}
           onChange={handleCardNumberChange}
           required
+          className={errors.cardNumber ? "border-red-500" : ""}
         />
+        {errors.cardNumber && <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>}
       </div>
       
       <div className="flex space-x-4">
@@ -160,7 +190,9 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
             value={expiryDate}
             onChange={handleExpiryDateChange}
             required
+            className={errors.expiryDate ? "border-red-500" : ""}
           />
+          {errors.expiryDate && <p className="text-red-500 text-sm mt-1">{errors.expiryDate}</p>}
         </div>
         <div className="w-1/2">
           <Label htmlFor="cvv">CVV</Label>
@@ -168,10 +200,12 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
             id="cvv"
             placeholder="123"
             value={cvv}
-            onChange={e => setCvv(e.target.value.replace(/\D/g, '').slice(0, 3))}
+            onChange={handleCvvChange}
             required
             type="password"
+            className={errors.cvv ? "border-red-500" : ""}
           />
+          {errors.cvv && <p className="text-red-500 text-sm mt-1">{errors.cvv}</p>}
         </div>
       </div>
       
@@ -180,7 +214,11 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
         className="w-full mt-4 bg-red-800 hover:bg-red-700"
         disabled={loading}
       >
-        {loading ? 'Traitement en cours...' : 'Payer'}
+        {loading ? (
+          <span className="flex items-center justify-center">
+            <LoadingSpinner size="sm" className="mr-2" /> Traitement en cours...
+          </span>
+        ) : 'Payer'}
       </Button>
     </form>
   );

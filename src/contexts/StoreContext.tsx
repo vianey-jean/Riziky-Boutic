@@ -1,6 +1,5 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { productsAPI, Product, panierAPI, favoritesAPI, Cart, ordersAPI, Order } from '@/services/api';
+import { productsAPI, Product, panierAPI, favoritesAPI, Cart, ordersAPI, Order, codePromosAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from './AuthContext';
 
@@ -30,7 +29,11 @@ interface StoreContextType {
   fetchProducts: (categoryName?: string) => Promise<void>;
   fetchOrders: () => Promise<void>;
   favoriteCount: number;
-  createOrder: (shippingAddress: any, paymentMethod: string) => Promise<Order | null>;
+  createOrder: (
+    shippingAddress: any, 
+    paymentMethod: string, 
+    codePromo?: {code: string, productId: string, pourcentage: number}
+  ) => Promise<Order | null>;
   setSelectedCartItems: (items: CartItem[]) => void;
 }
 
@@ -137,6 +140,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (!cartData || !Array.isArray(cartData.items)) {
         setCart([]);
+        setLoadingCart(false);
         return;
       }
       
@@ -187,18 +191,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Charger les produits au démarrage
   useEffect(() => {
     fetchProducts();
   }, []);
 
+  // Charger les favoris, le panier et les commandes quand l'utilisateur change
   useEffect(() => {
-    fetchFavorites();
-    fetchCart();
-    fetchOrders();
-  }, [user]);
+    if (isAuthenticated && user) {
+      fetchFavorites();
+      fetchCart();
+      fetchOrders();
+    } else {
+      setFavorites([]);
+      setCart([]);
+      setOrders([]);
+      setLoadingFavorites(false);
+      setLoadingCart(false);
+      setLoadingOrders(false);
+    }
+  }, [isAuthenticated, user]);
 
+  // Mettre à jour les items sélectionnés quand le panier change
   useEffect(() => {
-    setSelectedCartItems(cart);
+    setSelectedCartItems([...cart]);
   }, [cart]);
 
   const addToCart = async (product: Product, quantity: number = 1) => {
@@ -345,12 +361,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return products.find(p => p.id === id);
   };
 
-  const createOrder = async (shippingAddress: any, paymentMethod: string): Promise<Order | null> => {
+  const createOrder = async (
+    shippingAddress: any,
+    paymentMethod: string,
+    codePromo?: { code: string; productId: string; pourcentage: number }
+  ): Promise<Order | null> => {
     if (!isAuthenticated || !user || selectedCartItems.length === 0) {
+      toast.error('Impossible de créer la commande: utilisateur non connecté ou panier vide');
       return null;
     }
 
-    // Check stock availability for each item before placing order
+    // Vérifie que chaque produit a encore assez de stock
     for (const item of selectedCartItems) {
       const currentProduct = products.find(p => p.id === item.product.id);
       if (currentProduct && currentProduct.stock !== undefined && item.quantity > currentProduct.stock) {
@@ -360,48 +381,51 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     try {
-      const orderItems = selectedCartItems.map(item => ({
-        productId: item.product.id,
-        quantity: item.quantity,
-        price: item.product.price, // Prix déjà avec promotion si applicable
-        name: item.product.name,
-        image: item.product.image,
-        subtotal: item.product.price * item.quantity
-      }));
+      console.log('Preparing order payload with items:', selectedCartItems.length);
       
-      const orderData = {
+      // Prépare les éléments de la commande avec toutes les informations nécessaires
+      const orderItems = selectedCartItems.map(item => {
+        // Déterminer le prix final (avec ou sans code promo)
+        const finalPrice = codePromo && codePromo.productId === item.product.id
+          ? item.product.price * (1 - codePromo.pourcentage / 100)
+          : item.product.price;
+
+        return {
+          productId: item.product.id,
+          name: item.product.name,
+          price: finalPrice,
+          originalPrice: item.product.originalPrice || item.product.price,
+          quantity: item.quantity,
+          image: item.product.images && item.product.images.length > 0 
+            ? item.product.images[0] 
+            : item.product.image,
+          subtotal: finalPrice * item.quantity,
+          codePromoApplied: codePromo && codePromo.productId === item.product.id
+        };
+      });
+      
+      console.log('Order items mapped:', orderItems);
+
+      const orderPayload = {
         items: orderItems,
         shippingAddress,
-        paymentMethod
+        paymentMethod,
+        codePromo: codePromo || null
       };
+
+      console.log('Sending order payload:', orderPayload);
       
-      const response = await ordersAPI.create(orderData);
-      
+      const response = await ordersAPI.create(orderPayload);
+
       if (response.data) {
-        // Update local products with new stock levels
-        const updatedProducts = [...products];
-        selectedCartItems.forEach(item => {
-          const productIndex = updatedProducts.findIndex(p => p.id === item.product.id);
-          if (productIndex !== -1 && updatedProducts[productIndex].stock !== undefined) {
-            const newStock = Math.max(0, updatedProducts[productIndex].stock! - item.quantity);
-            updatedProducts[productIndex] = {
-              ...updatedProducts[productIndex],
-              stock: newStock,
-              isSold: newStock > 0
-            };
-          }
-        });
-        setProducts(updatedProducts);
-        
-        // Refresh data
-        await fetchOrders();
-        await fetchProducts();
-        await clearCart();
-        
+        toast.success('Commande créée avec succès');
+        fetchOrders(); // recharge les commandes
+        clearCart(); // vide le panier
         return response.data;
+      } else {
+        toast.error('Échec de la création de la commande');
+        return null;
       }
-      
-      return null;
     } catch (error) {
       console.error("Erreur lors de la création de la commande:", error);
       toast.error('Erreur lors de la création de la commande');

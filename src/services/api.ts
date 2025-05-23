@@ -1,6 +1,6 @@
-
 import axios from 'axios';
 import _ from 'lodash';
+import Cookies from 'js-cookie';
 
 // 🔁 URL de base récupérée depuis le .env
 const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -8,7 +8,7 @@ const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // Créer une instance axios avec la configuration de base
 const API = axios.create({
   baseURL: `${AUTH_BASE_URL}/api`, // Utilisation correcte de la template string
-  timeout: 10000, // Timeout plus long pour éviter les erreurs de connexion
+  timeout: 30000, // Timeout plus long pour éviter les erreurs de connexion
 });
 
 // Ajouter un intercepteur pour inclure le token d'authentification
@@ -27,16 +27,27 @@ API.interceptors.request.use(
       };
     }
 
+    // Log des requêtes pour le débogage
+    console.log(`${config.method?.toUpperCase()} Request to ${config.url}`, 
+      config.method === 'post' || config.method === 'put' 
+        ? JSON.stringify(config.data)
+        : config.params || {});
+
     return config;
   },
   (error) => {
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
 // Ajouter un intercepteur pour gérer les erreurs globalement
 API.interceptors.response.use(
-  response => response,
+  response => {
+    // Log des réponses pour le débogage
+    console.log(`Response from ${response.config.url}:`, response.data);
+    return response;
+  },
   error => {
     // Log de l'erreur pour le débogage
     console.error("API Error:", error.response || error);
@@ -296,6 +307,8 @@ export interface OrderItem {
   image: string;
   images?: string[]; // Support pour multiples images
   subtotal: number;
+  codePromoApplied?: boolean;
+  originalPrice?: number;
 }
 
 export interface Order {
@@ -307,6 +320,7 @@ export interface Order {
   totalAmount: number;
   shippingAddress: ShippingAddress;
   paymentMethod: string;
+  codePromoUsed?: string | null;
   status: 'confirmée' | 'en préparation' | 'en livraison' | 'livrée';
   createdAt: string;
   updatedAt: string;
@@ -317,7 +331,25 @@ export const ordersAPI = {
   getAll: () => API.get<Order[]>('/orders'),
   getUserOrders: () => API.get<Order[]>('/orders/user'),
   getById: (orderId: string) => API.get<Order>(`/orders/${orderId}`),
-  create: (orderData: any) => API.post<Order>('/orders', orderData),
+  create: (orderData: any) => {
+    console.log('Sending order data to server:', JSON.stringify(orderData));
+    
+    // Ensure orderData has the required properties with correct types
+    const validatedData = {
+      items: Array.isArray(orderData.items) 
+        ? orderData.items.map((item: any) => ({
+            productId: item.productId,
+            quantity: Number(item.quantity),
+            ...(item.price !== undefined && { price: Number(item.price) }),
+          })) 
+        : [],
+      shippingAddress: orderData.shippingAddress,
+      paymentMethod: orderData.paymentMethod,
+      codePromo: orderData.codePromo
+    };
+    
+    return API.post<Order>('/orders', validatedData);
+  },
   updateStatus: (orderId: string, status: string) => 
     API.put(`/orders/${orderId}/status`, { status }),
 };
@@ -390,6 +422,31 @@ export const clientChatAPI = {
     API.delete(`/client-chat/messages/${messageId}?conversationId=${conversationId}`),
   markAsRead: (messageId: string, conversationId: string) => 
     API.put(`/client-chat/messages/${messageId}/read`, { conversationId })
+};
+
+// Interface pour les codes promos
+export interface CodePromo {
+  id: string;
+  code: string;
+  pourcentage: number;
+  quantite: number;
+  productId: string;
+}
+
+// Services pour les codes promos
+export const codePromosAPI = {
+  getAll: () => API.get<CodePromo[]>('/code-promos'),
+  getById: (id: string) => API.get<CodePromo>(`/code-promos/${id}`),
+  create: (data: { pourcentage: number, quantite: number, productId: string }) => 
+    API.post<CodePromo>('/code-promos', data),
+  update: (id: string, quantite: number) => API.put<CodePromo>(`/code-promos/${id}`, { quantite }),
+  delete: (id: string) => API.delete(`/code-promos/${id}`),
+  verify: (code: string, productId: string) => 
+    API.post<{ valid: boolean, pourcentage?: number, message?: string }>('/code-promos/verify', { code, productId }),
+  use: (code: string, productId: string) => 
+    API.post<{ success: boolean, message: string }>('/code-promos/use', { code, productId }),
+  searchProducts: (query: string) => 
+    API.get<{ id: string, name: string, price: number, image: string }[]>(`/code-promos/products/search?query=${query}`)
 };
 
 export default API;
