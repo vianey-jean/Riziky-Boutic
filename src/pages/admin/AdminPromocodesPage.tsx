@@ -32,12 +32,20 @@ import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+// Define proper product type
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
+}
+
 const AdminPromocodesPage: React.FC = () => {
   const [codePromos, setCodePromos] = useState<CodePromo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<string>('');
-  const [productOptions, setProductOptions] = useState<{ id: string; name: string }[]>([]);
+  const [productOptions, setProductOptions] = useState<Product[]>([]);
   const [pourcentage, setPourcentage] = useState<number>(10);
   const [quantite, setQuantite] = useState<number>(1);
   const { user, isAuthenticated } = useAuth();
@@ -181,7 +189,7 @@ const AdminPromocodesPage: React.FC = () => {
                         <SelectContent>
                           {productOptions.map((product) => (
                             <SelectItem key={product.id} value={product.id}>
-                              {product.name} - {product.price}€
+                              {product.name} {product.price ? `- ${product.price}€` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>

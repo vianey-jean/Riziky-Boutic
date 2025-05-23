@@ -13,7 +13,9 @@ const OrdersPage = () => {
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
+    // Forcer un rechargement des commandes à chaque fois
     fetchOrders();
+    console.log("Chargement des commandes depuis la page des commandes");
   }, []);
 
   const formatDate = (dateString: string) => {
