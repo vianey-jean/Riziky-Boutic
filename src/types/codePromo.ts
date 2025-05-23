@@ -5,6 +5,7 @@ export interface CodePromo {
   pourcentage: number;
   quantite: number;
   productId: string;
+  productName?: string;
 }
 
 export interface VerifyCodePromoResponse {

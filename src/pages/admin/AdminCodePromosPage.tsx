@@ -197,13 +197,14 @@ const AdminCodePromosPage = () => {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Pourcentage</TableHead>
-                    <TableHead>Quantité</TableHead>
-                    <TableHead>Produit ID</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
+<TableRow>
+  <TableHead className="text-center text-red-600 font-bold">Code</TableHead>
+  <TableHead className="text-center text-red-600 font-bold">Pourcentage</TableHead>
+  <TableHead className="text-center text-red-600 font-bold">Quantité</TableHead>
+  <TableHead className="text-center text-red-600 font-bold">Produit</TableHead>
+  <TableHead className="text-center text-red-600 font-bold">Actions</TableHead>
+</TableRow>
+
                 </TableHeader>
                 <TableBody>
                   {codePromos.map((codePromo) => (
@@ -215,7 +216,7 @@ const AdminCodePromosPage = () => {
                           {codePromo.quantite}
                         </Badge>
                       </TableCell>
-                      <TableCell>{codePromo.productId}</TableCell>
+                      <TableCell>{codePromo.productName || codePromo.productId}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <Button size="sm" variant="outline" onClick={() => openEditModal(codePromo)}>
