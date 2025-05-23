@@ -94,33 +94,38 @@ const AdminOrdersPage = () => {
               <CardContent>
                 <div className="mb-4">
                   <h3 className="text-sm font-medium mb-2">Produits:</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                    {order.items.map((item) => (
-                      <div key={item.productId} className="flex items-center">
-                        <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden mr-2">
-                          {item.image ? (
-                            <img 
-                              src={getImageUrl(item.image)} 
-                              alt={item.name} 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                              <ShoppingBag className="h-4 w-4 text-gray-500" />
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">{item.quantity} x {item.price.toFixed(2)} €</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+
+
+<div className="flex flex-col gap-2">
+  {order.items.map((item) => (
+    <div key={item.productId} className="flex items-center">
+      <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden mr-2">
+        {item.image ? (
+          <img 
+            src={getImageUrl(item.image)} 
+            alt={item.name} 
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+            <ShoppingBag className="h-4 w-4 text-gray-500" />
+          </div>
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-medium">{item.name}</p>
+        <p className="text-xs text-muted-foreground">{item.quantity} × {item.price.toFixed(2)} €</p>
+      </div>
+    </div>
+  ))}
+</div>
+
+
+
                 </div>
 
                 <div className="mt-4">

@@ -72,42 +72,44 @@ const OrdersPage = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap gap-4 mb-4">
-                    {order.items.slice(0, 3).map((item) => (
-                      <div key={item.productId} className="flex items-center">
-                        <div className="w-12 h-12 rounded overflow-hidden">
-                          {item.image ? (
-                            <img
-                              src={getImageUrl(item.image)}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                              <ShoppingBag className="h-6 w-6 text-gray-500" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.quantity} × {item.price.toFixed(2)} €
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                    {order.items.length > 3 && (
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center">
-                          <span className="text-sm font-medium">+{order.items.length - 3}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+<div className="flex flex-col gap-4 mb-4">
+  {order.items.slice(0, 3).map((item) => (
+    <div key={item.productId} className="flex items-center">
+      <div className="w-12 h-12 rounded overflow-hidden">
+        {item.image ? (
+          <img
+            src={getImageUrl(item.image)}
+            alt={item.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+            <ShoppingBag className="h-6 w-6 text-gray-500" />
+          </div>
+        )}
+      </div>
+      <div className="ml-3">
+        <p className="text-sm font-medium">{item.name}</p>
+        <p className="text-xs text-muted-foreground">
+          {item.quantity} × {item.price.toFixed(2)} €
+        </p>
+      </div>
+    </div>
+  ))}
+
+  {order.items.length > 3 && (
+    <div className="flex items-center">
+      <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center">
+        <span className="text-sm font-medium">+{order.items.length - 3}</span>
+      </div>
+    </div>
+  )}
+</div>
+
 
                   {/* Order Status Steps */}
                   <div className="bg-white border rounded-lg p-4 mb-4">

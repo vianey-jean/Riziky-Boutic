@@ -9,6 +9,7 @@ import {
   Truck,
   Settings,
   LogOut,
+  Percent,
   MessageSquare
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,7 +49,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: 'Utilisateurs', path: secureRoutes.utilisateurs, realPath: '/admin/utilisateurs', icon: Users },
     { name: 'Messages', path: secureRoutes.messages, realPath: '/admin/messages', icon: MessageCircle },
     { name: 'Commandes', path: secureRoutes.commandes, realPath: '/admin/commandes', icon: Truck },
-     { name: 'CodePromo', path: secureRoutes.codePromo, realPath: '/admin/code-promos', icon: Truck },
+     { name: 'CodePromo', path: secureRoutes.codePromo, realPath: '/admin/code-promos', icon: Percent },
     { name: 'Chat Admin', path: secureRoutes.chat, realPath: '/admin', icon: ShoppingBag },
     // Conditional item for service client admin
     ...(isServiceAdmin ? [{ 
