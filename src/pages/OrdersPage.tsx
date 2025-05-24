@@ -1,16 +1,32 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, Truck, Package, ShoppingBag } from 'lucide-react';
+import { Check, Truck, Package, ShoppingBag, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '@/contexts/StoreContext';
 import { Separator } from '@/components/ui/separator';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from '@/components/ui/sonner';
+import { ordersAPI } from '@/services/api';
 
 const OrdersPage = () => {
   const { orders, loadingOrders, fetchOrders } = useStore();
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const [selectedItems, setSelectedItems] = useState<{[orderId: string]: string[]}>({});
+  const [cancellingOrder, setCancellingOrder] = useState<string | null>(null);
 
   useEffect(() => {
     // Forcer un rechargement des commandes à chaque fois
@@ -47,6 +63,58 @@ const OrdersPage = () => {
     return `${AUTH_BASE_URL}${imagePath}`;
   };
 
+  const handleItemSelection = (orderId: string, itemId: string, checked: boolean) => {
+    setSelectedItems(prev => {
+      const orderItems = prev[orderId] || [];
+      if (checked) {
+        return { ...prev, [orderId]: [...orderItems, itemId] };
+      } else {
+        return { ...prev, [orderId]: orderItems.filter(id => id !== itemId) };
+      }
+    });
+  };
+
+  const handleSelectAllItems = (orderId: string, orderItems: any[], checked: boolean) => {
+    if (checked) {
+      setSelectedItems(prev => ({ 
+        ...prev, 
+        [orderId]: orderItems.map(item => item.productId) 
+      }));
+    } else {
+      setSelectedItems(prev => ({ ...prev, [orderId]: [] }));
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      setCancellingOrder(orderId);
+      const itemsToCancel = selectedItems[orderId] || [];
+      
+      const response = await ordersAPI.cancelOrder(orderId, itemsToCancel);
+      
+      if (response.data.cancelled) {
+        toast.success('Commande complètement annulée');
+      } else {
+        toast.success('Produits sélectionnés annulés avec succès');
+      }
+      
+      // Recharger les commandes pour voir les changements
+      await fetchOrders();
+      
+      // Réinitialiser les sélections
+      setSelectedItems(prev => ({ ...prev, [orderId]: [] }));
+    } catch (error) {
+      console.error('Erreur lors de l\'annulation:', error);
+      toast.error('Erreur lors de l\'annulation de la commande');
+    } finally {
+      setCancellingOrder(null);
+    }
+  };
+
+  const canCancelOrder = (order: any) => {
+    return order.status === 'confirmée' || order.status === 'en préparation';
+  };
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto p-4">
@@ -72,44 +140,43 @@ const OrdersPage = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-<div className="flex flex-col gap-4 mb-4">
-  {order.items.slice(0, 3).map((item) => (
-    <div key={item.productId} className="flex items-center">
-      <div className="w-12 h-12 rounded overflow-hidden">
-        {item.image ? (
-          <img
-            src={getImageUrl(item.image)}
-            alt={item.name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
-            }}
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <ShoppingBag className="h-6 w-6 text-gray-500" />
-          </div>
-        )}
-      </div>
-      <div className="ml-3">
-        <p className="text-sm font-medium">{item.name}</p>
-        <p className="text-xs text-muted-foreground">
-          {item.quantity} × {item.price.toFixed(2)} €
-        </p>
-      </div>
-    </div>
-  ))}
+                  <div className="flex flex-col gap-4 mb-4">
+                    {order.items.slice(0, 3).map((item) => (
+                      <div key={item.productId} className="flex items-center">
+                        <div className="w-12 h-12 rounded overflow-hidden">
+                          {item.image ? (
+                            <img
+                              src={getImageUrl(item.image)}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                              <ShoppingBag className="h-6 w-6 text-gray-500" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm font-medium">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.quantity} × {item.price.toFixed(2)} €
+                          </p>
+                        </div>
+                      </div>
+                    ))}
 
-  {order.items.length > 3 && (
-    <div className="flex items-center">
-      <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center">
-        <span className="text-sm font-medium">+{order.items.length - 3}</span>
-      </div>
-    </div>
-  )}
-</div>
-
+                    {order.items.length > 3 && (
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center">
+                          <span className="text-sm font-medium">+{order.items.length - 3}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Order Status Steps */}
                   <div className="bg-white border rounded-lg p-4 mb-4">
@@ -161,16 +228,94 @@ const OrdersPage = () => {
 
                   <Separator className="my-4" />
 
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                       <p className="text-sm font-medium">Total</p>
                       <p className="text-xl font-bold">{order.totalAmount.toFixed(2)} €</p>
                     </div>
-                    <Button asChild>
-                      <Link to={`/commande/${order.id}`}>
-                        Voir les détails
-                      </Link>
-                    </Button>
+                    
+                    <div className="flex gap-3">
+                      {canCancelOrder(order) && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              disabled={cancellingOrder === order.id}
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Annuler la commande
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="max-w-md">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Annuler la commande</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {order.items.length > 1 ? (
+                                  <div className="space-y-4">
+                                    <p>Sélectionnez les produits à annuler :</p>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`select-all-${order.id}`}
+                                          checked={selectedItems[order.id]?.length === order.items.length}
+                                          onCheckedChange={(checked) => 
+                                            handleSelectAllItems(order.id, order.items, checked as boolean)
+                                          }
+                                        />
+                                        <label htmlFor={`select-all-${order.id}`} className="text-sm font-medium">
+                                          Tout sélectionner
+                                        </label>
+                                      </div>
+                                      {order.items.map((item) => (
+                                        <div key={item.productId} className="flex items-center space-x-2">
+                                          <Checkbox
+                                            id={`item-${item.productId}`}
+                                            checked={selectedItems[order.id]?.includes(item.productId) || false}
+                                            onCheckedChange={(checked) => 
+                                              handleItemSelection(order.id, item.productId, checked as boolean)
+                                            }
+                                          />
+                                          <label htmlFor={`item-${item.productId}`} className="text-sm">
+                                            {item.name} (x{item.quantity})
+                                          </label>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  "Êtes-vous sûr de vouloir annuler cette commande ? Cette action est irréversible."
+                                )}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => {
+                                  if (order.items.length === 1) {
+                                    setSelectedItems(prev => ({ 
+                                      ...prev, 
+                                      [order.id]: [order.items[0].productId] 
+                                    }));
+                                  }
+                                  handleCancelOrder(order.id);
+                                }}
+                                disabled={order.items.length > 1 && (!selectedItems[order.id] || selectedItems[order.id].length === 0)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Confirmer l'annulation
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      
+                      <Button asChild>
+                        <Link to={`/commande/${order.id}`}>
+                          Voir les détails
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

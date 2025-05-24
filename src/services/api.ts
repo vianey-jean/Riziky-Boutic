@@ -352,6 +352,8 @@ export const ordersAPI = {
   },
   updateStatus: (orderId: string, status: string) => 
     API.put(`/orders/${orderId}/status`, { status }),
+  cancelOrder: (orderId: string, itemsToCancel: string[]) => 
+    API.post(`/orders/${orderId}/cancel`, { itemsToCancel }),
 };
 
 // Interface pour les messages
