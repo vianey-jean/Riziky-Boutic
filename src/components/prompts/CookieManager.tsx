@@ -6,9 +6,10 @@ import { toast } from 'sonner';
 
 interface CookieManagerProps {
   className?: string;
+  position?: 'footer' | 'fixed';
 }
 
-const CookieManager: React.FC<CookieManagerProps> = ({ className = '' }) => {
+const CookieManager: React.FC<CookieManagerProps> = ({ className = '', position = 'footer' }) => {
   const openCookieSettings = () => {
     // Effacer les préférences existantes pour forcer l'affichage du consentement
     localStorage.removeItem('cookie-consent');
@@ -25,15 +26,29 @@ const CookieManager: React.FC<CookieManagerProps> = ({ className = '' }) => {
   };
   
   return (
-    <Button 
-      variant="ghost" 
-      size="sm" 
-      className={`text-xs flex items-center gap-1 ${className}`}
-      onClick={openCookieSettings}
-    >
-      <Cookie className="h-3 w-3" />
-      <span>Gérer les cookies</span>
-    </Button>
+    <>
+      {position === 'footer' ? (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className={`text-xs flex items-center gap-1 ${className}`}
+          onClick={openCookieSettings}
+        >
+          <Cookie className="h-3 w-3" />
+          <span>Gérer les cookies</span>
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed bottom-4 left-4 z-50 rounded-full h-10 w-10 shadow-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+          onClick={openCookieSettings}
+          aria-label="Gérer les cookies"
+        >
+          <Cookie className="h-5 w-5" />
+        </Button>
+      )}
+    </>
   );
 };
 
