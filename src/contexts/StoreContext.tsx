@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { productsAPI, Product, panierAPI, favoritesAPI, Cart, ordersAPI, Order, codePromosAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
@@ -219,11 +220,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addToCart = async (product: Product, quantity: number = 1) => {
     if (!isAuthenticated || !user) {
-      toast.error('Vous devez être connecté pour ajouter un produit au panier',
-        {
-          style: { backgroundColor: 'red', color: 'white' },
-        }
-      );
+      toast.error('Vous devez être connecté pour ajouter un produit au panier', {
+        style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
+        duration: 4000,
+        position: 'top-center',
+      });
       return;
     }
     
@@ -320,11 +321,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const toggleFavorite = async (product: Product) => {
     if (!isAuthenticated || !user) {
-      toast.error('Vous devez être connecté pour ajouter un produit aux favoris',
-        {
-          style: { backgroundColor: 'red', color: 'white' },
-        }
-      );
+      toast.error('Vous devez être connecté pour ajouter un produit aux favoris', {
+        style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
+        duration: 4000,
+        position: 'top-center',
+      });
       return;
     }
     
@@ -421,6 +422,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toast.success('Commande créée avec succès');
         fetchOrders(); // recharge les commandes
         clearCart(); // vide le panier
+        
+        // Mettre à jour les produits pour refléter le stock actualisé
+        fetchProducts();
+        
         return response.data;
       } else {
         toast.error('Échec de la création de la commande');
