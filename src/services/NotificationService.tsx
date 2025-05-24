@@ -93,21 +93,20 @@ export const NotificationService = {
         // Jouer le son de notification
         NotificationService.playNotificationSound();
         
-        // Afficher la notification avec un fond rouge et un bouton OK en noir
+        // Afficher la notification avec Shadcn Toast
         toast({
+          variant: "destructive",
           title: "Rappel de rendez-vous",
-          description: (
-            <div className="bg-red-500 p-3 rounded-md text-white">
-              <p>Vous aurez un rendez-vous le {formattedDate} à {location}, "{appointment.description}".</p>
-              <Button 
-                onClick={() => NotificationService.addConfirmedNotification(appointment.id)}
-                className="mt-2 bg-black text-white hover:bg-gray-800"
-              >
-                OK
-              </Button>
-            </div>
+          description: `Vous aurez un rendez-vous le ${formattedDate} à ${location}, "${appointment.description}".`,
+          action: (
+            <Button 
+              onClick={() => NotificationService.addConfirmedNotification(appointment.id)}
+              variant="outline"
+              size="sm"
+            >
+              OK
+            </Button>
           ),
-          duration: 10000, // 10 secondes
         });
       } catch (error) {
         console.error("Erreur lors de l'affichage de la notification:", error);

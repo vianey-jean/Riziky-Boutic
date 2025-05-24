@@ -119,7 +119,7 @@ const ProfilePage = () => {
     <Layout>
       <div className="container px-4 py-8">
 <div className="max-w-[900px] mx-auto px-4">
-  <h1 className="text-3xl font-bold mb-8">Mon Compte</h1>
+  <h1 className="text-3xl font-bold mb-8 text-red-800">Mon Compte</h1>
 
   <div className="grid gap-6 md:grid-cols-[250px_1fr]">
     <div className="md:col-span-2">

@@ -1,4 +1,3 @@
-
 import { nanoid } from 'nanoid';
 
 // Stockage en mémoire des mappings entre IDs sécurisés et IDs réels
@@ -88,6 +87,16 @@ export const getSecureId = (realId: string, type: EntityType = 'product'): strin
   
   // Sinon, générer un nouvel ID
   return generateSecureId(realId, type);
+};
+
+/**
+ * Obtient un ID sécurisé spécifiquement pour un produit
+ * @param productId L'ID du produit
+ * @param type Type d'entité (par défaut 'product')
+ * @returns L'ID sécurisé du produit
+ */
+export const getSecureProductId = (productId: string, type: EntityType = 'product'): string => {
+  return getSecureId(productId, type);
 };
 
 /**

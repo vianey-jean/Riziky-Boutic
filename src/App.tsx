@@ -30,7 +30,7 @@ const LoadingFallback = () => (
 );
 
 // Chargement paresseux des pages pour optimiser les performances
-const Index = lazy(() => import('./pages/Index'));
+const HomePage = lazy(() => import('./pages/HomePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
@@ -96,7 +96,7 @@ function AppRoutes() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        <Route path="/" element={<Index />} />
+        <Route path="/" element={<HomePage />} />
         
         {/* Routes d'authentification sécurisées */}
         <Route path={secureRoutes.get('/login')?.substring(1)} element={<LoginPage />} />
