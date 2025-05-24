@@ -281,7 +281,7 @@ const CookieConsent: React.FC = () => {
                   </Link>
                   <span>•</span>
                   <Link 
-                    to="/privacy" 
+                    to="/politique-confidentialite" 
                     className="flex items-center hover:text-neutral-700 dark:hover:text-neutral-200"
                   >
                     Politique de confidentialité <ExternalLink className="h-3 w-3 ml-1" />

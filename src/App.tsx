@@ -116,6 +116,7 @@ function AppRoutes() {
         
         {/* Pages d'information */}
         <Route path="/livraison" element={<DeliveryPage />} />
+        <Route path="/mentions-legales" element={<ReturnsPage />} />
         <Route path="/retours" element={<ReturnsPage />} />
         <Route path="/service-client" element={<CustomerServicePage />} />
         <Route path="/contact" element={<ContactPage />} />
