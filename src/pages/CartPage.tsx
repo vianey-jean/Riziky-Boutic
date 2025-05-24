@@ -65,7 +65,7 @@ const CartPage = () => {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold mb-8 text-red-800">Votre Panier</h1>
+          <h1 className="text-3xl font-bold mb-8">Votre Panier</h1>
           <div className="flex justify-center py-12">
             <LoadingSpinner text="Chargement de votre panier..." />
           </div>
@@ -77,7 +77,7 @@ const CartPage = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8 text-red-800">Votre Panier</h1>
+        <h1 className="text-3xl font-bold mb-8">Votre Panier</h1>
 
         {!isAuthenticated ? (
           <div className="text-center py-16 border rounded-lg bg-gray-50">

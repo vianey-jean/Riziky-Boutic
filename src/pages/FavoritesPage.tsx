@@ -15,7 +15,7 @@ const FavoritesPage = () => {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-red-800">Vos Favoris</h1>
+        <h1 className="text-3xl font-bold mb-6">Vos Favoris</h1>
         
         {!isAuthenticated ? (
           <div className="text-center py-12 border rounded-lg bg-gray-50">

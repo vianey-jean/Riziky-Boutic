@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -44,7 +45,7 @@ const ProductDetail = () => {
     if (!secureProductId) {
       setIsValidId(false);
       toast.error("Produit non trouvé");
-      navigate('/not-found', { replace: true });
+      navigate('/page/notfound', { replace: true });
       return;
     }
     
@@ -57,7 +58,7 @@ const ProductDetail = () => {
     if (!isValid) {
       setIsValidId(false);
       toast.error("Ce lien n'est plus valide");
-      navigate('/not-found', { replace: true });
+      navigate('/page/notfound', { replace: true });
     } else {
       // Trouver le produit correspondant à l'ID réel
       const foundProduct = products.find(p => p.id === productId);
@@ -68,7 +69,7 @@ const ProductDetail = () => {
         console.log('ProductDetail - Produit non trouvé:', productId);
         setIsValidId(false);
         toast.error("Produit introuvable");
-        navigate('/not-found', { replace: true });
+        navigate('/page/notfound', { replace: true });
       }
     }
     

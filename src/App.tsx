@@ -1,3 +1,4 @@
+
 import React, { useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import { Toaster } from './components/ui/sonner';
@@ -262,7 +263,10 @@ function AppRoutes() {
         } />
         <Route path="/admin/pub-layout" element={<Navigate to={secureRoutes.get('/admin/pub-layout') || '/'} replace />} />
         
-        {/* Route 404 */}
+        {/* Route NotFound spécifique */}
+        <Route path="/page/notfound" element={<NotFound />} />
+        
+        {/* Route 404 - tous les liens qui n'existent pas */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
