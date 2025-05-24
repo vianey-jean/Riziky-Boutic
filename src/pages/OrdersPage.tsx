@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, Truck, Package, ShoppingBag, X } from 'lucide-react';
+import { Check, Truck, Package, ShoppingBag, X, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '@/contexts/StoreContext';
 import { Separator } from '@/components/ui/separator';
@@ -26,7 +26,7 @@ const OrdersPage = () => {
   const { orders, loadingOrders, fetchOrders } = useStore();
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [selectedItems, setSelectedItems] = useState<{[orderId: string]: string[]}>({});
-  const [cancellingOrder, setCancellingOrder] = useState<string | null>(null);
+  const [processingOrder, setProcessingOrder] = useState<string | null>(null);
 
   useEffect(() => {
     // Forcer un rechargement des commandes à chaque fois
@@ -85,17 +85,42 @@ const OrdersPage = () => {
     }
   };
 
-  const handleCancelOrder = async (orderId: string) => {
+  const handleDeleteOrder = async (orderId: string) => {
     try {
-      setCancellingOrder(orderId);
+      setProcessingOrder(orderId);
+      
+      console.log('Suppression complète de la commande:', orderId);
+      
+      const response = await ordersAPI.cancelOrder(orderId, []);
+      
+      toast.success('Commande supprimée avec succès');
+      
+      // Recharger les commandes pour voir les changements
+      await fetchOrders();
+      
+      // Réinitialiser les sélections
+      setSelectedItems(prev => ({ ...prev, [orderId]: [] }));
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Erreur lors de la suppression de la commande');
+    } finally {
+      setProcessingOrder(null);
+    }
+  };
+
+  const handleCancelProducts = async (orderId: string) => {
+    try {
+      setProcessingOrder(orderId);
       const itemsToCancel = selectedItems[orderId] || [];
+      
+      console.log('Annulation des produits:', itemsToCancel);
       
       const response = await ordersAPI.cancelOrder(orderId, itemsToCancel);
       
       if (response.data.cancelled) {
-        toast.success('Commande complètement annulée');
+        toast.success('Commande complètement supprimée');
       } else {
-        toast.success('Produits sélectionnés annulés avec succès');
+        toast.success('Produits sélectionnés annulés avec succès. La commande a été mise à jour.');
       }
       
       // Recharger les commandes pour voir les changements
@@ -105,14 +130,22 @@ const OrdersPage = () => {
       setSelectedItems(prev => ({ ...prev, [orderId]: [] }));
     } catch (error) {
       console.error('Erreur lors de l\'annulation:', error);
-      toast.error('Erreur lors de l\'annulation de la commande');
+      toast.error('Erreur lors de l\'annulation des produits');
     } finally {
-      setCancellingOrder(null);
+      setProcessingOrder(null);
     }
   };
 
-  const canCancelOrder = (order: any) => {
+  const canModifyOrder = (order: any) => {
     return order.status === 'confirmée' || order.status === 'en préparation';
+  };
+
+  const getSelectedItemsCount = (orderId: string) => {
+    return selectedItems[orderId]?.length || 0;
+  };
+
+  const hasMultipleProducts = (order: any) => {
+    return order.items.length > 1;
   };
 
   return (
@@ -131,6 +164,9 @@ const OrdersPage = () => {
                     <CardTitle>Commande #{order.id.split('-')[1]}</CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {formatDate(order.createdAt)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {order.items.length} produit{order.items.length > 1 ? 's' : ''}
                     </p>
                   </div>
                   <div className="mt-2 sm:mt-0">
@@ -235,79 +271,114 @@ const OrdersPage = () => {
                     </div>
                     
                     <div className="flex gap-3">
-                      {canCancelOrder(order) && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              disabled={cancellingOrder === order.id}
-                            >
-                              <X className="h-4 w-4 mr-2" />
-                              Annuler la commande
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="max-w-md">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Annuler la commande</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {order.items.length > 1 ? (
-                                  <div className="space-y-4">
-                                    <p>Sélectionnez les produits à annuler :</p>
-                                    <div className="space-y-2">
-                                      <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                          id={`select-all-${order.id}`}
-                                          checked={selectedItems[order.id]?.length === order.items.length}
-                                          onCheckedChange={(checked) => 
-                                            handleSelectAllItems(order.id, order.items, checked as boolean)
-                                          }
-                                        />
-                                        <label htmlFor={`select-all-${order.id}`} className="text-sm font-medium">
-                                          Tout sélectionner
-                                        </label>
-                                      </div>
-                                      {order.items.map((item) => (
-                                        <div key={item.productId} className="flex items-center space-x-2">
+                      {canModifyOrder(order) && (
+                        <>
+                          {/* Bouton Supprimer - toujours visible */}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                disabled={processingOrder === order.id}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Supprimer
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="max-w-md">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Supprimer la commande</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Êtes-vous sûr de vouloir supprimer complètement cette commande ? 
+                                  Tous les produits seront remis en stock et la commande sera définitivement supprimée.
+                                  Cette action est irréversible.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteOrder(order.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  {processingOrder === order.id ? 'Suppression...' : 'Confirmer la suppression'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+
+                          {/* Bouton Annuler - seulement si plusieurs produits */}
+                          {/** {hasMultipleProducts(order) && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  disabled={processingOrder === order.id}
+                                >
+                                  <X className="h-4 w-4 mr-2" />
+                                  Annuler des produits
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="max-w-md">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Annuler des produits</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    <div className="space-y-4">
+                                      <p className="text-sm">
+                                        Sélectionnez les produits à annuler. Les produits non sélectionnés resteront dans votre commande.
+                                      </p>
+                                      <div className="space-y-2">
+                                        <div className="flex items-center space-x-2">
                                           <Checkbox
-                                            id={`item-${item.productId}`}
-                                            checked={selectedItems[order.id]?.includes(item.productId) || false}
+                                            id={`select-all-${order.id}`}
+                                            checked={getSelectedItemsCount(order.id) === order.items.length}
                                             onCheckedChange={(checked) => 
-                                              handleItemSelection(order.id, item.productId, checked as boolean)
+                                              handleSelectAllItems(order.id, order.items, checked as boolean)
                                             }
                                           />
-                                          <label htmlFor={`item-${item.productId}`} className="text-sm">
-                                            {item.name} (x{item.quantity})
+                                          <label htmlFor={`select-all-${order.id}`} className="text-sm font-medium">
+                                            Tout sélectionner
                                           </label>
                                         </div>
-                                      ))}
+                                        {order.items.map((item) => (
+                                          <div key={item.productId} className="flex items-center space-x-2">
+                                            <Checkbox
+                                              id={`item-${item.productId}`}
+                                              checked={selectedItems[order.id]?.includes(item.productId) || false}
+                                              onCheckedChange={(checked) => 
+                                                handleItemSelection(order.id, item.productId, checked as boolean)
+                                              }
+                                            />
+                                            <label htmlFor={`item-${item.productId}`} className="text-sm">
+                                              {item.name} (x{item.quantity}) - {item.price.toFixed(2)}€
+                                            </label>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      {getSelectedItemsCount(order.id) > 0 && (
+                                        <p className="text-sm text-blue-600">
+                                          {getSelectedItemsCount(order.id)} produit{getSelectedItemsCount(order.id) > 1 ? 's' : ''} sélectionné{getSelectedItemsCount(order.id) > 1 ? 's' : ''}
+                                        </p>
+                                      )}
                                     </div>
-                                  </div>
-                                ) : (
-                                  "Êtes-vous sûr de vouloir annuler cette commande ? Cette action est irréversible."
-                                )}
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => {
-                                  if (order.items.length === 1) {
-                                    setSelectedItems(prev => ({ 
-                                      ...prev, 
-                                      [order.id]: [order.items[0].productId] 
-                                    }));
-                                  }
-                                  handleCancelOrder(order.id);
-                                }}
-                                disabled={order.items.length > 1 && (!selectedItems[order.id] || selectedItems[order.id].length === 0)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Confirmer l'annulation
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleCancelProducts(order.id)}
+                                    disabled={getSelectedItemsCount(order.id) === 0}
+                                    className="bg-orange-600 hover:bg-orange-700"
+                                  >
+                                    {processingOrder === order.id ? 'Annulation...' : 
+                                     `Annuler ${getSelectedItemsCount(order.id)} produit${getSelectedItemsCount(order.id) > 1 ? 's' : ''}`
+                                    }
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}*/}
+                        </>
                       )}
                       
                       <Button asChild>
