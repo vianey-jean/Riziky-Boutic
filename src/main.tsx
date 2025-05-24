@@ -10,6 +10,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from "./components/ui/sonner";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from './components/theme-provider'
+import CookieConsent from './components/prompts/CookieConsent'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +26,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
           <App />
+          <CookieConsent />
           <Toaster />
         </ThemeProvider>
       </BrowserRouter>

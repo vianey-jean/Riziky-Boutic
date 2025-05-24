@@ -4,9 +4,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Cookie, X } from 'lucide-react';
+import { toast } from "sonner";
+
+// Interface pour les préférences de cookies
+interface CookiePreferences {
+  essential: boolean;
+  performance: boolean;
+  functional: boolean;
+  targeting: boolean;
+}
 
 const CookieConsent: React.FC = () => {
   const [showConsent, setShowConsent] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [preferences, setPreferences] = useState<CookiePreferences>({
+    essential: true, // Toujours activé car essentiel
+    performance: false,
+    functional: false,
+    targeting: false
+  });
   
   // Vérifier si l'utilisateur a déjà donné son consentement
   useEffect(() => {
@@ -18,17 +34,63 @@ const CookieConsent: React.FC = () => {
       }, 1000);
       
       return () => clearTimeout(timer);
+    } else {
+      try {
+        // Charger les préférences sauvegardées
+        const savedPreferences = JSON.parse(consentGiven);
+        if (typeof savedPreferences === 'object') {
+          setPreferences(savedPreferences);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des préférences de cookies:', error);
+      }
     }
   }, []);
   
-  const acceptAll = () => {
-    localStorage.setItem('cookie-consent', 'all');
+  const savePreferences = (prefs: CookiePreferences) => {
+    localStorage.setItem('cookie-consent', JSON.stringify(prefs));
+    setPreferences(prefs);
     setShowConsent(false);
+    
+    // Afficher un toast de confirmation
+    toast.success("Vos préférences de cookies ont été enregistrées", {
+      description: "Vous pouvez les modifier à tout moment via le lien en bas de page",
+      duration: 5000,
+    });
+  };
+  
+  const acceptAll = () => {
+    const allAccepted = {
+      essential: true,
+      performance: true,
+      functional: true,
+      targeting: true
+    };
+    savePreferences(allAccepted);
   };
   
   const acceptEssential = () => {
-    localStorage.setItem('cookie-consent', 'essential');
-    setShowConsent(false);
+    const essentialOnly = {
+      essential: true,
+      performance: false,
+      functional: false,
+      targeting: false
+    };
+    savePreferences(essentialOnly);
+  };
+  
+  const saveCustomPreferences = () => {
+    savePreferences({
+      ...preferences,
+      essential: true // Toujours garder les cookies essentiels
+    });
+  };
+  
+  const togglePreference = (type: keyof CookiePreferences) => {
+    setPreferences(prev => ({
+      ...prev,
+      [type]: !prev[type]
+    }));
   };
   
   const dismiss = () => {
@@ -66,6 +128,62 @@ const CookieConsent: React.FC = () => {
                   sur votre utilisation de notre site avec nos partenaires.
                 </p>
                 
+                {showDetails ? (
+                  <div className="mb-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Cookies essentiels</p>
+                        <p className="text-sm text-neutral-500">Nécessaires au fonctionnement du site</p>
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        checked={preferences.essential} 
+                        disabled 
+                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Cookies de performance</p>
+                        <p className="text-sm text-neutral-500">Analyse des visites pour améliorer le site</p>
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        checked={preferences.performance} 
+                        onChange={() => togglePreference('performance')} 
+                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Cookies fonctionnels</p>
+                        <p className="text-sm text-neutral-500">Se souvenir de vos préférences</p>
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        checked={preferences.functional} 
+                        onChange={() => togglePreference('functional')} 
+                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Cookies de publicité</p>
+                        <p className="text-sm text-neutral-500">Personnalisation des publicités</p>
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        checked={preferences.targeting} 
+                        onChange={() => togglePreference('targeting')} 
+                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                ) : null}
+                
                 <div className="flex flex-col sm:flex-row gap-3 items-center">
                   <Button 
                     variant="default" 
@@ -78,9 +196,17 @@ const CookieConsent: React.FC = () => {
                   <Button 
                     variant="outline" 
                     className="w-full sm:w-auto" 
-                    onClick={acceptEssential}
+                    onClick={showDetails ? saveCustomPreferences : acceptEssential}
                   >
-                    Accepter uniquement les cookies essentiels
+                    {showDetails ? 'Enregistrer mes préférences' : 'Accepter uniquement les cookies essentiels'}
+                  </Button>
+                  
+                  <Button
+                    variant="link"
+                    onClick={() => setShowDetails(!showDetails)}
+                    className="text-sm text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                  >
+                    {showDetails ? 'Masquer les détails' : 'Personnaliser mes choix'}
                   </Button>
                   
                   <Link 
