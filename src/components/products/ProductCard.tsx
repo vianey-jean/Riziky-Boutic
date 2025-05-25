@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Heart, Clock, Star, Eye } from 'lucide-react';
 import { Product, useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { getSecureId } from '@/services/secureIds';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
@@ -27,6 +28,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   featured = false
 }) => {
   const { addToCart, toggleFavorite, isFavorite } = useStore();
+  const { isAuthenticated } = useAuth();
   const isProductFavorite = isFavorite(product.id);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
@@ -106,6 +108,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      toast.error("Vous devez être connecté pour ajouter un produit au panier", {
+        style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
+        duration: 4000,
+        position: 'top-center',
+      });
+      return;
+    }
     
     if (!product.isSold || (product.stock !== undefined && product.stock <= 0)) {
       toast.error("Ce produit est en rupture de stock");
@@ -262,12 +273,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <p className="font-bold">{product.price.toFixed(2)} €</p>
               )}
               
-              {(!product.isSold || (product.stock !== undefined && product.stock <= 0)) && (
-                <p className="text-red-500 text-xs mt-1">En rupture de stock</p>
-              )}
-              
-              {product.stock !== undefined && product.stock > 0 && product.stock <= 5 && (
-                <p className="text-orange-500 text-xs mt-1">Plus que {product.stock} en stock</p>
+              {/* Affichage du stock pour tous les produits */}
+              {product.stock !== undefined && (
+                <div className="mt-1">
+                  {product.stock === 0 || !product.isSold ? (
+                    <p className="text-red-500 text-xs">En rupture de stock</p>
+                  ) : product.stock <= 5 ? (
+                    <p className="text-orange-500 text-xs">Plus que {product.stock} en stock</p>
+                  ) : (
+                    <p className="text-orange-500 text-xs">Plus que {product.stock} en stock</p>
+                  )}
+                </div>
               )}
             </div>
             
@@ -275,7 +291,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               size="sm"
               variant="outline"
               className="h-8 bg-red-50 text-red-700 hover:bg-red-100 border-red-200 hover:border-red-300 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 dark:border-red-900/50"
-              onClick={() => addToCart(product)}
+              onClick={handleQuickAdd}
               disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
             >
               <ShoppingCart className="h-3.5 w-3.5 mr-1" />

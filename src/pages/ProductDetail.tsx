@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Heart, ShoppingCart, Check, Truck, ArrowLeft, Share2, Shield, Clock } from 'lucide-react';
 import FeaturedProductsSlider from '@/components/products/FeaturedProductsSlider';
 import ProductReviews from '@/components/reviews/ProductReviews';
@@ -18,6 +18,7 @@ const ProductDetail = () => {
   const { productId: secureProductId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { products, addToCart, toggleFavorite, isFavorite } = useStore();
+  const { isAuthenticated } = useAuth();
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const PLACEHOLDER_IMAGE = '/placeholder.svg';
   
@@ -115,6 +116,15 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      toast.error("Vous devez être connecté pour ajouter un produit au panier", {
+        style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
+        duration: 4000,
+        position: 'top-center',
+      });
+      return;
+    }
+
     if (product) {
       for (let i = 0; i < quantity; i++) {
         addToCart(product);
@@ -284,7 +294,7 @@ const ProductDetail = () => {
             <h1 className="text-3xl font-bold mb-4 text-neutral-900 dark:text-neutral-100">{product.name}</h1>
             
             {isPromotionActive ? (
-              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/50">
+              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900 rounded-lg border border-red-100 dark:border-red-900/50">
                 <div className="flex items-center gap-3 mb-2">
                   <p className="text-xl text-gray-500 line-through">
                     {typeof product.originalPrice === 'number'
