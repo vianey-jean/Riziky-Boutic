@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { authAPI, User, UpdateProfileData } from '../services/api';
+import { authAPI, User } from '../services/api';
+import { UpdateProfileData } from '@/types/auth';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {

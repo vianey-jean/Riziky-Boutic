@@ -7,9 +7,3 @@ export interface CodePromo {
   productId: string;
   productName?: string;
 }
-
-export interface VerifyCodePromoResponse {
-  valid: boolean;
-  pourcentage?: number;
-  message?: string;
-}

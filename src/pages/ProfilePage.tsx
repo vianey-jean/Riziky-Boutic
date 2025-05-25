@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,7 +9,8 @@ import PasswordForm from '@/components/profile/PasswordForm';
 import PreferencesForm from '@/components/profile/PreferencesForm';
 import { toast } from '@/components/ui/sonner';
 import { useStore } from '@/contexts/StoreContext';
-import { authAPI, UpdateProfileData } from '@/services/api';
+import { authAPI } from '@/services/api';
+import { UpdateProfileData } from '@/types/auth';
 
 const ProfilePage = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();

@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UpdateProfileData } from '@/services/api';
+import { UpdateProfileData } from '@/types/auth';
 
 interface PersonalInfoFormProps {
   profileData: UpdateProfileData & { id?: string };
