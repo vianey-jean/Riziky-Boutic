@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { productsAPI, Product, panierAPI, favoritesAPI, Cart, ordersAPI, Order, codePromosAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
@@ -421,7 +420,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (response.data) {
         toast.success('Commande créée avec succès');
         fetchOrders(); // recharge les commandes
-        clearCart(); // vide le panier
+        
+        // Supprimer seulement les produits commandés du panier
+        const remainingCartItems = cart.filter(cartItem => 
+          !selectedCartItems.some(selectedItem => selectedItem.product.id === cartItem.product.id)
+        );
+        
+        // Mettre à jour le panier avec les produits restants
+        setCart(remainingCartItems);
+        
+        // Vider les items sélectionnés
+        setSelectedCartItems([]);
         
         // Mettre à jour les produits pour refléter le stock actualisé
         fetchProducts();

@@ -65,10 +65,9 @@ const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
 const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
 const AdminClientChatPage = lazy(() => import('./pages/admin/AdminClientChatPage'));
-
 const AdminCodePromosPage = lazy(() => import('./pages/admin/AdminCodePromosPage'));
-
 const AdminPubLayoutPage = lazy(() => import('./pages/admin/AdminPubLayoutPage'));
+const AdminRemboursementsPage = lazy(() => import('./pages/admin/AdminRemboursementsPage'));
 
 // Création d'un nouveau QueryClient avec configuration optimisée
 const queryClient = new QueryClient({
@@ -262,6 +261,16 @@ function AppRoutes() {
           </SecureRoute>
         } />
         <Route path="/admin/pub-layout" element={<Navigate to={secureRoutes.get('/admin/pub-layout') || '/'} replace />} />
+        
+        {/* Ajout de la route sécurisée pour la page remboursements */}
+        <Route path={secureRoutes.get('/admin/remboursements')?.substring(1)} element={
+          <SecureRoute>
+            <ProtectedRoute requireAdmin>
+              <AdminRemboursementsPage />
+            </ProtectedRoute>
+          </SecureRoute>
+        } />
+        <Route path="/admin/remboursements" element={<Navigate to={secureRoutes.get('/admin/remboursements') || '/'} replace />} />
         
         {/* Route NotFound spécifique */}
         <Route path="/page/notfound" element={<NotFound />} />

@@ -11,16 +11,21 @@ interface CartSummaryProps {
   onCheckout?: () => void;
   showCheckoutButton?: boolean;
   isCompact?: boolean;
+  selectedItems?: Record<string, boolean>;
 }
 
 const CartSummary: React.FC<CartSummaryProps> = ({ 
   onCheckout, 
   showCheckoutButton = true,
-  isCompact = false
+  isCompact = false,
+  selectedItems = {}
 }) => {
-  const { selectedCartItems, getCartTotal } = useStore();
+  const { cart } = useStore();
   
-  const subtotal = getCartTotal();
+  // Filtrer les produits sélectionnés
+  const selectedCartItems = cart ? cart.filter(item => selectedItems[item.product.id]) : [];
+  
+  const subtotal = selectedCartItems.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   const itemCount = selectedCartItems.reduce((count, item) => count + item.quantity, 0);
   
   // Vérifier si des articles sont sélectionnés
@@ -33,14 +38,14 @@ const CartSummary: React.FC<CartSummaryProps> = ({
       {!hasSelectedItems ? (
         <div className="text-center py-4">
           <ShoppingBag className="mx-auto h-8 w-8 text-gray-400" />
-          <p className="mt-2 text-muted-foreground">Votre panier est vide</p>
+          <p className="mt-2 text-muted-foreground">Aucun produit sélectionné</p>
         </div>
       ) : (
         <>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                {itemCount} {itemCount > 1 ? 'articles' : 'article'}
+                {itemCount} {itemCount > 1 ? 'articles' : 'article'} sélectionné{itemCount > 1 ? 's' : ''}
               </span>
               <span>{formatPrice(subtotal)}</span>
             </div>

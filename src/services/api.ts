@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import _ from 'lodash';
 import Cookies from 'js-cookie';
@@ -146,11 +147,11 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  originalPrice?: number;
   image: string; // Maintenu pour compatibilité
   images?: string[]; // Nouveau tableau d'images
   category: string;
   isSold: boolean;
-  originalPrice?: number;
   promotion?: number | null;
   promotionEnd?: string | null;
   stock?: number;
@@ -449,6 +450,70 @@ export const codePromosAPI = {
     API.post<{ success: boolean, message: string }>('/code-promos/use', { code, productId }),
   searchProducts: (query: string) => 
     API.get<{ id: string, name: string, price: number, image: string }[]>(`/code-promos/products/search?query=${query}`)
+};
+
+// Alias pour compatibilité
+export const codePromoAPI = codePromosAPI;
+
+// Interface pour les remboursements
+export interface Remboursement {
+  id: string;
+  orderId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  reason: string;
+  customReason?: string;
+  photo?: string;
+  status: 'vérification' | 'en étude' | 'traité';
+  decision?: 'accepté' | 'refusé';
+  adminComments: AdminComment[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminComment {
+  id: string;
+  adminId: string;
+  adminName: string;
+  comment: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface RemboursementFormData {
+  orderId: string;
+  reason: string;
+  customReason?: string;
+  photo?: File;
+}
+
+// Services pour les remboursements
+export const remboursementsAPI = {
+  getAll: () => API.get<Remboursement[]>('/remboursements'),
+  getUserRemboursements: () => API.get<Remboursement[]>('/remboursements/user'),
+  getById: (id: string) => API.get<Remboursement>(`/remboursements/${id}`),
+  create: (remboursementData: RemboursementFormData) => {
+    const formData = new FormData();
+    formData.append('orderId', remboursementData.orderId);
+    formData.append('reason', remboursementData.reason);
+    
+    if (remboursementData.customReason) {
+      formData.append('customReason', remboursementData.customReason);
+    }
+    
+    if (remboursementData.photo) {
+      formData.append('photo', remboursementData.photo);
+    }
+    
+    return API.post<Remboursement>('/remboursements', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+  updateStatus: (id: string, status: string, comment?: string, decision?: string) => 
+    API.put(`/remboursements/${id}/status`, { status, comment, decision }),
 };
 
 export default API;

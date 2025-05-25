@@ -232,6 +232,7 @@ const CartPage = () => {
             <div className="md:col-span-1">
               <CartSummary 
                 onCheckout={handleCheckout}
+                selectedItems={selectedItems}
               />
             </div>
           </div>
