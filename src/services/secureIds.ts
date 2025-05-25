@@ -192,6 +192,8 @@ export const initSecureRoutes = () => {
     '/admin/parametres', 
     '/admin/commandes',
     '/admin/service-client',
+    '/admin/pub-layout',
+    '/admin/remboursements',
     '/profil',
     '/commandes',
     '/panier',
@@ -200,7 +202,9 @@ export const initSecureRoutes = () => {
     // Ajout des routes d'authentification
     '/login',
     '/register',
-    '/forgot-password'
+    '/forgot-password',
+    // Ajout de la route tous-les-produits
+    '/tous-les-produits'
   ];
   
   let hasNewRoutes = false;

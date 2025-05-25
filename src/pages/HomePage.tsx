@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import ProductCatalogGrid from '@/components/products/ProductGrid';
@@ -299,9 +298,13 @@ const HomePage = () => {
             <ProductCatalogGrid products={newArrivalProducts} title="Dernières Nouveautés" />
           </div>
 
-          {/* Catalogue complet */}
+          {/* Catalogue complet - Avec bouton "Voir tous produits" */}
           <div className="mb-12">
-            <ProductCatalogGrid products={completeProductCatalog} title="Notre Catalogue Complet" />
+            <ProductCatalogGrid 
+              products={completeProductCatalog} 
+              title="Notre Catalogue Complet" 
+              showViewAllButton={true}
+            />
           </div>
 
           {/* Témoignages clients */}

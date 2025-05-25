@@ -39,6 +39,7 @@ const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const CategoryPage = lazy(() => import('./pages/CategoryPage'));
 const DeliveryPage = lazy(() => import('./pages/DeliveryPage'));
 const ReturnsPage = lazy(() => import('./pages/ReturnsPage'));
+const AllProductsPage = lazy(() => import('./pages/AllProductsPage'));
 const CustomerServicePage = lazy(() => import('./pages/CustomerServicePage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const BlogPage = lazy(() => import('./pages/BlogPage'));
@@ -118,6 +119,11 @@ function AppRoutes() {
         <Route path="/livraison" element={<DeliveryPage />} />
         <Route path="/mentions-legales" element={<ReturnsPage />} />
         <Route path="/retours" element={<ReturnsPage />} />
+        
+        {/* Route sécurisée pour tous les produits */}
+        <Route path={secureRoutes.get('/tous-les-produits')?.substring(1)} element={<AllProductsPage />} />
+        <Route path="/tous-les-produits" element={<Navigate to={secureRoutes.get('/tous-les-produits') || '/'} replace />} />
+        
         <Route path="/service-client" element={<CustomerServicePage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/blog" element={<BlogPage />} />

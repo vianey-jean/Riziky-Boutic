@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { Product } from '@/contexts/StoreContext';
@@ -6,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { LayoutGrid, LayoutList, Filter } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Link } from 'react-router-dom';
+import { getSecureRoute } from '@/services/secureIds';
 
 interface ProductGridProps {
   products: Product[];
@@ -13,6 +14,7 @@ interface ProductGridProps {
   description?: string;
   showFilters?: boolean;
   isLoading?: boolean;
+  showViewAllButton?: boolean;
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ 
@@ -20,7 +22,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   title, 
   description, 
   showFilters = false,
-  isLoading = false
+  isLoading = false,
+  showViewAllButton = false
 }) => {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -28,7 +31,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
   
-  // Charger les produits progressivement pour améliorer les performances
   useEffect(() => {
     setCurrentPage(1);
     setVisibleProducts(products.slice(0, productsPerPage));
@@ -43,7 +45,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
 
   const hasMoreProducts = visibleProducts.length < products.length;
   
-  // Animation variants pour les produits
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -98,26 +99,36 @@ const ProductGrid: React.FC<ProductGridProps> = ({
             {products.length} produit{products.length > 1 ? 's' : ''}
           </span>
         </div>
-        
-        {showFilters && (
-          <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filtres
+
+        <div className="flex items-center gap-3">
+          {showViewAllButton && (
+            <Link to={getSecureRoute('/tous-les-produits')}>
+              <Button variant="outline" size="sm" className="text-sm text-red-800">
+                Voir tous produits
               </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Filtres</SheetTitle>
-              </SheetHeader>
-              {/* Contenu des filtres ici */}
-              <div className="py-4">
-                <p>Options de filtrage à implémenter</p>
-              </div>
-            </SheetContent>
-          </Sheet>
-        )}
+            </Link>
+          )}
+          
+          {showFilters && (
+            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filtres
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Filtres</SheetTitle>
+                </SheetHeader>
+                {/* Contenu des filtres ici */}
+                <div className="py-4">
+                  <p>Options de filtrage à implémenter</p>
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
+        </div>
       </div>
       
       {isLoading ? (
