@@ -34,9 +34,6 @@ const ClientServiceChatWidget: React.FC = () => {
   const queryClient = useQueryClient();
   const [previousUnreadCount, setPreviousUnreadCount] = useState(0);
 
-  // Persister l'état fermé dans localStorage
-  const WIDGET_CLOSED_KEY = 'clientChatWidgetClosed';
-
   // Récupérer la conversation de service client
   const { data: conversation, isLoading } = useQuery({
     queryKey: ['serviceConversation'],
@@ -68,48 +65,14 @@ const ClientServiceChatWidget: React.FC = () => {
     }
   });
 
-  // Mutation pour marquer les messages comme lus
-  const markAsReadMutation = useMutation({
-    mutationFn: async ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
-      return clientChatAPI.markAsRead(messageId, conversationId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['serviceConversation'] });
-    }
-  });
-
   // Compter les messages non lus
   const unreadCount = conversation?.messages?.filter(
     (msg: Message) => !msg.read && msg.senderId !== user?.id && !msg.isSystemMessage
   ).length || 0;
 
-  // Marquer les messages comme lus quand le widget est ouvert
+  // Ouvrir automatiquement le widget quand il y a de nouveaux messages
   useEffect(() => {
-    if (isOpen && !isMinimized && conversation?.messages && user) {
-      const unreadMessages = conversation.messages.filter(
-        (msg: Message) => !msg.read && msg.senderId !== user.id && !msg.isSystemMessage
-      );
-      
-      unreadMessages.forEach((msg: Message) => {
-        const conversationId = `client-${user.id}-service`;
-        markAsReadMutation.mutate({ messageId: msg.id, conversationId });
-      });
-    }
-  }, [isOpen, isMinimized, conversation?.messages, user]);
-
-  // Vérifier l'état fermé au montage
-  useEffect(() => {
-    const isClosed = localStorage.getItem(WIDGET_CLOSED_KEY) === 'true';
-    if (isClosed) {
-      setIsOpen(false);
-    }
-  }, []);
-
-  // Ouvrir automatiquement le widget quand il y a de nouveaux messages (seulement si pas fermé manuellement)
-  useEffect(() => {
-    const isClosed = localStorage.getItem(WIDGET_CLOSED_KEY) === 'true';
-    
-    if (unreadCount > previousUnreadCount && unreadCount > 0 && !isClosed) {
+    if (unreadCount > previousUnreadCount && unreadCount > 0) {
       setIsOpen(true);
       setIsMinimized(false);
     }
@@ -147,18 +110,6 @@ const ClientServiceChatWidget: React.FC = () => {
     setMessage((prev) => prev + emoji.native);
   };
 
-  const handleCloseWidget = () => {
-    setIsOpen(false);
-    // Persister l'état fermé
-    localStorage.setItem(WIDGET_CLOSED_KEY, 'true');
-  };
-
-  const handleOpenWidget = () => {
-    setIsOpen(true);
-    // Enlever l'état fermé
-    localStorage.removeItem(WIDGET_CLOSED_KEY);
-  };
-
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString('fr-FR', {
@@ -177,13 +128,13 @@ const ClientServiceChatWidget: React.FC = () => {
           whileTap={{ scale: 0.9 }}
         >
           <Button
-            onClick={handleOpenWidget}
+            onClick={() => setIsOpen(true)}
             className="rounded-full w-14 h-14 bg-blue-600 hover:bg-blue-700 shadow-lg"
           >
             <MessageCircle className="h-6 w-6" />
           </Button>
           
-          {/* Badge de notification - n'afficher que s'il y a des messages non lus */}
+          {/* Badge de notification */}
           {unreadCount > 0 && (
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
@@ -227,7 +178,7 @@ const ClientServiceChatWidget: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={handleCloseWidget}
+                      onClick={() => setIsOpen(false)}
                       className="text-white hover:bg-blue-700 p-1"
                     >
                       <X className="h-4 w-4" />
