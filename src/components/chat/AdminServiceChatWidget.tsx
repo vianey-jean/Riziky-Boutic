@@ -46,6 +46,9 @@ const AdminServiceChatWidget: React.FC = () => {
   const queryClient = useQueryClient();
   const [previousUnreadCount, setPreviousUnreadCount] = useState(0);
 
+  // Persister l'état fermé dans localStorage
+  const WIDGET_CLOSED_KEY = 'adminChatWidgetClosed';
+
   // Vérifier si on est sur la page admin service client
   const isOnAdminServicePage = location.pathname.includes('/admin/service-client');
 
@@ -83,14 +86,50 @@ const AdminServiceChatWidget: React.FC = () => {
     }
   });
 
+  // Mutation pour marquer les messages comme lus
+  const markAsReadMutation = useMutation({
+    mutationFn: async ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
+      return clientChatAPI.markAsRead(messageId, conversationId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminServiceConversations'] });
+    }
+  });
+
   // Calculer le nombre total de messages non lus
   const totalUnreadCount = conversations ? Object.values(conversations).reduce(
     (total, conv) => total + (conv.unreadCount || 0), 0
   ) : 0;
 
-  // Ouvrir automatiquement le widget quand il y a de nouveaux messages
+  // Marquer les messages comme lus quand le widget est ouvert
   useEffect(() => {
-    if (totalUnreadCount > previousUnreadCount && totalUnreadCount > 0) {
+    if (isOpen && !isMinimized && activeConversationId && conversations && user) {
+      const activeConversation = conversations[activeConversationId];
+      if (activeConversation?.messages) {
+        const unreadMessages = activeConversation.messages.filter(
+          (msg: Message) => !msg.read && msg.senderId !== user.id && !msg.isSystemMessage
+        );
+        
+        unreadMessages.forEach((msg: Message) => {
+          markAsReadMutation.mutate({ messageId: msg.id, conversationId: activeConversationId });
+        });
+      }
+    }
+  }, [isOpen, isMinimized, activeConversationId, conversations, user]);
+
+  // Vérifier l'état fermé au montage
+  useEffect(() => {
+    const isClosed = localStorage.getItem(WIDGET_CLOSED_KEY) === 'true';
+    if (isClosed) {
+      setIsOpen(false);
+    }
+  }, []);
+
+  // Ouvrir automatiquement le widget quand il y a de nouveaux messages (seulement si pas fermé manuellement)
+  useEffect(() => {
+    const isClosed = localStorage.getItem(WIDGET_CLOSED_KEY) === 'true';
+    
+    if (totalUnreadCount > previousUnreadCount && totalUnreadCount > 0 && !isClosed) {
       setIsOpen(true);
       setIsMinimized(false);
     }
@@ -130,6 +169,18 @@ const AdminServiceChatWidget: React.FC = () => {
     setMessage((prev) => prev + emoji.native);
   };
 
+  const handleCloseWidget = () => {
+    setIsOpen(false);
+    // Persister l'état fermé
+    localStorage.setItem(WIDGET_CLOSED_KEY, 'true');
+  };
+
+  const handleOpenWidget = () => {
+    setIsOpen(true);
+    // Enlever l'état fermé
+    localStorage.removeItem(WIDGET_CLOSED_KEY);
+  };
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString('fr-FR', {
@@ -155,13 +206,13 @@ const AdminServiceChatWidget: React.FC = () => {
           whileTap={{ scale: 0.9 }}
         >
           <Button
-            onClick={() => setIsOpen(true)}
+            onClick={handleOpenWidget}
             className="rounded-full w-14 h-14 bg-red-600 hover:bg-red-700 shadow-lg"
           >
             <MessageCircle className="h-6 w-6" />
           </Button>
           
-          {/* Badge de notification */}
+          {/* Badge de notification - n'afficher que s'il y a des messages non lus */}
           {totalUnreadCount > 0 && (
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
@@ -205,7 +256,7 @@ const AdminServiceChatWidget: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setIsOpen(false)}
+                      onClick={handleCloseWidget}
                       className="text-white hover:bg-red-700 p-1"
                     >
                       <X className="h-4 w-4" />
