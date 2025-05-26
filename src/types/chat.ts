@@ -23,3 +23,15 @@ export interface ServiceConversation extends Conversation {
   clientInfo?: User;
   unreadCount?: number;
 }
+
+export interface ChatWidget {
+  isOpen: boolean;
+  isMinimized: boolean;
+  unreadCount: number;
+}
+
+export interface AdminChatState {
+  activeConversationId: string | null;
+  conversations: { [key: string]: ServiceConversation };
+  totalUnreadCount: number;
+}

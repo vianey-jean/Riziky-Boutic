@@ -7,6 +7,8 @@ import BenefitsSection from './BenefitsSection';
 import PaymentBadges from './PaymentBadges';
 import SecurityInfo from './SecurityInfo';
 import LayoutPrompts from './LayoutPrompts';
+import ClientServiceChatWidget from '@/components/chat/ClientServiceChatWidget';
+import AdminServiceChatWidget from '@/components/chat/AdminServiceChatWidget';
 import { useQuery } from '@tanstack/react-query';
 import { Product } from '@/contexts/StoreContext';
 import { productsAPI } from '@/services/api';
@@ -80,6 +82,10 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
         trendingProducts={trendingProducts}
         hasScrolled={hasScrolled}
       />
+
+      {/* Widgets de chat */}
+      <ClientServiceChatWidget />
+      <AdminServiceChatWidget />
     </div>
   );
 };

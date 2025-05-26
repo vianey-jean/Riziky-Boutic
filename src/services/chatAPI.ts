@@ -35,3 +35,6 @@ export const clientChatAPI = {
   markAsRead: (messageId: string, conversationId: string) => 
     API.put(`/client-chat/messages/${messageId}/read`, { conversationId })
 };
+
+// Export des types pour une meilleure réutilisabilité
+export type { Message, ServiceConversation } from '@/types/chat';
