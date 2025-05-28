@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Clock, ArrowRight, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { flashSaleAPI } from '@/services/flashSaleAPI';
 
 interface TimeLeft {
   days: number;
@@ -31,34 +32,25 @@ const FlashSaleBanner: React.FC = () => {
   const [activeFlashSale, setActiveFlashSale] = useState<FlashSale | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Récupérer les données de vente flash directement
+  // Récupérer les données de vente flash via l'API
   useEffect(() => {
     const fetchFlashSaleData = async () => {
       try {
         setIsLoading(true);
+        console.log('🔄 Récupération de la vente flash active via API...');
         
-        // Récupérer les données du fichier flash-sales.json
-        const response = await fetch('/server/data/flash-sales.json');
-        if (response.ok) {
-          const flashSales: FlashSale[] = await response.json();
-          console.log('Flash sales loaded:', flashSales);
-          
-          // Trouver la vente flash active
-          const now = new Date();
-          const activeFlashSaleData = flashSales.find(sale => 
-            sale.isActive && 
-            new Date(sale.startDate) <= now && 
-            new Date(sale.endDate) > now
-          );
-          
-          console.log('Active flash sale found:', activeFlashSaleData);
-          setActiveFlashSale(activeFlashSaleData || null);
+        // Utiliser l'API au lieu d'accéder directement au fichier
+        const response = await flashSaleAPI.getActive();
+        
+        if (response.data) {
+          console.log('✅ Vente flash active trouvée:', response.data);
+          setActiveFlashSale(response.data);
         } else {
-          console.log('Aucune vente flash trouvée');
+          console.log('ℹ️ Aucune vente flash active');
           setActiveFlashSale(null);
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des ventes flash:', error);
+        console.error('❌ Erreur lors du chargement de la vente flash:', error);
         setActiveFlashSale(null);
       } finally {
         setIsLoading(false);
@@ -129,15 +121,16 @@ const FlashSaleBanner: React.FC = () => {
 
               <p className="text-lg mb-4 opacity-90">{activeFlashSale.description}</p>
 
-              <Link to={secureFlashSaleUrl}>
-                <Button
-                  variant="secondary"
-                  className="bg-white text-red-600 hover:bg-gray-100 font-bold px-6 py-3 rounded-full"
-                >
+              <Button
+                variant="secondary"
+                className="bg-white text-red-600 hover:bg-gray-100 font-bold px-6 py-3 rounded-full"
+                asChild
+              >
+                <Link to={secureFlashSaleUrl}>
                   Voir les produits
                   <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
 
             <div className="flex flex-col items-center space-y-4">
