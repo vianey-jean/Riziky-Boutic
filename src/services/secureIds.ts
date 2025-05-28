@@ -1,3 +1,4 @@
+
 import { nanoid } from 'nanoid';
 
 // Stockage en mémoire des mappings entre IDs sécurisés et IDs réels
@@ -194,6 +195,8 @@ export const initSecureRoutes = () => {
     '/admin/service-client',
     '/admin/pub-layout',
     '/admin/remboursements',
+    '/admin/flash-sales',
+    '/flash-sale/:id',
     '/profil',
     '/commandes',
     '/panier',
