@@ -259,7 +259,7 @@ const FlashSalePage: React.FC = () => {
         </div>
 
         {/* Informations sur la vente flash */}
-        <div className="bg-blue-50 rounded-lg p-6">
+        {/* <div className="bg-blue-50 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">Informations sur la vente flash</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
             <div>
@@ -285,7 +285,7 @@ const FlashSalePage: React.FC = () => {
               <p>• Dates de début et fin de la vente flash</p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </Layout>
   );
