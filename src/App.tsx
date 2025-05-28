@@ -56,7 +56,6 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const OrderPage = lazy(() => import('./pages/OrderPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const FlashSalePage = lazy(() => import('./pages/FlashSalePage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Pages Admin
@@ -70,7 +69,6 @@ const AdminClientChatPage = lazy(() => import('./pages/admin/AdminClientChatPage
 const AdminCodePromosPage = lazy(() => import('./pages/admin/AdminCodePromosPage'));
 const AdminPubLayoutPage = lazy(() => import('./pages/admin/AdminPubLayoutPage'));
 const AdminRemboursementsPage = lazy(() => import('./pages/admin/AdminRemboursementsPage'));
-const AdminFlashSalesPage = lazy(() => import('./pages/admin/AdminFlashSalesPage'));
 
 // Création d'un nouveau QueryClient avec configuration optimisée
 const queryClient = new QueryClient({
@@ -125,10 +123,6 @@ function AppRoutes() {
         {/* Route sécurisée pour tous les produits */}
         <Route path={secureRoutes.get('/tous-les-produits')?.substring(1)} element={<AllProductsPage />} />
         <Route path="/tous-les-produits" element={<Navigate to={secureRoutes.get('/tous-les-produits') || '/'} replace />} />
-        
-        {/* Route sécurisée pour la page vente flash */}
-        <Route path={secureRoutes.get('/flash-sale/:id')?.substring(1)} element={<FlashSalePage />} />
-        <Route path="/flash-sale/:id" element={<Navigate to={secureRoutes.get('/flash-sale/:id') || '/'} replace />} />
         
         <Route path="/service-client" element={<CustomerServicePage />} />
         <Route path="/contact" element={<ContactPage />} />
@@ -261,13 +255,7 @@ function AppRoutes() {
           </SecureRoute>
         } />
 
-        <Route path={getSecureRoute('/admin/code-promos')} element={
-          <SecureRoute>
-            <ProtectedRoute requireAdmin>
-              <AdminCodePromosPage />
-            </ProtectedRoute>
-          </SecureRoute>
-        } />
+        <Route path={getSecureRoute('/admin/code-promos')} element={<AdminCodePromosPage />} />
         <Route path="/admin/service-client" element={<Navigate to={secureRoutes.get('/admin/service-client') || '/'} replace />} />
         
         {/* Ajout de la route sécurisée pour la page pub-layout */}
@@ -289,16 +277,6 @@ function AppRoutes() {
           </SecureRoute>
         } />
         <Route path="/admin/remboursements" element={<Navigate to={secureRoutes.get('/admin/remboursements') || '/'} replace />} />
-        
-        {/* Ajout de la route sécurisée pour la page flash-sales admin */}
-        <Route path={secureRoutes.get('/admin/flash-sales')?.substring(1)} element={
-          <SecureRoute>
-            <ProtectedRoute requireAdmin>
-              <AdminFlashSalesPage />
-            </ProtectedRoute>
-          </SecureRoute>
-        } />
-        <Route path="/admin/flash-sales" element={<Navigate to={secureRoutes.get('/admin/flash-sales') || '/'} replace />} />
         
         {/* Route NotFound spécifique */}
         <Route path="/page/notfound" element={<NotFound />} />

@@ -12,8 +12,7 @@ import {
   Percent,
   MessageSquare,
   Megaphone,
-  RefreshCw,
-  Zap
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSecureRoute } from '@/services/secureIds';
@@ -46,7 +45,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     parametres: getSecureRoute('/admin/parametres'),
     pubLayout: getSecureRoute('/admin/pub-layout'),
     remboursements: getSecureRoute('/admin/remboursements'),
-    flashSales: getSecureRoute('/admin/flash-sales'),
   };
   
   const navItems = [
@@ -57,7 +55,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: 'CodePromo', path: secureRoutes.codePromo, realPath: '/admin/code-promos', icon: Percent },
     { name: 'Publicités', path: secureRoutes.pubLayout, realPath: '/admin/pub-layout', icon: Megaphone },
     { name: 'Remboursements', path: secureRoutes.remboursements, realPath: '/admin/remboursements', icon: RefreshCw },
-    { name: 'Ventes Flash', path: secureRoutes.flashSales, realPath: '/admin/flash-sales', icon: Zap },
     { name: 'Chat Admin', path: secureRoutes.chat, realPath: '/admin', icon: ShoppingBag },
     // Conditional item for service client admin
     ...(isServiceAdmin ? [{ 

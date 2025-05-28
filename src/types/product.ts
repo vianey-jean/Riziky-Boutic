@@ -13,11 +13,4 @@ export interface Product {
   promotionEnd?: string | null;
   stock?: number;
   dateAjout?: string;
-  flashSaleDiscount?: number;
-  flashSaleStartDate?: string;
-  flashSaleEndDate?: string;
-  flashSaleTitle?: string;
-  flashSaleDescription?: string;
-  originalFlashPrice?: number;
-  flashSalePrice?: number;
 }
