@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -12,18 +11,6 @@ interface TimeLeft {
   hours: number;
   minutes: number;
   seconds: number;
-}
-
-interface FlashSale {
-  id: string;
-  title: string;
-  description: string;
-  discount: number;
-  startDate: string;
-  endDate: string;
-  isActive: boolean;
-  productIds: string[];
-  createdAt: string;
 }
 
 interface Product {
@@ -63,21 +50,21 @@ const FlashSalePage: React.FC = () => {
     endDate: string;
   } | null>(null);
 
-  // Récupérer les produits de vente flash depuis banniereflashsale.json
+  // Récupérer les produits de vente flash depuis l'API
   useEffect(() => {
     const fetchFlashSaleProducts = async () => {
       try {
         setIsLoading(true);
-        console.log('🔍 Chargement des produits de vente flash depuis banniereflashsale.json');
+        console.log('🔍 Chargement des produits de vente flash depuis l\'API');
 
-        // Récupérer tous les produits de la vente flash
+        // Utiliser uniquement l'API, pas d'accès direct aux fichiers JSON
         const response = await flashSaleAPI.getBanniereProducts();
         const products = response.data;
         
-        console.log('📦 Produits de vente flash récupérés:', products);
+        console.log('📦 Produits de vente flash récupérés via API:', products);
 
-        if (products.length === 0) {
-          console.log('❌ Aucun produit dans banniereflashsale.json');
+        if (!products || products.length === 0) {
+          console.log('❌ Aucun produit dans la réponse API');
           setFlashSaleProducts([]);
           setFlashSaleInfo(null);
           setIsLoading(false);
@@ -106,7 +93,7 @@ const FlashSalePage: React.FC = () => {
         setFlashSaleProducts(processedProducts);
 
       } catch (error) {
-        console.error('💥 Erreur lors du chargement des produits de vente flash:', error);
+        console.error('💥 Erreur lors du chargement des produits de vente flash via API:', error);
         setFlashSaleProducts([]);
         setFlashSaleInfo(null);
       } finally {
