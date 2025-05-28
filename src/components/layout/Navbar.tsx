@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +10,8 @@ import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package, Menu } from 'lucide-react';
 import { productsAPI, Product } from '@/services/api';
+import { categoriesAPI } from '@/services/categoriesAPI';
+import { Category } from '@/types/category';
 import { debounce } from 'lodash';
 import { useIsMobile } from '@/hooks/use-mobile';
 import logo from "@/assets/logo.png"; 
@@ -45,6 +46,7 @@ const Navbar = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,8 +54,26 @@ const Navbar = () => {
   const isMobile = useIsMobile();
   const cartItemsCount = cart.reduce((count, item) => count + item.quantity, 0);
 
-  // Liste des catégories
-  const categories = ["perruques", "tissages", "queue de cheval", "peigne chauffante", "colle - dissolvant"];
+  // Charger les catégories depuis la base de données
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await categoriesAPI.getActive();
+        setCategories(response.data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement des catégories:', error);
+        // Fallback vers les catégories par défaut si l'API échoue
+        setCategories([
+          { id: '1', name: 'perruques', description: '', order: 1, isActive: true, createdAt: '' },
+          { id: '2', name: 'tissages', description: '', order: 2, isActive: true, createdAt: '' },
+          { id: '3', name: 'queue de cheval', description: '', order: 3, isActive: true, createdAt: '' },
+          { id: '4', name: 'peigne chauffante', description: '', order: 4, isActive: true, createdAt: '' },
+          { id: '5', name: 'colle - dissolvant', description: '', order: 5, isActive: true, createdAt: '' }
+        ]);
+      }
+    };
+    loadCategories();
+  }, []);
 
   // Ferme les résultats si clic en dehors
   useEffect(() => {
@@ -427,12 +447,12 @@ const Navbar = () => {
         <div className="hidden md:flex mt-4 space-x-6 overflow-x-auto py-2 justify-center" role="navigation" aria-label="Catégories">
           <ul className="flex space-x-6 ">
             {categories.map(cat => (
-              <li  key={cat}>
+              <li key={cat.id}>
                 <Link 
-                  to={`/categorie/${cat}`} 
+                  to={`/categorie/${cat.name}`} 
                   className=" text-red-800  text-sm font-medium whitespace-nowrap text-neutral-700 hover:text-red-600 dark:text-neutral-200 dark:hover:text-red-400 capitalize transition-colors"
                 >
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                 </Link>
               </li>
             ))}
@@ -450,11 +470,11 @@ const Navbar = () => {
                 <div className="grid grid-cols-2 gap-2 pt-2">
                   {categories.map(cat => (
                     <Link 
-                      key={cat} 
-                      to={`/categorie/${cat}`} 
+                      key={cat.id} 
+                      to={`/categorie/${cat.name}`} 
                       className="text-sm py-2 px-3 rounded-md bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 capitalize text-center transition-colors"
                     >
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                     </Link>
                   ))}
                 </div>
