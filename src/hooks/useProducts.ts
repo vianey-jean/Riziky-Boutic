@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Product } from '@/types/product';
-import { productsAPI } from '@/services/productsAPI';
+import { productsAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
 
 export const useProducts = (categoryName?: string) => {

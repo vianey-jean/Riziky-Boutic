@@ -1,9 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { StoreCartItem } from '@/types/cart';
 import { Product } from '@/types/product';
-import { cartAPI } from '@/services/cartAPI';
-import { productsAPI } from '@/services/productsAPI';
+import { cartAPI, productsAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/contexts/AuthContext';
 

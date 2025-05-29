@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { Order } from '@/types/order';
-import { ordersAPI } from '@/services/ordersAPI';
+import { ordersAPI } from '@/services/api';
 import { StoreCartItem } from '@/types/cart';
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/contexts/AuthContext';

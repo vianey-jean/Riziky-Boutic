@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/sonner';
 import { useMutation } from '@tanstack/react-query';
-import API from '@/services/api';
+import { API } from '@/services/api';
 
 const formSchema = z.object({
   nom: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),

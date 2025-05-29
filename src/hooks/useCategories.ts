@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Category } from '@/types/category';
-import { categoriesAPI } from '@/services/categoriesAPI';
+import { categoriesAPI } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
 export const useCategories = (activeOnly: boolean = false) => {
