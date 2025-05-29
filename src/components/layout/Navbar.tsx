@@ -450,7 +450,7 @@ const Navbar = () => {
               <li key={cat.id}>
                 <Link 
                   to={`/categorie/${cat.name}`} 
-                  className=" text-red-800  text-sm font-medium whitespace-nowrap text-neutral-700 hover:text-red-600 dark:text-neutral-200 dark:hover:text-red-400 capitalize transition-colors"
+                  className=" text-red-900  text-lg font-bold whitespace-nowrap text-neutral-700 hover:text-red-600 dark:text-neutral-200 dark:hover:text-red-400 capitalize transition-colors"
                 >
                   {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                 </Link>
