@@ -9,6 +9,7 @@ import SecurityInfo from './SecurityInfo';
 import LayoutPrompts from './LayoutPrompts';
 import ClientServiceChatWidget from '@/components/chat/ClientServiceChatWidget';
 import AdminServiceChatWidget from '@/components/chat/AdminServiceChatWidget';
+import ScrollToTop from '@/components/ui/ScrollToTop';
 import { useQuery } from '@tanstack/react-query';
 import { Product } from '@/contexts/StoreContext';
 import { productsAPI } from '@/services/api';
@@ -86,6 +87,9 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
       {/* Widgets de chat */}
       <ClientServiceChatWidget />
       <AdminServiceChatWidget />
+      
+      {/* Bouton Vers le haut - disponible sur toutes les pages */}
+      <ScrollToTop />
     </div>
   );
 };

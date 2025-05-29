@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -9,6 +8,7 @@ import HomeHeader from '@/components/home/HomeHeader';
 import FeaturedProductsCarousel from '@/components/home/FeaturedProductsCarousel';
 import PromotionalProductsGrid from '@/components/home/PromotionalProductsGrid';
 import FlashSaleBanner from '@/components/flash-sale/FlashSaleBanner';
+import ScrollToTop from '@/components/ui/ScrollToTop';
 import { useHomePageData } from '@/hooks/useHomePageData';
 import { useCarouselAutoplay } from '@/hooks/useCarouselAutoplay';
 
@@ -108,6 +108,9 @@ const HomePage = () => {
           <CustomerTestimonialSection />
         </DataRetryLoader>
       </div>
+      
+      {/* Bouton Vers le haut */}
+      <ScrollToTop />
     </Layout>
   );
 };
