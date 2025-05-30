@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -78,7 +77,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
           <div className="relative bg-gray-50 p-6">
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
+              className="absolute top-4 mr-6 right-4 z-10 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow md:hidden"
             >
               <X className="h-4 w-4" />
             </button>

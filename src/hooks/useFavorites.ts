@@ -44,7 +44,7 @@ export const useFavorites = () => {
 
   const toggleFavorite = async (product: Product) => {
     if (!isAuthenticated || !user) {
-      toast.error('Vous devez être connecté pour ajouter un produit aux favoris', {
+      toast.error('Vous devez être connecté pour ajouter un produit au favoris', {
         style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
         duration: 4000,
         position: 'top-center',

@@ -36,7 +36,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   
-  // Fetch reviews to calculate ratings
   useEffect(() => {
     const fetchProductReviews = async () => {
       try {
@@ -60,15 +59,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
     fetchProductReviews();
   }, [product.id]);
   
-  // Générer un ID sécurisé pour le produit
   const secureId = getSecureId(product.id, 'product');
   
-  // Determine which image to display - first image from images array or fallback to image property
   const displayImages = product.images && product.images.length > 0 
     ? product.images 
     : product.image ? [product.image] : [];
     
-  // Calculate time left for promotion
   const getPromotionTimeLeft = (endDate: string) => {
     if (!endDate) return "";
     
@@ -93,16 +89,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
     product.promotionEnd && 
     new Date(product.promotionEnd) > new Date();
 
-  // Fonction pour construire l'URL de l'image de manière sécurisée
   const getImageUrl = (imagePath: string) => {
     if (!imagePath) return PLACEHOLDER_IMAGE;
     
-    // Si l'image commence déjà par http, c'est une URL complète
     if (imagePath.startsWith('http')) {
       return imagePath;
     }
     
-    // Sinon, on ajoute le BASE_URL
     return `${AUTH_BASE_URL}${imagePath}`;
   };
 
@@ -132,12 +125,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     toggleFavorite(product);
-    
-    if (!isProductFavorite) {
-      toast.success("Produit ajouté aux favoris");
-    } else {
-      toast.success("Produit retiré des favoris");
-    }
   };
 
   const handleQuickView = (e: React.MouseEvent) => {
@@ -146,7 +133,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     setIsQuickViewOpen(true);
   };
 
-  // Rotation des images au survol
   useEffect(() => {
     if (isHovered && displayImages.length > 1) {
       const interval = setInterval(() => {
@@ -221,7 +207,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <Badge className="absolute top-2 right-2 bg-amber-500 text-white">Recommandé</Badge>
             )}
             
-            {/* Quick action buttons */}
             <div className={`absolute bottom-0 left-0 right-0 p-2 flex justify-between bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
               <Button 
                 variant="ghost" 
@@ -315,7 +300,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </Card>
       </motion.div>
 
-      {/* Modal de vue rapide */}
       <QuickViewModal
         product={product}
         isOpen={isQuickViewOpen}
