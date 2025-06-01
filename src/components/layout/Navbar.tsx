@@ -15,6 +15,7 @@ import { Category } from '@/types/category';
 import { debounce } from 'lodash';
 import { useIsMobile } from '@/hooks/use-mobile';
 import logo from "@/assets/logo.png"; 
+import CategoriesDropdown from './CategoriesDropdown';
 
 // Fonction améliorée pour normaliser les chaînes de caractères (supprime les accents et met en minuscule)
 const normalizeString = (str: string) => {
@@ -231,12 +232,13 @@ const Navbar = () => {
                   });
                 }} 
                 aria-label="Rechercher des produits" 
-                className="w-full pl-10 rounded-xl border-neutral-300 dark:border-neutral-700 shadow-sm focus:ring-2 focus:ring-red-500 focus:border-transparent pr-10 bg-white dark:bg-neutral-800" 
+                className="w-full pl-10 rounded-xl border-neutral-300 dark:border-neutral-700 shadow-sm focus:ring-2 focus:ring-red-500 focus:border-transparent pr-12 bg-white dark:bg-neutral-800" 
               />
               {isSearching ? 
-                <div className="absolute right-3 top-2.5 h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"></div> : 
+                <div className="absolute right-10 top-2.5 h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"></div> : 
                 <Search className="absolute left-3 top-2.5 h-5 w-5 text-neutral-400" aria-hidden="true" />
               }
+              
               {renderSearchResults()}
             </div>
           </div>
@@ -339,7 +341,7 @@ const Navbar = () => {
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <nav className="flex flex-col h-full">
                   <div className="flex-1 py-4">
-                    <div className="mb-6">
+                    <div className="mb-6 relative">
                       <Input 
                         type="text" 
                         placeholder="Rechercher des produits..." 
@@ -440,23 +442,13 @@ const Navbar = () => {
             <div className="absolute right-3 top-2.5 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"></div> : 
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           }
+          
           {renderSearchResults()}
         </div>
 
-        {/* Liens catégories - Desktop */}
-        <div className="hidden md:flex mt-4 space-x-6 overflow-x-auto py-2 justify-center" role="navigation" aria-label="Catégories">
-          <ul className="flex space-x-6 ">
-            {categories.map(cat => (
-              <li key={cat.id}>
-                <Link 
-                  to={`/categorie/${cat.name}`} 
-                  className=" text-red-900  text-lg font-bold whitespace-nowrap text-neutral-700 hover:text-red-600 dark:text-neutral-200 dark:hover:text-red-400 capitalize transition-colors"
-                >
-                  {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                </Link>
-              </li>
-            ))}
-          </ul>
+        {/* Menu "Toutes les catégories" - Desktop */}
+        <div className="hidden md:flex mt-4 justify-center" role="navigation" aria-label="Catégories">
+          <CategoriesDropdown categories={categories} />
         </div>
 
         {/* Catégories - Mobile (collapsed by default) */}

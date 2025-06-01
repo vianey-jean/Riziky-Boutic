@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -32,6 +33,7 @@ const HomePage = () => {
   // Filtrage des produits selon la recherche (conformité RGPD)
   React.useEffect(() => {
     const searchQuery = searchParams.get('q');
+    
     if (searchQuery && searchQuery.length >= 3) {
       const filteredResults = completeProductCatalog.filter(
         product =>
@@ -65,7 +67,7 @@ const HomePage = () => {
             </div>
           }
         >
-          {/* Résultats de recherche */}
+          {/* Résultats de recherche par texte */}
           {searchParams.get('q') && (
             <div className="mb-12">
               <ProductCatalogGrid
