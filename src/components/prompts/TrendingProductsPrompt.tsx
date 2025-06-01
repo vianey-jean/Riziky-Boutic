@@ -32,7 +32,7 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
     title: 'Produits populaires',
     icon: TrendingUp,
     linkText: 'Voir plus de produits',
-    linkPath: '/produits'
+    linkPath: '/populaires'
   });
 
   const sections: SectionInfo[] = [

@@ -212,7 +212,8 @@ export const initSecureRoutes = () => {
     '/tous-les-produits',
     // Ajout des nouvelles routes
     '/promotions',
-    '/nouveautes'
+    '/nouveautes',
+    '/populaires'
   ];
   
   let hasNewRoutes = false;

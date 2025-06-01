@@ -41,6 +41,7 @@ const ReturnsPage = lazy(() => import('./pages/ReturnsPage'));
 const AllProductsPage = lazy(() => import('./pages/AllProductsPage'));
 const Promotions = lazy(() => import('./pages/PromotionalProductsPage'));
 const Nouveautes = lazy(() => import('./pages/NewArrivalsPage'));
+const Populaires = lazy(() => import('./pages/PopularityPage'));
 const CustomerServicePage = lazy(() => import('./pages/CustomerServicePage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const BlogPage = lazy(() => import('./pages/BlogPage'));
@@ -134,6 +135,9 @@ function AppRoutes() {
 
         <Route path={secureRoutes.get('/nouveautes')?.substring(1)} element={<Nouveautes />} />
         <Route path="/nouveautes" element={<Navigate to={secureRoutes.get('/nouveautes') || '/'} replace />} />
+
+         <Route path={secureRoutes.get('/populaires')?.substring(1)} element={<Populaires />} />
+        <Route path="/populaires" element={<Navigate to={secureRoutes.get('/populaires') || '/'} replace />} />
 
         
         {/* Route sécurisée pour la page vente flash */}
