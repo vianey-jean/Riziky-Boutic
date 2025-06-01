@@ -89,16 +89,18 @@ const HomePage = () => {
 
           {/* Produits en promotion */}
           {!searchParams.get('q') && (
-            <PromotionalProductsGrid products={promotionalProducts} />
+            <div className="mb-12" data-section="promotional">
+              <PromotionalProductsGrid products={promotionalProducts} />
+            </div>
           )}
 
           {/* Nouveautés */}
-          <div className="mb-12">
+          <div className="mb-12" data-section="new-arrivals">
             <ProductCatalogGrid products={newArrivalProducts} title="Dernières Nouveautés" />
           </div>
 
           {/* Catalogue complet - Avec bouton "Voir tous produits" */}
-          <div className="mb-12">
+          <div className="mb-12" data-section="complete-catalog">
             <ProductCatalogGrid 
               products={completeProductCatalog} 
               title="Notre Catalogue Complet" 
