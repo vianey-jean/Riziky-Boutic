@@ -455,11 +455,11 @@ const Navbar = () => {
         <div className="md:hidden mt-4">
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="categories">
-              <AccordionTrigger className="py-2 justify-center">
-                Catégories
+              <AccordionTrigger className="py-2 justify-center text-red-800 font-bold">
+                Catégories :
               </AccordionTrigger>
               <AccordionContent>
-                <div className="grid grid-cols-2 gap-2 pt-2">
+                <div className="grid grid-cols-2 gap-2 pt-2 text-red-800 font-bold">
                   {categories.map(cat => (
                     <Link 
                       key={cat.id} 
