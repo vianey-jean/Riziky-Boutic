@@ -196,6 +196,8 @@ export const initSecureRoutes = () => {
     '/admin/pub-layout',
     '/admin/remboursements',
     '/admin/flash-sales',
+    '/admin/categories',
+    '/admin/code-promos',
     '/flash-sale/:id',
     '/profil',
     '/commandes',
@@ -207,7 +209,10 @@ export const initSecureRoutes = () => {
     '/register',
     '/forgot-password',
     // Ajout de la route tous-les-produits
-    '/tous-les-produits'
+    '/tous-les-produits',
+    // Ajout des nouvelles routes
+    '/promotions',
+    '/nouveautes'
   ];
   
   let hasNewRoutes = false;

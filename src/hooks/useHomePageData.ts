@@ -22,7 +22,6 @@ export const useHomePageData = () => {
     setCompleteProductCatalog(sortedProductCatalog);
     setFilteredProductCatalog(sortedProductCatalog);
 
-    // Chargement des produits vedettes
     try {
       const featuredResponse = await productsAPI.getMostFavorited();
       const featuredItems = Array.isArray(featuredResponse.data)
@@ -34,7 +33,6 @@ export const useHomePageData = () => {
       setFeaturedProductCatalog(productCatalog.slice(0, 8));
     }
 
-    // Chargement des nouveautés
     try {
       const newArrivalsResponse = await productsAPI.getNewArrivals();
       const newItems = Array.isArray(newArrivalsResponse.data)
@@ -49,7 +47,6 @@ export const useHomePageData = () => {
       setNewArrivalProducts(sortedByDate.slice(0, 8));
     }
 
-    // Filtrage des produits en promotion (conformité temporelle UE)
     const currentDate = new Date();
     const activePromotionalProducts = productCatalog.filter(product => 
       product.promotion && 
@@ -61,7 +58,7 @@ export const useHomePageData = () => {
     return productCatalog;
   };
 
-  const handleDataLoadingSuccess = (data: Product[]) => {
+  const handleDataLoadingSuccess = () => {
     setDataLoadingComplete(true);
   };
 

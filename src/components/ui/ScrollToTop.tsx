@@ -9,7 +9,6 @@ const ScrollToTop: React.FC = () => {
 
   useEffect(() => {
     const toggleVisibility = () => {
-      // Afficher le bouton après avoir fait défiler de 300px
       if (window.pageYOffset > 300) {
         setIsVisible(true);
       } else {

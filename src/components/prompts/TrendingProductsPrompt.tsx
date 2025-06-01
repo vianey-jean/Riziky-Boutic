@@ -21,7 +21,6 @@ interface SectionInfo {
 
 const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({ 
   products, 
-  title = "Produits populaires",
   dismissKey = "trending-products-dismissed"
 }) => {
   const [isDismissed, setIsDismissed] = useState(() => {
@@ -36,7 +35,6 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
     linkPath: '/produits'
   });
 
-  // Configuration des sections
   const sections: SectionInfo[] = [
     {
       id: 'promotional',
@@ -57,11 +55,10 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
       title: 'Tous les produits',
       icon: Package,
       linkText: 'Voir tous les produits',
-      linkPath: '/produits'
+      linkPath: '/tous-les-produits'
     }
   ];
 
-  // Détecter quelle section est visible à l'écran
   useEffect(() => {
     const detectVisibleSection = () => {
       const promotionalSection = document.querySelector('[data-section="promotional"]');
@@ -76,20 +73,17 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
         return elementMiddle >= 0 && elementMiddle <= windowHeight;
       };
 
-      // Vérifier dans l'ordre de priorité
       if (isInViewport(promotionalSection)) {
-        setCurrentSection(sections[0]); // promotional
+        setCurrentSection(sections[0]);
       } else if (isInViewport(newArrivalsSection)) {
-        setCurrentSection(sections[1]); // new-arrivals
+        setCurrentSection(sections[1]);
       } else if (isInViewport(completeCatalogSection)) {
-        setCurrentSection(sections[2]); // complete-catalog
+        setCurrentSection(sections[2]);
       }
     };
 
-    // Détecter immédiatement
     detectVisibleSection();
 
-    // Ajouter l'écouteur de scroll avec throttling
     let ticking = false;
     const handleScroll = () => {
       if (!ticking) {
@@ -115,7 +109,6 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
     setIsDismissed(true);
   };
 
-  // Si aucun produit ou si déjà fermé, ne rien afficher
   if (products.length === 0 || isDismissed) {
     return null;
   }
@@ -130,7 +123,7 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 50 }}
         transition={{ duration: 0.3 }}
-        key={currentSection.id} // Permet une animation lors du changement de section
+        key={currentSection.id}
       >
         <div className="p-4">
           <div className="flex justify-between items-center mb-3">

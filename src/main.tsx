@@ -1,5 +1,4 @@
 
-// Ajout du polyfill pour global
 window.global = window;
 
 import React from 'react'
