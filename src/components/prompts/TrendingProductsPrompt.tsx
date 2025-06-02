@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { X, TrendingUp, ArrowRight, Zap, Sparkles, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,6 +24,7 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
   products, 
   dismissKey = "trending-products-dismissed"
 }) => {
+  const location = useLocation();
   const [isDismissed, setIsDismissed] = useState(() => {
     return localStorage.getItem(dismissKey) === 'true';
   });
@@ -109,7 +111,8 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
     setIsDismissed(true);
   };
 
-  if (products.length === 0 || isDismissed) {
+  // N'afficher que sur la page d'accueil
+  if (location.pathname !== '/' || products.length === 0 || isDismissed) {
     return null;
   }
 
