@@ -11,6 +11,8 @@ import PromotionalProductsGrid from '@/components/home/PromotionalProductsGrid';
 import FlashSaleBanner from '@/components/flash-sale/FlashSaleBanner';
 import { useHomePageData } from '@/hooks/useHomePageData';
 import { useCarouselAutoplay } from '@/hooks/useCarouselAutoplay';
+import SalesNotification from '@/components/engagement/SalesNotification';
+import LiveVisitorCounter from '@/components/engagement/LiveVisitorCounter';
 
 const HomePage = () => {
   const [searchParams] = useSearchParams();
@@ -103,6 +105,10 @@ const HomePage = () => {
           <CustomerTestimonialSection />
         </DataRetryLoader>
       </div>
+
+      {/* Composants pour les administrateurs uniquement - SalesNotification au-dessus */}
+      <SalesNotification />
+      <LiveVisitorCounter />
     </Layout>
   );
 };

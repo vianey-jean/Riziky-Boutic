@@ -35,6 +35,7 @@ interface StoreContextType {
     codePromo?: {code: string, productId: string, pourcentage: number}
   ) => Promise<Order | null>;
   setSelectedCartItems: (items: StoreCartItem[]) => void;
+  fetchCart: () => Promise<void>;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -56,7 +57,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     updateQuantity: updateCartQuantity,
     clearCart,
     getCartTotal,
-    setSelectedCartItems
+    setSelectedCartItems,
+    fetchCart
   } = useCart();
 
   const {
@@ -86,10 +88,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const result = await createNewOrder(shippingAddress, paymentMethod, selectedCartItems, codePromo);
     
     if (result) {
-      // Supprimer seulement les produits commandés du panier
-      const remainingCartItems = cart.filter(cartItem => 
-        !selectedCartItems.some(selectedItem => selectedItem.product.id === cartItem.product.id)
-      );
+      // Recharger le panier pour refléter les suppressions
+      await fetchCart();
       
       // Vider les items sélectionnés
       setSelectedCartItems([]);
@@ -124,7 +124,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       fetchOrders,
       favoriteCount,
       createOrder,
-      setSelectedCartItems
+      setSelectedCartItems,
+      fetchCart
     }}>
       {children}
     </StoreContext.Provider>

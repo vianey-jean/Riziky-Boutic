@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { Order } from '@/types/order';
-import { ordersAPI } from '@/services/api';
+import { ordersAPI, cartAPI } from '@/services/api';
 import { StoreCartItem } from '@/types/cart';
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export const useOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const fetchOrders = async () => {
     if (!isAuthenticated) {
@@ -48,7 +49,7 @@ export const useOrders = () => {
     selectedCartItems: StoreCartItem[],
     codePromo?: { code: string; productId: string; pourcentage: number }
   ): Promise<Order | null> => {
-    if (!isAuthenticated || selectedCartItems.length === 0) {
+    if (!isAuthenticated || !user || selectedCartItems.length === 0) {
       toast.error('Impossible de créer la commande: utilisateur non connecté ou panier vide');
       return null;
     }
@@ -89,6 +90,17 @@ export const useOrders = () => {
       const response = await ordersAPI.create(orderPayload);
 
       if (response.data) {
+        // Supprimer seulement les produits commandés du panier
+        console.log('Suppression des produits commandés du panier...');
+        for (const item of selectedCartItems) {
+          try {
+            await cartAPI.removeItem(user.id, item.product.id);
+            console.log(`Produit ${item.product.id} supprimé du panier`);
+          } catch (error) {
+            console.error(`Erreur lors de la suppression du produit ${item.product.id} du panier:`, error);
+          }
+        }
+        
         toast.success('Commande créée avec succès');
         fetchOrders();
         return response.data;
