@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Truck, Package, ShoppingBag, Trash2, RefreshCw, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Separator } from '@/components/ui/separator';
 import { 
   AlertDialog, 
@@ -31,6 +31,7 @@ import RefundTracking from '@/components/orders/RefundTracking';
 
 const OrdersPage = () => {
   const { orders, loadingOrders, fetchOrders } = useStore();
+  const { user } = useAuth();
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [processingOrder, setProcessingOrder] = useState<string | null>(null);
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
@@ -41,14 +42,18 @@ const OrdersPage = () => {
 
   useEffect(() => {
     fetchOrders();
-    fetchUserRemboursements();
+    if (user?.id) {
+      fetchUserRemboursements();
+    }
     console.log("Chargement des commandes depuis la page des commandes");
-  }, []);
+  }, [user?.id]);
 
   const fetchUserRemboursements = async () => {
+    if (!user?.id) return;
+    
     try {
-      const response = await remboursementsAPI.getUserRemboursements();
-      setUserRemboursements(response.data);
+      const remboursements = await remboursementsAPI.getUserRemboursements(user.id);
+      setUserRemboursements(remboursements);
     } catch (error) {
       console.error('Erreur lors du chargement des remboursements:', error);
     }

@@ -1,6 +1,8 @@
 
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { productsAPI } from '@/services/api';
+import { settingsAPI } from '@/services/settingsAPI';
 import { Product } from '@/contexts/StoreContext';
 
 export const useHomePageData = () => {
@@ -11,7 +13,29 @@ export const useHomePageData = () => {
   const [filteredProductCatalog, setFilteredProductCatalog] = useState<Product[]>([]);
   const [dataLoadingComplete, setDataLoadingComplete] = useState(false);
 
+  // Vérifier le mode maintenance avant de charger les produits
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: settingsAPI.getSettings,
+    staleTime: 10000,
+    retry: false,
+  });
+
+  const isMaintenanceMode = settings?.general?.maintenanceMode;
+
   const loadEcommerceProductData = async () => {
+    // Si le mode maintenance est activé, ne pas charger les produits
+    if (isMaintenanceMode) {
+      console.log('Mode maintenance activé - chargement des produits bloqué');
+      setFeaturedProductCatalog([]);
+      setNewArrivalProducts([]);
+      setPromotionalProducts([]);
+      setCompleteProductCatalog([]);
+      setFilteredProductCatalog([]);
+      setDataLoadingComplete(true);
+      return [];
+    }
+
     const productsResponse = await productsAPI.getAll();
     if (!productsResponse.data || !Array.isArray(productsResponse.data)) {
       throw new Error('Format de données produit incorrect - Conformité UE requise');
@@ -78,6 +102,7 @@ export const useHomePageData = () => {
     completeProductCatalog,
     filteredProductCatalog,
     dataLoadingComplete,
+    isMaintenanceMode,
     setFilteredProductCatalog,
     loadEcommerceProductData,
     handleDataLoadingSuccess,

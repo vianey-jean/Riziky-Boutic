@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -17,8 +16,7 @@ const RefundTracking = () => {
     queryKey: ['refund', refundId],
     queryFn: async () => {
       if (!refundId) throw new Error('ID de remboursement manquant');
-      const response = await remboursementsAPI.getById(refundId);
-      return response.data;
+      return await remboursementsAPI.getById(refundId);
     },
     enabled: !!refundId
   });

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,19 +39,17 @@ const AdminRemboursementsPage = () => {
   const { data: remboursements = [], isLoading } = useQuery({
     queryKey: ['admin-remboursements'],
     queryFn: async () => {
-      const response = await remboursementsAPI.getAll();
-      return response.data;
+      return await remboursementsAPI.getAll();
     }
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status, comment, decision }: { 
+    mutationFn: async ({ id, status, comment }: { 
       id: string; 
       status: string; 
       comment?: string; 
-      decision?: string; 
     }) => {
-      return await remboursementsAPI.updateStatus(id, status, comment, decision);
+      return await remboursementsAPI.updateStatus(id, status, comment);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-remboursements'] });
@@ -119,11 +116,12 @@ const AdminRemboursementsPage = () => {
       return;
     }
 
+    const comment = statusUpdateData.comment + (statusUpdateData.decision ? ` - ${statusUpdateData.decision}` : '');
+
     updateStatusMutation.mutate({
       id: selectedRemboursement.id,
       status: statusUpdateData.status,
-      comment: statusUpdateData.comment || undefined,
-      decision: statusUpdateData.decision || undefined
+      comment: comment || undefined
     });
   };
 

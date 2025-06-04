@@ -48,19 +48,17 @@ const AdminRefundsPage = () => {
   const { data: refunds = [], isLoading } = useQuery({
     queryKey: ['admin-refunds'],
     queryFn: async () => {
-      const response = await remboursementsAPI.getAll();
-      return response.data;
+      return await remboursementsAPI.getAll();
     }
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status, comment, decision }: { 
+    mutationFn: async ({ id, status, comment }: { 
       id: string, 
       status: string, 
-      comment?: string, 
-      decision?: string 
+      comment?: string
     }) => {
-      await remboursementsAPI.updateStatus(id, status, comment, decision);
+      await remboursementsAPI.updateStatus(id, status, comment);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-refunds'] });
@@ -124,11 +122,12 @@ const AdminRefundsPage = () => {
       return;
     }
 
+    const comment = statusComment ? `${statusComment}${decision ? ` - ${decision}` : ''}` : undefined;
+
     updateStatusMutation.mutate({
       id: refundId,
       status,
-      comment: statusComment || undefined,
-      decision: status === 'traité' ? decision : undefined
+      comment
     });
   };
 
@@ -173,6 +172,7 @@ const AdminRefundsPage = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Détails de la demande */}
                     <div>
