@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Card, CardContent, CardDescription, CardFooter,
   CardHeader, CardTitle
@@ -31,6 +31,7 @@ const passwordSchema = z.object({
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<'email' | 'password'>('email');
   const [userEmail, setUserEmail] = useState('');
@@ -81,7 +82,14 @@ const LoginPage = () => {
   const onPasswordSubmit = async (data: { password: string }) => {
     try {
       setIsLoading(true);
-      await login(userEmail, data.password);
+      
+      // Vérifier si on vient directement de /login (pas de redirection sauvegardée)
+      const isDirectLogin = !localStorage.getItem('redirectAfterLogin');
+      
+      // Si on vient directement sur /login, on va vers home après connexion
+      const redirectTo = isDirectLogin ? '/' : undefined;
+      
+      await login(userEmail, data.password, redirectTo);
       // La redirection est gérée dans le contexte Auth
     } catch (error) {
       console.error("Erreur de connexion:", error);

@@ -17,7 +17,6 @@ import { authAPI } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Shield, Lock, ArrowLeft } from 'lucide-react';
 import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
-import { getSecureRoute } from '@/services/secureIds';
 
 // ✅ Validation schemas
 const emailSchema = z.object({
@@ -99,7 +98,7 @@ const LoginMaintenanceAdminPage = () => {
       if (response.data.user.role !== 'admin') {
         toast({
           title: "❌ Accès refusé",
-          description: "Cette email n'est pas admin et vérifiez bien votre identifiant",
+          description: "Cette identifiant n'est pas un administrateur",
           variant: "destructive",
           className: "bg-red-500 text-white border-red-600",
         });
@@ -111,15 +110,14 @@ const LoginMaintenanceAdminPage = () => {
       
       toast({
         title: "✅ Connexion réussie",
-        description: "Redirection vers les paramètres",
+        description: `Bienvenu ${response.data.user.nom}`,
         className: "bg-green-500 text-white border-green-600",
       });
 
-      console.log('Redirection vers /admin/parametres');
+      console.log('Redirection vers la page index');
       
-      // Forcer la redirection en utilisant window.location
-      const secureRoute = getSecureRoute('/admin/parametres');
-      window.location.href = secureRoute;
+      // Redirection vers la page index
+      window.location.href = '/';
       
     } catch (error: any) {
       console.error("Erreur de connexion:", error);

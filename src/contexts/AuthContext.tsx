@@ -8,13 +8,14 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, redirectTo?: string) => Promise<void>;
   logout: () => void;
   register: (nom: string, email: string, password: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
   updateProfile: (data: UpdateProfileData) => Promise<void>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  setRedirectAfterLogin: (path: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,7 +23,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [redirectAfterLogin, setRedirectAfterLoginState] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const setRedirectAfterLogin = (path: string) => {
+    setRedirectAfterLoginState(path);
+    localStorage.setItem('redirectAfterLogin', path);
+  };
+
+  const clearRedirectAfterLogin = () => {
+    setRedirectAfterLoginState(null);
+    localStorage.removeItem('redirectAfterLogin');
+  };
 
   const validateToken = async () => {
     const token = localStorage.getItem('authToken');
@@ -53,9 +65,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     verifyToken();
+
+    // Récupérer la redirection sauvegardée s'il y en a une
+    const savedRedirect = localStorage.getItem('redirectAfterLogin');
+    if (savedRedirect) {
+      setRedirectAfterLoginState(savedRedirect);
+    }
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string, redirectTo?: string): Promise<void> => {
     try {
       console.log("Tentative de connexion avec:", { email });
       
@@ -85,23 +103,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         variant: 'default',
       });
 
-      // Redirection selon le rôle et le mode maintenance
-      if (response.data.user.role === 'admin') {
-        if (isMaintenanceMode) {
-          // En mode maintenance, rediriger vers les paramètres
-          console.log('Redirection vers paramètres (mode maintenance)');
-          window.location.href = '/admin/parametres';
-        } else {
-          // Mode normal, rediriger vers le dashboard admin
-          console.log('Redirection vers dashboard admin');
-          window.location.href = '/admin';
-        }
-      } else if (isMaintenanceMode) {
-        // Ne devrait pas arriver car déjà vérifié plus haut
-        throw new Error('Accès refusé en mode maintenance');
-      } else {
-        window.location.href = '/';
+      // Déterminer la redirection
+      let targetUrl = '/';
+      
+      // 1. Si une redirection spécifique est demandée
+      if (redirectTo) {
+        targetUrl = redirectTo;
       }
+      // 2. Si une redirection était sauvegardée (favori, panier, etc.)
+      else if (redirectAfterLogin) {
+        targetUrl = redirectAfterLogin;
+        clearRedirectAfterLogin();
+      }
+      // 3. Mode maintenance : admin vers paramètres, autre vers home
+      else if (isMaintenanceMode && response.data.user.role === 'admin') {
+        targetUrl = '/admin/parametres';
+      }
+      // 4. Mode normal : admin vers dashboard, client vers home
+      else if (!isMaintenanceMode && response.data.user.role === 'admin') {
+        targetUrl = '/admin';
+      }
+      
+      console.log('Redirection vers:', targetUrl);
+      window.location.href = targetUrl;
     } catch (error: any) {
       console.error("Erreur de connexion:", error);
       
@@ -134,6 +158,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     localStorage.removeItem('authToken');
+    clearRedirectAfterLogin();
     setUser(null);
     toast({
       title: 'Vous êtes déconnecté',
@@ -272,6 +297,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     resetPassword,
     updateProfile,
     updatePassword,
+    setRedirectAfterLogin,
   };
 
   return (
