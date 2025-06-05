@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { CreditCard, CreditCardIcon, Banknote } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { settingsAPI } from '@/services/settingsAPI';
 import visaLogo from '@/assets/visa.png';
 import mastercardLogo from '@/assets/mastercard.png';
 import paypalLogo from '@/assets/paypal.png';
@@ -22,56 +20,33 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   onMethodChange,
   isDisabled = false 
 }) => {
-  const { data: settings } = useQuery({
-    queryKey: ['settings'],
-    queryFn: settingsAPI.getSettings,
-    staleTime: 30000,
-  });
-
-  const paymentSettings = settings?.general?.paymentSettings;
-
-  // Si aucun moyen de paiement n'est activé, afficher tous par défaut
-  const hasAnyPaymentEnabled = paymentSettings && (
-    paymentSettings.enableStripe || 
-    paymentSettings.enablePayPal || 
-    paymentSettings.enableCreditCard
-  );
-
-  const showCreditCard = !paymentSettings || paymentSettings.enableCreditCard || !hasAnyPaymentEnabled;
-  const showPayPal = !paymentSettings || paymentSettings.enablePayPal || !hasAnyPaymentEnabled;
-  const showStripe = !paymentSettings || paymentSettings.enableStripe || !hasAnyPaymentEnabled;
-
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <h2 className="text-xl font-semibold mb-4">Mode de paiement</h2>
       
       <RadioGroup value={selectedMethod} onValueChange={onMethodChange} disabled={isDisabled}>
         <div className="flex flex-col space-y-3">
-          {showCreditCard && (
-            <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'card' ? 'border-primary bg-primary/5' : ''}`}>
-              <RadioGroupItem value="card" id="card" />
-              <Label htmlFor="card" className="flex-grow cursor-pointer flex items-center">
-                <CreditCard className="mr-2 h-4 w-4" />
-                <span>Carte bancaire</span>
-              </Label>
-              <div className="flex space-x-1">
-                <img src={visaLogo} alt="Visa" className="h-6" />
-                <img src={mastercardLogo} alt="Mastercard" className="h-6" />
-              </div>
+          <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'card' ? 'border-primary bg-primary/5' : ''}`}>
+            <RadioGroupItem value="card" id="card" />
+            <Label htmlFor="card" className="flex-grow cursor-pointer flex items-center">
+              <CreditCard className="mr-2 h-4 w-4" />
+              <span>Carte bancaire</span>
+            </Label>
+            <div className="flex space-x-1">
+              <img src={visaLogo} alt="Visa" className="h-6" />
+              <img src={mastercardLogo} alt="Mastercard" className="h-6" />
             </div>
-          )}
+          </div>
 
-          {showPayPal && (
-            <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'paypal' ? 'border-primary bg-primary/5' : ''}`}>
-              <RadioGroupItem value="paypal" id="paypal" />
-              <Label htmlFor="paypal" className="flex-grow cursor-pointer">
-                <div className="flex items-center">
-                  <img src={paypalLogo} alt="PayPal" className="h-5 mr-2" />
-                  <span>PayPal</span>
-                </div>
-              </Label>
-            </div>
-          )}
+          <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'paypal' ? 'border-primary bg-primary/5' : ''}`}>
+            <RadioGroupItem value="paypal" id="paypal" />
+            <Label htmlFor="paypal" className="flex-grow cursor-pointer">
+              <div className="flex items-center">
+                <img src={paypalLogo} alt="PayPal" className="h-5 mr-2" />
+                <span>PayPal</span>
+              </div>
+            </Label>
+          </div>
           
           <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'applepay' ? 'border-primary bg-primary/5' : ''}`}>
             <RadioGroupItem value="applepay" id="applepay" />
@@ -93,13 +68,13 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
         </div>
       </RadioGroup>
 
-      {selectedMethod === 'card' && showCreditCard && (
+      {selectedMethod === 'card' && (
         <div className="mt-4 text-sm text-muted-foreground">
           <p>Vous serez redirigé vers notre page de paiement sécurisé</p>
         </div>
       )}
       
-      {selectedMethod === 'paypal' && showPayPal && (
+      {selectedMethod === 'paypal' && (
         <div className="mt-4 text-sm text-muted-foreground">
           <p>Vous serez redirigé vers PayPal pour finaliser votre paiement</p>
         </div>

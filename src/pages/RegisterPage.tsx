@@ -1,259 +1,219 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Link } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, AlertCircle, UserPlus } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useAuth } from '@/contexts/AuthContext';
+import Layout from '@/components/layout/Layout';
+import { authAPI } from '@/services/api';
+import { toast } from 'sonner';
+import { Eye, EyeOff, Mail, User, Lock } from 'lucide-react';
+import { debounce } from 'lodash';
 import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
-import { useQuery } from '@tanstack/react-query';
-import { settingsAPI } from '@/services/settingsAPI';
-import { Skeleton } from '@/components/ui/skeleton';
+
+const formSchema = z.object({
+  nom: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
+  email: z.string().email('Email invalide'),
+  password: z.string()
+    .min(8, 'Le mot de passe doit contenir au moins 8 caractères')
+    .regex(/[A-Z]/, 'Le mot de passe doit contenir au moins une majuscule')
+    .regex(/[a-z]/, 'Le mot de passe doit contenir au moins une minuscule')
+    .regex(/[0-9]/, 'Le mot de passe doit contenir au moins un chiffre')
+    .regex(/[^A-Za-z0-9]/, 'Le mot de passe doit contenir au moins un caractère spécial'),
+  confirmPassword: z.string()
+}).refine(data => data.password === data.confirmPassword, {
+  message: 'Les mots de passe ne correspondent pas',
+  path: ['confirmPassword'],
+});
 
 const RegisterPage = () => {
-  const navigate = useNavigate();
   const { register } = useAuth();
-  
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
-  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  // Vérifier les paramètres d'inscription
-  const { data: settings, isLoading: settingsLoading } = useQuery({
-    queryKey: ['settings'],
-    queryFn: settingsAPI.getSettings,
-    staleTime: 30000,
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      nom: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setError('');
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const checkEmailExists = debounce(async (email: string) => {
+    if (!email || !email.includes('@')) return;
     
-    if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
-      return;
-    }
-
-    setIsLoading(true);
-    setError('');
-
     try {
-      // Combiner prénom et nom pour créer le nom complet
-      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-      await register(fullName, formData.email, formData.password);
-      navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de l\'inscription');
+      const response = await authAPI.checkEmail(email);
+      if (response.data.exists) {
+        setEmailExists(true);
+        toast.error('Cet email existe déjà');
+      } else {
+        setEmailExists(false);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification de l\'email:', error);
+    }
+  }, 500);
+
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'email') {
+        checkEmailExists(value.email || '');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
+
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    if (emailExists) {
+      toast.error('Cet email existe déjà');
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      await register(data.nom, data.email, data.password);
+    } catch (error) {
+      console.error('Erreur d\'inscription:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Affichage de chargement
-  if (settingsLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-4">
-            <Skeleton className="h-6 w-32 mx-auto" />
-            <Skeleton className="h-4 w-48 mx-auto" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Vérifier si l'inscription est autorisée
-  if (settings && !settings.general?.allowRegistration) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2">
-              <AlertCircle className="h-5 w-5 text-orange-500" />
-              Inscription fermée
-            </CardTitle>
-            <CardDescription>
-              Les nouvelles inscriptions ne sont pas autorisées pour le moment.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground text-center">
-              Veuillez contacter l'administrateur pour plus d'informations.
-            </p>
-            <div className="flex flex-col space-y-2">
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/login">Se connecter</Link>
-              </Button>
-              <Button asChild variant="ghost" className="w-full">
-                <Link to="/">Retour à l'accueil</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="flex items-center justify-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Créer un compte
-          </CardTitle>
-          <CardDescription>
-            Rejoignez-nous dès aujourd'hui
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">Prénom</Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                  disabled={isLoading}
+    <Layout>
+      <div className="flex justify-center items-center min-h-[70vh]">
+        <Card className="w-[400px]">
+          <CardHeader>
+            <CardTitle>Inscription</CardTitle>
+            <CardDescription>Créez un nouveau compte</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="nom"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nom</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input placeholder="Votre nom" {...field} />
+                          <User className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Nom</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  required
-                  disabled={isLoading}
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input placeholder="email@example.com" {...field} />
+                          <Mail className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
-              <div className="relative">
-                <Input
-                  id="password"
+                <FormField
+                  control={form.control}
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  disabled={isLoading}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mot de passe</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="********"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-5 w-5 text-muted-foreground" />
+                            ) : (
+                              <Eye className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                      <PasswordStrengthIndicator password={field.value} />
+                    </FormItem>
+                  )}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
-              {formData.password && (
-                <PasswordStrengthIndicator password={formData.password} />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
+                <FormField
+                  control={form.control}
                   name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  required
-                  disabled={isLoading}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirmer le mot de passe</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="********"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-5 w-5 text-muted-foreground" />
+                            ) : (
+                              <Eye className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  disabled={isLoading}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <Button type="submit" className="w-full" disabled={emailExists || isLoading}>
+                  {isLoading ? "Inscription en cours..." : "S'inscrire"}
                 </Button>
-              </div>
-            </div>
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Création en cours...' : 'Créer mon compte'}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Vous avez déjà un compte ?{' '}
-              <Link to="/login" className="font-medium text-primary hover:underline">
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter>
+            <div className="text-sm text-muted-foreground w-full text-center">
+              Déjà un compte ?{' '}
+              <Link to="/login" className="text-brand-blue hover:underline">
                 Se connecter
               </Link>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+    </Layout>
   );
 };
 
