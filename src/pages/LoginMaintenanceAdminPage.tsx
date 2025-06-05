@@ -14,7 +14,7 @@ import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage
 } from '@/components/ui/form';
 import { authAPI } from '@/services/api';
-import { useToast } from '@/hooks/use-toast';
+import { notificationService } from '@/services/NotificationService';
 import { Eye, EyeOff, Mail, Shield, Lock, ArrowLeft } from 'lucide-react';
 import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
 
@@ -28,7 +28,6 @@ const passwordSchema = z.object({
 
 const LoginMaintenanceAdminPage = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<'email' | 'password'>('email');
   const [userEmail, setUserEmail] = useState('');
@@ -59,27 +58,13 @@ const LoginMaintenanceAdminPage = () => {
         setUserEmail(normalizedEmail);
         setUserName(response.data.user.nom || 'Utilisateur');
         setStep('password');
-        toast({
-          title: "✅ Email vérifié",
-          description: `Bienvenue ${response.data.user.nom || 'Utilisateur'}`,
-          className: "bg-green-500 text-white border-green-600",
-        });
+        notificationService.success("Email vérifié", `Bienvenue ${response.data.user.nom || 'Utilisateur'}`);
       } else {
-        toast({
-          title: "❌ Erreur",
-          description: "Cet email n'existe pas",
-          variant: "destructive",
-          className: "bg-red-500 text-white border-red-600",
-        });
+        notificationService.error("Email introuvable", "Cet email n'existe pas");
       }
     } catch (error) {
       console.error("Erreur lors de la vérification de l'email:", error);
-      toast({
-        title: "❌ Erreur",
-        description: "Erreur lors de la vérification de l'email",
-        variant: "destructive",
-        className: "bg-red-500 text-white border-red-600",
-      });
+      notificationService.error("Erreur", "Erreur lors de la vérification de l'email");
     } finally {
       setIsLoading(false);
     }
@@ -96,23 +81,14 @@ const LoginMaintenanceAdminPage = () => {
       
       // Vérifier que c'est un admin
       if (response.data.user.role !== 'admin') {
-        toast({
-          title: "❌ Accès refusé",
-          description: "Cette identifiant n'est pas un administrateur",
-          variant: "destructive",
-          className: "bg-red-500 text-white border-red-600",
-        });
+        notificationService.error("Accès refusé", "Cette identifiant n'est pas un administrateur");
         return;
       }
 
       // Stocker le token
       localStorage.setItem('authToken', response.data.token);
       
-      toast({
-        title: "✅ Connexion réussie",
-        description: `Bienvenu ${response.data.user.nom}`,
-        className: "bg-green-500 text-white border-green-600",
-      });
+      notificationService.success("Connexion réussie", `Bienvenu ${response.data.user.nom}`);
 
       console.log('Redirection vers la page index');
       
@@ -122,12 +98,7 @@ const LoginMaintenanceAdminPage = () => {
     } catch (error: any) {
       console.error("Erreur de connexion:", error);
       const errorMessage = error.response?.data?.message || "Mot de passe incorrect";
-      toast({
-        title: "❌ Erreur de connexion",
-        description: errorMessage,
-        variant: "destructive",
-        className: "bg-red-500 text-white border-red-600",
-      });
+      notificationService.error("Erreur de connexion", errorMessage);
     } finally {
       setIsLoading(false);
     }

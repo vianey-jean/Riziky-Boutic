@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { notificationService } from '@/services/NotificationService';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
     // Si l'utilisateur n'est pas connecté, sauvegarder la page actuelle pour redirection après login
     if (!loading && !isAuthenticated) {
       setRedirectAfterLogin(location.pathname);
+      notificationService.info('Connexion requise', 'Veuillez vous connecter pour accéder à cette page');
     }
   }, [isAuthenticated, loading, location.pathname, setRedirectAfterLogin]);
 
@@ -29,6 +31,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
   }
 
   if ((requireAdmin || adminOnly) && !isAdmin) {
+    notificationService.accessDenied();
     return <Navigate to="/" replace />;
   }
 

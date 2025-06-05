@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Product } from '@/types/product';
 import { favoritesAPI } from '@/services/favoritesAPI';
-import { toast } from '@/components/ui/sonner';
+import { notificationService } from '@/services/NotificationService';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useFavorites = () => {
@@ -27,6 +27,7 @@ export const useFavorites = () => {
       }
     } catch (error) {
       console.error("Erreur lors du chargement des favoris:", error);
+      notificationService.error('Erreur', 'Impossible de charger vos favoris');
       setFavorites([]);
     } finally {
       setLoading(false);
@@ -44,11 +45,7 @@ export const useFavorites = () => {
 
   const toggleFavorite = async (product: Product) => {
     if (!isAuthenticated || !user) {
-      toast.error('Vous devez être connecté pour ajouter un produit au favoris', {
-        style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
-        duration: 4000,
-        position: 'top-center',
-      });
+      notificationService.error('Connexion requise', 'Vous devez être connecté pour ajouter un produit aux favoris');
       return;
     }
     
@@ -58,15 +55,15 @@ export const useFavorites = () => {
       if (isFav) {
         await favoritesAPI.removeItem(user.id, product.id);
         setFavorites(favorites.filter(fav => fav.id !== product.id));
-        toast.info('Produit retiré des favoris');
+        notificationService.removeFromFavorites(product.name);
       } else {
         await favoritesAPI.addItem(user.id, product.id);
         setFavorites([...favorites, product]);
-        toast.success('Produit ajouté aux favoris');
+        notificationService.addToFavorites(product.name);
       }
     } catch (error) {
       console.error("Erreur lors de la gestion des favoris:", error);
-      toast.error('Erreur lors de la gestion des favoris');
+      notificationService.error('Erreur', 'Impossible de modifier vos favoris');
     }
   };
 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import PromoBanner from './PromoBanner';
@@ -15,6 +15,7 @@ import { Product } from '@/contexts/StoreContext';
 import { productsAPI } from '@/services/api';
 import pubLayoutAPI, { PubLayout } from '@/services/pubLayoutAPI';
 import { useScrollDetection } from '@/hooks/useScrollDetection';
+import { notificationService } from '@/services/NotificationService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,6 +23,17 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
+  // Notification de consentement des cookies au chargement
+  useEffect(() => {
+    const hasShownCookieNotice = localStorage.getItem('cookieNoticeShown');
+    if (!hasShownCookieNotice) {
+      setTimeout(() => {
+        notificationService.cookieConsent();
+        localStorage.setItem('cookieNoticeShown', 'true');
+      }, 2000);
+    }
+  }, []);
+
   const { data: trendingProducts } = useQuery({
     queryKey: ['trending-products'],
     queryFn: async (): Promise<Product[]> => {
@@ -30,6 +42,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
         return response.data || [];
       } catch (error) {
         console.error('Erreur lors du chargement des produits populaires:', error);
+        notificationService.error('Erreur', 'Impossible de charger les produits populaires');
         return [];
       }
     },
@@ -46,6 +59,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
         return await pubLayoutAPI.getAll();
       } catch (error) {
         console.error('Erreur lors du chargement des publicités:', error);
+        notificationService.warning('Avertissement', 'Certaines promotions peuvent ne pas s\'afficher');
         return [
           { id: "1", icon: "ThumbsUp", text: "Livraison gratuite à partir de 50€ d'achat" },
           { id: "2", icon: "Gift", text: "-10% sur votre première commande avec le code WELCOME10" },
