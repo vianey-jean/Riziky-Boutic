@@ -1,0 +1,1 @@
+import{a3 as t}from"./index-Dc-BS1W2.js";const c={getAll:()=>t.get("/categories"),getActive:()=>t.get("/categories/active"),getById:e=>t.get(`/categories/${e}`),create:e=>t.post("/categories",e),update:(e,a)=>t.put(`/categories/${e}`,a),delete:e=>t.delete(`/categories/${e}`)};export{c};
