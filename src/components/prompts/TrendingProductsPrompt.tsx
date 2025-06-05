@@ -39,6 +39,13 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
 
   const sections: SectionInfo[] = [
     {
+      id: 'featured',
+      title: 'Produits populaires',
+      icon: TrendingUp,
+      linkText: 'Voir plus de produits populaires',
+      linkPath: '/populaires'
+    },
+    {
       id: 'promotional',
       title: 'Offres promotionnelles',
       icon: Zap,
@@ -63,25 +70,40 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
 
   useEffect(() => {
     const detectVisibleSection = () => {
-      const promotionalSection = document.querySelector('[data-section="promotional"]');
-      const newArrivalsSection = document.querySelector('[data-section="new-arrivals"]');
-      const completeCatalogSection = document.querySelector('[data-section="complete-catalog"]');
+      // Chercher les sections par leur contenu textuel ou data attributes
+      const heroSection = document.querySelector('[class*="hero"]') || document.querySelector('h1');
+      const featuredSection = document.querySelector('h2[class*="text-gradient"]') || 
+                             Array.from(document.querySelectorAll('h2')).find(h => h.textContent?.includes('populaires') || h.textContent?.includes('Vedettes'));
+      const promotionalSection = Array.from(document.querySelectorAll('h2')).find(h => 
+        h.textContent?.includes('Offres') || h.textContent?.includes('Promotions') || h.textContent?.includes('Exceptionnelles')
+      );
+      const newArrivalsSection = Array.from(document.querySelectorAll('h2')).find(h => 
+        h.textContent?.includes('Nouveautés') || h.textContent?.includes('Dernières')
+      );
+      const completeCatalogSection = Array.from(document.querySelectorAll('h2')).find(h => 
+        h.textContent?.includes('Catalogue') || h.textContent?.includes('Complet') || h.textContent?.includes('tous')
+      );
 
       const isInViewport = (element: Element | null) => {
         if (!element) return false;
         const rect = element.getBoundingClientRect();
         const windowHeight = window.innerHeight;
         const elementMiddle = rect.top + rect.height / 2;
-        return elementMiddle >= 0 && elementMiddle <= windowHeight;
+        const threshold = windowHeight * 0.4; // 40% du viewport
+        return elementMiddle >= 0 && elementMiddle <= windowHeight && rect.top <= threshold;
       };
 
-      if (isInViewport(promotionalSection)) {
-        setCurrentSection(sections[0]);
+      // Vérifier les sections dans l'ordre de priorité
+      if (isInViewport(completeCatalogSection)) {
+        setCurrentSection(sections[3]); // Tous les produits
       } else if (isInViewport(newArrivalsSection)) {
-        setCurrentSection(sections[1]);
-      } else if (isInViewport(completeCatalogSection)) {
-        setCurrentSection(sections[2]);
+        setCurrentSection(sections[2]); // Nouveautés
+      } else if (isInViewport(promotionalSection)) {
+        setCurrentSection(sections[1]); // Promotions
+      } else if (isInViewport(featuredSection)) {
+        setCurrentSection(sections[0]); // Populaires
       }
+      // Si on est en haut de page (hero), on garde les produits populaires par défaut
     };
 
     detectVisibleSection();
@@ -118,8 +140,35 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
 
   const IconComponent = currentSection.icon;
 
+  // Filtrer les produits selon la section courante
+  const getFilteredProducts = () => {
+    switch (currentSection.id) {
+      case 'promotional':
+        const promotionalProducts = products.filter(product => 
+          product.promotion && 
+          product.promotionEnd && 
+          new Date(product.promotionEnd) > new Date()
+        );
+        return promotionalProducts.length > 0 ? promotionalProducts.slice(0, 3) : products.slice(0, 3);
+      
+      case 'new-arrivals':
+        const sortedByDate = [...products].sort((a, b) =>
+          new Date(b.dateAjout || 0).getTime() - new Date(a.dateAjout || 0).getTime()
+        );
+        return sortedByDate.slice(0, 3);
+      
+      case 'complete-catalog':
+        return products.slice(0, 3);
+      
+      default: // featured/popular
+        return products.slice(0, 3);
+    }
+  };
+
+  const displayedProducts = getFilteredProducts();
+
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       <motion.div 
         className="fixed bottom-4 right-4 z-50 max-w-sm bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden"
         initial={{ opacity: 0, y: 50 }}
@@ -144,7 +193,7 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
           </div>
           
           <div className="space-y-3">
-            {products.slice(0, 3).map(product => (
+            {displayedProducts.map(product => (
               <Link 
                 key={product.id}
                 to={`/produit/${product.id}`}

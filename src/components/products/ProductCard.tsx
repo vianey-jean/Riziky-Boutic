@@ -1,17 +1,19 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Heart, Clock, Star, Eye } from 'lucide-react';
+import { ShoppingCart, Heart, Clock, Star, Eye, Share2, Zap } from 'lucide-react';
 import { Product, useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSecureId } from '@/services/secureIds';
 import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { reviewsAPI } from '@/services/api';
 import StarRating from '@/components/reviews/StarRating';
-import { toast } from '@/components/ui/sonner';
+import { notificationService } from '@/services/NotificationService';
 import QuickViewModal from '@/components/products/QuickViewModal';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 interface ProductCardProps {
   product: Product;
@@ -35,6 +37,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(isProductFavorite);
   
   useEffect(() => {
     const fetchProductReviews = async () => {
@@ -43,7 +46,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         const reviews = response.data;
         
         if (reviews && reviews.length > 0) {
-          // Calculate average rating from product and delivery ratings
           const totalRating = reviews.reduce((sum, review) => {
             return sum + ((review.productRating + review.deliveryRating) / 2);
           }, 0);
@@ -104,27 +106,36 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.stopPropagation();
     
     if (!isAuthenticated) {
-      toast.error("Vous devez être connecté pour ajouter un produit au panier", {
-        style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
-        duration: 4000,
-        position: 'top-center',
-      });
+      notificationService.error("Connexion requise", "Vous devez être connecté pour ajouter un produit au panier");
       return;
     }
     
     if (!product.isSold || (product.stock !== undefined && product.stock <= 0)) {
-      toast.error("Ce produit est en rupture de stock");
+      notificationService.error("Rupture de stock", "Ce produit n'est plus disponible");
       return;
     }
     
     addToCart(product);
-    toast.success("Produit ajouté au panier");
+    notificationService.addToCart(product.name);
   };
 
   const handleFavoriteToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      notificationService.error("Connexion requise", "Vous devez être connecté pour ajouter aux favoris");
+      return;
+    }
+    
+    setIsWishlisted(!isWishlisted);
     toggleFavorite(product);
+    
+    if (isWishlisted) {
+      notificationService.removeFromFavorites(product.name);
+    } else {
+      notificationService.addToFavorites(product.name);
+    }
   };
 
   const handleQuickView = (e: React.MouseEvent) => {
@@ -133,168 +144,260 @@ const ProductCard: React.FC<ProductCardProps> = ({
     setIsQuickViewOpen(true);
   };
 
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (navigator.share) {
+      navigator.share({
+        title: product.name,
+        text: product.description,
+        url: window.location.origin + `/${secureId}`
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.origin + `/${secureId}`);
+      notificationService.success("Lien copié", "Le lien du produit a été copié dans le presse-papiers");
+    }
+  };
+
   useEffect(() => {
     if (isHovered && displayImages.length > 1) {
       const interval = setInterval(() => {
         setCurrentImageIndex((prev) => (prev + 1) % displayImages.length);
-      }, 2000);
+      }, 1500);
       return () => clearInterval(interval);
+    } else {
+      setCurrentImageIndex(0);
     }
   }, [isHovered, displayImages.length]);
 
   const heightClasses = {
-    small: 'h-[300px]',
-    medium: 'h-[380px]',
-    large: 'h-[450px]'
+    small: 'h-[320px]',
+    medium: 'h-[400px]',
+    large: 'h-[480px]'
   };
+
+  const discountPercentage = isPromotionActive ? product.promotion : 0;
+  const originalPrice = typeof product.originalPrice === 'number' ? product.originalPrice : product.price;
+  const savings = isPromotionActive ? (originalPrice - product.price) : 0;
 
   return (
     <>
       <motion.div 
-        whileHover={{ y: -5 }}
-        transition={{ duration: 0.2 }}
+        whileHover={{ y: -8, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => {
-          setIsHovered(false);
-          setCurrentImageIndex(0);
-        }}
-        className={featured ? 'z-10 scale-105' : ''}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`group relative ${featured ? 'z-10' : ''}`}
       >
-        <Card className={`overflow-hidden ${heightClasses[size]} flex flex-col border border-neutral-200 hover:border-neutral-300 dark:border-neutral-800 dark:hover:border-neutral-700 rounded-xl hover:shadow-lg transition-all duration-300 ${featured ? 'shadow-md ring-1 ring-red-200 dark:ring-red-900' : ''}`}>
-          <div className="relative h-[60%] bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
+        <Card className={`overflow-hidden ${heightClasses[size]} flex flex-col border-0 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl bg-gradient-to-br from-white to-gray-50 dark:from-neutral-900 dark:to-black ${featured ? 'ring-2 ring-gradient-to-r from-red-500 to-pink-500 shadow-2xl' : ''}`}>
+          {/* Image Container with Enhanced Effects */}
+          <div className="relative h-[65%] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-900 overflow-hidden rounded-t-2xl">
             <Link to={`/${secureId}`} className="block h-full">
-              {displayImages.length > 0 ? (
-                <motion.img 
-                  src={getImageUrl(displayImages[currentImageIndex])} 
-                  alt={`Photo de ${product.name}`} 
-                  className="w-full h-full object-contain transition-opacity duration-300"
-                  loading="lazy"
-                  onError={(e) => {
-                    console.log("Erreur de chargement d'image, utilisation du placeholder");
-                    const target = e.target as HTMLImageElement;
-                    target.src = PLACEHOLDER_IMAGE;
-                  }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  key={currentImageIndex}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-neutral-100 dark:bg-neutral-800">
-                  <ShoppingCart className="h-12 w-12 text-neutral-400" />
-                </div>
-              )}
-            </Link>
-            
-            {isPromotionActive && (
-              <div className="absolute top-0 left-0 right-0 flex items-center justify-between">
-                <Badge className="m-2 bg-red-600 text-white px-2 py-1 text-xs font-bold">
-                  -{product.promotion}%
-                </Badge>
-                {product.promotionEnd && (
-                  <div className="m-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs flex items-center">
-                    <Clock className="h-3 w-3 mr-1" /> {getPromotionTimeLeft(product.promotionEnd)}
+              <AnimatePresence mode="wait">
+                {displayImages.length > 0 ? (
+                  <motion.img 
+                    key={currentImageIndex}
+                    src={getImageUrl(displayImages[currentImageIndex])} 
+                    alt={`Photo de ${product.name}`} 
+                    className="w-full h-full object-contain transition-all duration-500 group-hover:scale-110"
+                    loading="lazy"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = PLACEHOLDER_IMAGE;
+                    }}
+                    initial={{ opacity: 0, scale: 1.1 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.4 }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-neutral-800 dark:to-neutral-900">
+                    <ShoppingCart className="h-16 w-16 text-gray-400" />
                   </div>
                 )}
+              </AnimatePresence>
+            </Link>
+            
+            {/* Enhanced Badges */}
+            <div className="absolute top-3 left-3 flex flex-col gap-2">
+              {isPromotionActive && (
+                <motion.div
+                  initial={{ scale: 0, rotate: -12 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  className="relative"
+                >
+                  <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 text-sm font-bold rounded-full shadow-lg">
+                    <Zap className="h-3 w-3 mr-1" />
+                    -{product.promotion}%
+                  </Badge>
+                </motion.div>
+              )}
+              
+              {product.dateAjout && new Date().getTime() - new Date(product.dateAjout).getTime() < 7 * 24 * 60 * 60 * 1000 && (
+                <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 text-sm font-bold rounded-full shadow-lg">
+                  Nouveau
+                </Badge>
+              )}
+              
+              {featured && (
+                <Badge className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-3 py-1 text-sm font-bold rounded-full shadow-lg animate-pulse">
+                  ⭐ Top
+                </Badge>
+              )}
+            </div>
+
+            {/* Timer for promotions */}
+            {isPromotionActive && product.promotionEnd && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute top-3 right-3 bg-black/80 text-white px-3 py-1 rounded-full text-xs flex items-center backdrop-blur-sm"
+              >
+                <Clock className="h-3 w-3 mr-1 animate-pulse" />
+                {getPromotionTimeLeft(product.promotionEnd)}
+              </motion.div>
+            )}
+            
+            {/* Enhanced Action Buttons */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 20 }}
+              transition={{ duration: 0.3 }}
+              className="absolute bottom-4 left-4 right-4 flex justify-between items-center gap-2"
+            >
+              <div className="flex gap-2">
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <Button 
+                      variant="secondary" 
+                      size="icon" 
+                      onClick={handleFavoriteToggle}
+                      className="rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-red-500 backdrop-blur-sm shadow-lg transition-all duration-300 transform hover:scale-110"
+                    >
+                      <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-red-500 text-red-500' : ''} transition-all duration-300`} />
+                    </Button>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-auto p-2">
+                    <p className="text-sm">{isWishlisted ? "Retirer des favoris" : "Ajouter aux favoris"}</p>
+                  </HoverCardContent>
+                </HoverCard>
+                
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={handleQuickView}
+                  className="rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-blue-500 backdrop-blur-sm shadow-lg transition-all duration-300 transform hover:scale-110"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={handleShare}
+                  className="rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-green-500 backdrop-blur-sm shadow-lg transition-all duration-300 transform hover:scale-110"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
               </div>
-            )}
-            
-            {product.dateAjout && new Date().getTime() - new Date(product.dateAjout).getTime() < 7 * 24 * 60 * 60 * 1000 && (
-              <Badge className="absolute top-2 left-2 bg-blue-600 text-white">Nouveau</Badge>
-            )}
-            
-            {featured && (
-              <Badge className="absolute top-2 right-2 bg-amber-500 text-white">Recommandé</Badge>
-            )}
-            
-            <div className={`absolute bottom-0 left-0 right-0 p-2 flex justify-between bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleFavoriteToggle}
-                className="rounded-full bg-white/90 hover:bg-white text-neutral-700 hover:text-red-600 backdrop-blur-sm"
-                title={isProductFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-              >
-                <Heart className={`h-4 w-4 ${isProductFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-              </Button>
               
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleQuickView}
-                className="rounded-full bg-white/90 hover:bg-white text-neutral-700 hover:text-blue-600 backdrop-blur-sm"
-                title="Vue rapide"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="icon"
                 onClick={handleQuickAdd}
                 disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
-                className="rounded-full bg-white/90 hover:bg-white text-neutral-700 hover:text-green-600 backdrop-blur-sm"
-                title="Ajouter au panier"
+                className="rounded-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 px-4"
               >
-                <ShoppingCart className="h-4 w-4" />
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Ajouter
               </Button>
-            </div>
+            </motion.div>
+
+            {/* Image indicators */}
+            {displayImages.length > 1 && (
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                {displayImages.slice(0, 5).map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === currentImageIndex ? 'bg-white shadow-lg' : 'bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
           
-          <CardContent className="p-4 flex flex-col flex-grow">
-            <Link to={`/${secureId}`} className="block">
-              <h3 className="font-medium text-lg mb-1 hover:text-red-600 transition-colors line-clamp-2 text-left">{product.name}</h3>
+          {/* Enhanced Product Info */}
+          <CardContent className="p-4 flex flex-col flex-grow bg-white dark:bg-neutral-900">
+            <Link to={`/${secureId}`} className="block group">
+              <h3 className="font-semibold text-lg mb-2 hover:text-red-600 transition-colors line-clamp-2 text-left group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-red-500 group-hover:to-pink-500">
+                {product.name}
+              </h3>
             </Link>
             
-            <div className="flex items-center mt-1 mb-2">
-              <StarRating rating={averageRating} size={14} />
-              <span className="text-xs text-neutral-500 ml-1">({reviewCount})</span>
+            {/* Rating with enhanced styling */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <StarRating rating={averageRating} size={16} />
+                <span className="text-sm text-gray-500 ml-2">({reviewCount})</span>
+              </div>
+              {averageRating > 4.5 && (
+                <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                  Excellent
+                </Badge>
+              )}
             </div>
             
-            <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-3 line-clamp-2 text-left">{product.description}</p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2 text-left leading-relaxed">
+              {product.description}
+            </p>
+            
             <div className="flex-grow"></div>
             
-            <div className="flex justify-between items-end mt-2 text-left">
-              <div>
-                {isPromotionActive ? (
-                  <div className="flex flex-col">
+            {/* Enhanced Price Section */}
+            <div className="space-y-2">
+              {isPromotionActive ? (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <p className="text-sm text-gray-500 line-through">
-                        {typeof product.originalPrice === 'number'
-                          ? product.originalPrice.toFixed(2)
-                          : product.price.toFixed(2)}{' '}
-                        €
+                        {originalPrice.toFixed(2)} €
                       </p>
-                      <p className="font-bold text-red-600">{product.price.toFixed(2)} €</p>
+                      <Badge className="bg-red-100 text-red-800 text-xs">
+                        -{discountPercentage}%
+                      </Badge>
                     </div>
                   </div>
-                ) : (
-                  <p className="font-bold">{product.price.toFixed(2)} €</p>
-                )}
-                
-                {product.stock !== undefined && (
-                  <div className="mt-1">
-                    {product.stock === 0 || !product.isSold ? (
-                      <p className="text-red-500 text-xs">En rupture de stock</p>
-                    ) : product.stock <= 5 ? (
-                      <p className="text-orange-500 text-xs">Plus que {product.stock} en stock</p>
-                    ) : (
-                      <p className="text-orange-500 text-xs">Plus que {product.stock} en stock</p>
-                    )}
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold text-xl text-red-600">
+                      {product.price.toFixed(2)} €
+                    </p>
+                    <p className="text-sm text-green-600 font-medium">
+                      Économisez {savings.toFixed(2)} €
+                    </p>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <p className="font-bold text-xl text-gray-900 dark:text-white">
+                  {product.price.toFixed(2)} €
+                </p>
+              )}
               
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 bg-red-50 text-red-700 hover:bg-red-100 border-red-200 hover:border-red-300 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 dark:border-red-900/50"
-                onClick={handleQuickAdd}
-                disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
-              >
-                <ShoppingCart className="h-3.5 w-3.5 mr-1" />
-                <span>Ajouter</span>
-              </Button>
+              {/* Stock Status */}
+              {product.stock !== undefined && (
+                <div className="mt-2">
+                  {product.stock === 0 || !product.isSold ? (
+                    <p className="text-red-500 text-sm font-medium">❌ Rupture de stock</p>
+                  ) : product.stock <= 5 ? (
+                    <p className="text-orange-500 text-sm font-medium">
+                      ⚠️ Plus que {product.stock} en stock
+                    </p>
+                  ) : (
+                    <p className="text-green-500 text-sm font-medium">✅ En stock</p>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

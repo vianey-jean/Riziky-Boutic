@@ -4,6 +4,7 @@ import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react"
 import { ArrowLeft, ArrowRight } from "lucide-react"
+import { motion } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -18,7 +19,6 @@ type CarouselProps = {
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
-  // Add autoPlay and interval props
   autoPlay?: boolean
   interval?: number
 }
@@ -56,8 +56,8 @@ const Carousel = React.forwardRef<
       plugins,
       className,
       children,
-      autoPlay,
-      interval = 5000,
+      autoPlay = false,
+      interval = 3000,
       ...props
     },
     ref
@@ -88,29 +88,6 @@ const Carousel = React.forwardRef<
     const scrollNext = React.useCallback(() => {
       api?.scrollNext()
     }, [api])
-
-    // Add autoplay functionality - fixed TypeScript errors with setTimeout
-    React.useEffect(() => {
-      if (!api || !autoPlay) return
-
-      let timeoutId: ReturnType<typeof setTimeout> | null = null;
-      
-      const autoPlayFunction = () => {
-        if (api.canScrollNext()) {
-          api.scrollNext();
-        } else {
-          api.scrollTo(0);
-        }
-        
-        timeoutId = setTimeout(autoPlayFunction, interval);
-      };
-      
-      timeoutId = setTimeout(autoPlayFunction, interval);
-      
-      return () => {
-        if (timeoutId) clearTimeout(timeoutId);
-      };
-    }, [api, autoPlay, interval]);
 
     const handleKeyDown = React.useCallback(
       (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -146,6 +123,52 @@ const Carousel = React.forwardRef<
         api?.off("select", onSelect)
       }
     }, [api, onSelect])
+
+    React.useEffect(() => {
+      if (!api || !autoPlay) {
+        return
+      }
+
+      let timeoutId: NodeJS.Timeout;
+      
+      const autoPlayFunction = () => {
+        if (api.canScrollNext()) {
+          api.scrollNext();
+        } else {
+          api.scrollTo(0);
+        }
+      };
+      
+      const handleMouseEnter = () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      };
+      
+      const handleMouseLeave = () => {
+        timeoutId = setTimeout(autoPlayFunction, interval);
+      };
+      
+      // Get the carousel element through the API
+      const carouselElement = api.containerNode();
+      if (carouselElement) {
+        carouselElement.addEventListener('mouseenter', handleMouseEnter);
+        carouselElement.addEventListener('mouseleave', handleMouseLeave);
+        
+        // Start autoplay
+        timeoutId = setTimeout(autoPlayFunction, interval);
+      }
+      
+      return () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        if (carouselElement) {
+          carouselElement.removeEventListener('mouseenter', handleMouseEnter);
+          carouselElement.removeEventListener('mouseleave', handleMouseLeave);
+        }
+      };
+    }, [api, autoPlay, interval]);
 
     return (
       <CarouselContext.Provider
@@ -185,16 +208,42 @@ const CarouselContent = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const { carouselRef, orientation } = useCarousel()
 
+  // Filter out props that conflict with Framer Motion
+  const {
+    onDrag,
+    onDragCapture,
+    onDragEnd,
+    onDragEndCapture,
+    onDragEnter,
+    onDragEnterCapture,
+    onDragExit,
+    onDragExitCapture,
+    onDragLeave,
+    onDragLeaveCapture,
+    onDragOver,
+    onDragOverCapture,
+    onDragStart,
+    onDragStartCapture,
+    onDrop,
+    onDropCapture,
+    onAnimationStart,
+    onAnimationEnd,
+    onAnimationIteration,
+    onTransitionEnd,
+    ...filteredProps
+  } = props
+
   return (
     <div ref={carouselRef} className="overflow-hidden">
-      <div
+      <motion.div
         ref={ref}
         className={cn(
           "flex",
           orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col",
           className
         )}
-        {...props}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        {...filteredProps}
       />
     </div>
   )
@@ -207,8 +256,33 @@ const CarouselItem = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const { orientation } = useCarousel()
 
+  // Filter out props that conflict with Framer Motion
+  const {
+    onDrag,
+    onDragCapture,
+    onDragEnd,
+    onDragEndCapture,
+    onDragEnter,
+    onDragEnterCapture,
+    onDragExit,
+    onDragExitCapture,
+    onDragLeave,
+    onDragLeaveCapture,
+    onDragOver,
+    onDragOverCapture,
+    onDragStart,
+    onDragStartCapture,
+    onDrop,
+    onDropCapture,
+    onAnimationStart,
+    onAnimationEnd,
+    onAnimationIteration,
+    onTransitionEnd,
+    ...filteredProps
+  } = props
+
   return (
-    <div
+    <motion.div
       ref={ref}
       role="group"
       aria-roledescription="slide"
@@ -217,7 +291,8 @@ const CarouselItem = React.forwardRef<
         orientation === "horizontal" ? "pl-4" : "pt-4",
         className
       )}
-      {...props}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      {...filteredProps}
     />
   )
 })
@@ -230,24 +305,29 @@ const CarouselPrevious = React.forwardRef<
   const { orientation, scrollPrev, canScrollPrev } = useCarousel()
 
   return (
-    <Button
-      ref={ref}
-      variant={variant}
-      size={size}
+    <motion.div
       className={cn(
-        "absolute  h-8 w-8 rounded-full",
+        "absolute h-8 w-8 rounded-full",
         orientation === "horizontal"
           ? "-left-12 top-1/2 -translate-y-1/2"
           : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
-      disabled={!canScrollPrev}
-      onClick={scrollPrev}
-      {...props}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <ArrowLeft className="h-4 w-4" />
-      <span className="sr-only">Previous slide</span>
-    </Button>
+      <Button
+        ref={ref}
+        variant={variant}
+        size={size}
+        className="h-8 w-8 rounded-full"
+        disabled={!canScrollPrev}
+        onClick={scrollPrev}
+        {...props}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        <span className="sr-only">Previous slide</span>
+      </Button>
+    </motion.div>
   )
 })
 CarouselPrevious.displayName = "CarouselPrevious"
