@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import { Toaster } from './components/ui/sonner';
@@ -8,6 +10,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import SecureRoute from './components/SecureRoute';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { initSecureRoutes, getSecureRoute } from './services/secureIds';
+import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from 'next-themes';
+import CookieManager from '@/components/prompts/CookieManager';
+import MaintenanceChecker from '@/components/layout/MaintenanceChecker';
 
 // Composant de chargement
 import { Skeleton } from './components/ui/skeleton';
@@ -34,6 +40,7 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const LoginMaintenanceAdminPage = lazy(() => import('./pages/LoginMaintenanceAdminPage'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const CategoryPage = lazy(() => import('./pages/CategoryPage'));
 const DeliveryPage = lazy(() => import('./pages/DeliveryPage'));
@@ -113,6 +120,9 @@ function AppRoutes() {
         
         <Route path={secureRoutes.get('/forgot-password')?.substring(1)} element={<ForgotPasswordPage />} />
         <Route path="/forgot-password" element={<Navigate to={secureRoutes.get('/forgot-password') || '/'} replace />} />
+        
+        {/* Route pour la page de connexion maintenance admin */}
+        <Route path="/maintenance-admin-login" element={<LoginMaintenanceAdminPage />} />
         
         {/* Route de détail produit avec l'ID sécurisé directement dans le chemin */}
         <Route path="/:productId" element={<ProductDetail />} />
@@ -336,14 +346,22 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <StoreProvider>
-          <AppRoutes />
-          <Toaster closeButton richColors position="top-center" />
-        </StoreProvider>
-      </AuthProvider>
+      <BrowserRouter>
+        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+          <AuthProvider>
+            <StoreProvider>
+              <MaintenanceChecker>
+                <AppRoutes />
+                <CookieManager position="fixed" />
+                <Toaster />
+              </MaintenanceChecker>
+            </StoreProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
 
 export default App;
+

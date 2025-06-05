@@ -1,3 +1,4 @@
+
 // Export all API services
 export { authAPI } from './authAPI';
 export { productsAPI } from './productsAPI';
@@ -11,6 +12,7 @@ export { codePromosAPI, codePromoAPI } from './codePromosAPI';
 export { remboursementsAPI } from './remboursementsAPI';
 export { flashSaleAPI } from './flashSaleAPI';
 export { categoriesAPI } from './categoriesAPI';
+export { settingsAPI } from './settingsAPI';
 
 // Export API configuration
 export { API } from './apiConfig';

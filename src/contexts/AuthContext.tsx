@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { authAPI, User } from '../services/api';
 import { UpdateProfileData } from '@/types/auth';
@@ -59,26 +58,77 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string): Promise<void> => {
     try {
       console.log("Tentative de connexion avec:", { email });
+      
+      // Vérifier d'abord le mode maintenance
+      const isMaintenanceMode = await checkMaintenanceMode();
+      console.log("Mode maintenance:", isMaintenanceMode);
+      
+      // Faire la connexion
       const response = await authAPI.login({ email, password });
+      console.log("Réponse de connexion:", response.data.user?.role);
+      
+      // En mode maintenance, seuls les admins peuvent se connecter
+      if (isMaintenanceMode && response.data.user?.role !== 'admin') {
+        toast({
+          title: 'Accès refusé',
+          description: 'Seuls les administrateurs peuvent se connecter en mode maintenance',
+          variant: 'destructive',
+        });
+        throw new Error('Seuls les administrateurs peuvent se connecter en mode maintenance');
+      }
+      
       localStorage.setItem('authToken', response.data.token);
       setUser(response.data.user);
+      
       toast({
         title: 'Connexion réussie',
         variant: 'default',
       });
 
-      // Navigation via window.location pour éviter les problèmes de hooks
-      window.location.href = '/';
+      // Redirection selon le rôle et le mode maintenance
+      if (response.data.user.role === 'admin') {
+        if (isMaintenanceMode) {
+          // En mode maintenance, rediriger vers les paramètres
+          console.log('Redirection vers paramètres (mode maintenance)');
+          window.location.href = '/admin/parametres';
+        } else {
+          // Mode normal, rediriger vers le dashboard admin
+          console.log('Redirection vers dashboard admin');
+          window.location.href = '/admin';
+        }
+      } else if (isMaintenanceMode) {
+        // Ne devrait pas arriver car déjà vérifié plus haut
+        throw new Error('Accès refusé en mode maintenance');
+      } else {
+        window.location.href = '/';
+      }
     } catch (error: any) {
       console.error("Erreur de connexion:", error);
       
-      const errorMessage = error.response?.data?.message || "Erreur de connexion";
+      const errorMessage = error.response?.data?.message || error.message || "Erreur de connexion";
       toast({
-        title: errorMessage,
+        title: 'Erreur de connexion',
+        description: errorMessage,
         variant: 'destructive',
       });
 
       throw error;
+    }
+  };
+
+  // Vérifier le mode maintenance avec la nouvelle API publique
+  const checkMaintenanceMode = async (): Promise<boolean> => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public-settings/general`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Mode maintenance vérifié:', data?.maintenanceMode);
+        return data?.maintenanceMode || false;
+      }
+      return false;
+    } catch (error) {
+      console.error('Erreur vérification mode maintenance:', error);
+      return false;
     }
   };
 
