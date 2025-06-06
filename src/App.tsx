@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import { Toaster } from './components/ui/sonner';
@@ -65,7 +63,6 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const OrderPage = lazy(() => import('./pages/OrderPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const FlashSalePage = lazy(() => import('./pages/FlashSalePage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Pages Admin
@@ -79,7 +76,6 @@ const AdminClientChatPage = lazy(() => import('./pages/admin/AdminClientChatPage
 const AdminCodePromosPage = lazy(() => import('./pages/admin/AdminCodePromosPage'));
 const AdminPubLayoutPage = lazy(() => import('./pages/admin/AdminPubLayoutPage'));
 const AdminRemboursementsPage = lazy(() => import('./pages/admin/AdminRemboursementsPage'));
-const AdminFlashSalesPage = lazy(() => import('./pages/admin/AdminFlashSalesPage'));
 const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage'));
 
 // Création d'un nouveau QueryClient avec configuration optimisée
@@ -125,8 +121,8 @@ function AppRoutes() {
         <Route path="/maintenance-admin-login" element={<LoginMaintenanceAdminPage />} />
         
         {/* Route de détail produit avec l'ID sécurisé directement dans le chemin */}
-        <Route path="/:productId" element={<ProductDetail />} />
-        <Route path="/produit/:productId" element={<Navigate to="/:productId" replace />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
+        <Route path="/produit/:productId" element={<Navigate to="/products/:id" replace />} />
         
         <Route path="/categorie/:categoryName" element={<CategoryPage />} />
         
@@ -149,10 +145,6 @@ function AppRoutes() {
          <Route path={secureRoutes.get('/populaires')?.substring(1)} element={<Populaires />} />
         <Route path="/populaires" element={<Navigate to={secureRoutes.get('/populaires') || '/'} replace />} />
 
-        
-        {/* Route sécurisée pour la page vente flash */}
-        <Route path={secureRoutes.get('/flash-sale/:id')?.substring(1)} element={<FlashSalePage />} />
-        <Route path="/flash-sale/:id" element={<Navigate to={secureRoutes.get('/flash-sale/:id') || '/'} replace />} />
         
         <Route path="/service-client" element={<CustomerServicePage />} />
         <Route path="/contact" element={<ContactPage />} />
@@ -323,16 +315,6 @@ function AppRoutes() {
         } />
         <Route path="/admin/remboursements" element={<Navigate to={secureRoutes.get('/admin/remboursements') || '/'} replace />} />
         
-        {/* Ajout de la route sécurisée pour la page flash-sales admin */}
-        <Route path={secureRoutes.get('/admin/flash-sales')?.substring(1)} element={
-          <SecureRoute>
-            <ProtectedRoute requireAdmin>
-              <AdminFlashSalesPage />
-            </ProtectedRoute>
-          </SecureRoute>
-        } />
-        <Route path="/admin/flash-sales" element={<Navigate to={secureRoutes.get('/admin/flash-sales') || '/'} replace />} />
-        
         {/* Route NotFound spécifique */}
         <Route path="/page/notfound" element={<NotFound />} />
         
@@ -364,4 +346,3 @@ function App() {
 }
 
 export default App;
-

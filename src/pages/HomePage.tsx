@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -7,7 +8,6 @@ import DataRetryLoader from '@/components/data-loading/DataRetryLoader';
 import HomeHeader from '@/components/home/HomeHeader';
 import FeaturedProductsCarousel from '@/components/home/FeaturedProductsCarousel';
 import PromotionalProductsGrid from '@/components/home/PromotionalProductsGrid';
-import FlashSaleBanner from '@/components/flash-sale/FlashSaleBanner';
 import { useHomePageData } from '@/hooks/useHomePageData';
 import { useCarouselAutoplay } from '@/hooks/useCarouselAutoplay';
 import SalesNotification from '@/components/engagement/SalesNotification';
@@ -90,7 +90,6 @@ const HomePage = () => {
             <HomeHeader />
           </div>
           
-          {/* Floating Elements */}
           <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl animate-pulse"></div>
           <div className="absolute bottom-10 right-10 w-32 h-32 bg-pink-300/20 rounded-full blur-2xl float-animation"></div>
           <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-yellow-300/20 rounded-full blur-lg float-animation" style={{ animationDelay: '2s' }}></div>
@@ -142,13 +141,6 @@ const HomePage = () => {
                     title=""
                   />
                 </div>
-              </motion.div>
-            )}
-
-            {/* Flash Sale Banner - Always rendered when not searching */}
-            {!searchParams.get('q') && (
-              <motion.div variants={itemVariants}>
-                <FlashSaleBanner />
               </motion.div>
             )}
 
@@ -221,14 +213,12 @@ const HomePage = () => {
           </DataRetryLoader>
         </div>
 
-        {/* Enhanced Background Elements */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-red-200/20 to-pink-200/20 rounded-full blur-3xl"></div>
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-purple-200/20 to-blue-200/20 rounded-full blur-3xl"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-yellow-200/10 to-orange-200/10 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Admin Components */}
         <SalesNotification />
         <LiveVisitorCounter />
       </motion.div>
