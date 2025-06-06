@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -167,114 +168,183 @@ const Navbar = () => {
 
   const renderSearchResults = () => <>
       {showResults && searchResults.length > 0 && (
-        <div className="absolute z-50 w-full bg-white dark:bg-neutral-800 shadow-xl rounded-md mt-2 max-h-[60vh] overflow-auto border border-neutral-200 dark:border-neutral-700">
-          {/* <ul className="py-2">
-            {searchResults.map(product => (
-              <li 
-                key={product.id} 
-                className="px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer border-b border-neutral-100 dark:border-neutral-700 last:border-none" 
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="absolute z-50 w-full bg-white/95 dark:bg-neutral-800/95 backdrop-blur-xl shadow-2xl rounded-2xl mt-3 max-h-[60vh] overflow-auto border border-white/20 dark:border-neutral-700/50"
+        >
+          {/* <ul className="py-3">
+            {searchResults.map((product, index) => (
+              <motion.li
+                key={product.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="px-6 py-4 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 dark:hover:from-red-900/20 dark:hover:to-pink-900/20 cursor-pointer border-b border-neutral-100/50 dark:border-neutral-700/50 last:border-none transition-all duration-300" 
                 onClick={() => handleProductClick(product.id)}
               >
                 <div className="flex items-center">
-                  <img 
-                    src={`${import.meta.env.VITE_API_BASE_URL}${product.image}`} 
-                    alt={product.name} 
-                    className="w-14 h-14 object-cover rounded-md mr-4 bg-neutral-50 dark:bg-neutral-700"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `${import.meta.env.VITE_API_BASE_URL}/uploads/placeholder.jpg`;
-                    }}
-                  />
+                  <div className="relative">
+                    <img 
+                      src={`${import.meta.env.VITE_API_BASE_URL}${product.image}`} 
+                      alt={product.name} 
+                      className="w-16 h-16 object-cover rounded-xl mr-4 bg-neutral-50 dark:bg-neutral-700 shadow-sm"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `${import.meta.env.VITE_API_BASE_URL}/uploads/placeholder.jpg`;
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl"></div>
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-left truncate">{product.name}</p>
-                    <div className="flex justify-between items-center mt-1">
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400 text-left">{product.category}</p>
-                      <p className="text-sm font-semibold text-red-600 dark:text-red-400">{Number(product.price).toFixed(2)} €</p>
+                    <p className="font-semibold text-left truncate text-gray-800 dark:text-gray-200">{product.name}</p>
+                    <div className="flex justify-between items-center mt-2">
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400 text-left capitalize">{product.category}</p>
+                      <div className="flex items-center">
+                        <span className="text-sm font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg">
+                          {Number(product.price).toFixed(2)} €
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </li>
+              </motion.li>
             ))}
           </ul> */}
-        </div>
+        </motion.div>
       )}
       {showResults && searchTerm.length >= 3 && searchResults.length === 0 && (
-        <div className="absolute z-50 w-full bg-white dark:bg-neutral-800 shadow-lg rounded-md mt-2 p-6 text-center border border-neutral-200 dark:border-neutral-700">
-          <p className="text-neutral-600 dark:text-neutral-400">Aucun produit trouvé pour "{searchTerm}"</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="absolute z-50 w-full bg-white/95 dark:bg-neutral-800/95 backdrop-blur-xl shadow-2xl rounded-2xl mt-3 p-8 text-center border border-white/20 dark:border-neutral-700/50"
+        >
+          <div className="flex flex-col items-center space-y-3">
+            <Search className="h-12 w-12 text-neutral-400" />
+            <p className="text-neutral-600 dark:text-neutral-400 font-medium">Aucun produit trouvé pour "{searchTerm}"</p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-500">Essayez avec d'autres mots-clés</p>
+          </div>
+        </motion.div>
       )}
     </>;
 
   return (
-    <nav aria-label="Navigation principale" className="border-b py-4 bg-gradient-to-r from-slate-100 via-white to-slate-100 dark:from-neutral-900 dark:via-black dark:to-neutral-900 sticky top-0 z-40 backdrop-blur-sm bg-opacity-90">
+    <motion.nav 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      aria-label="Navigation principale" 
+      className="border-b py-4 bg-gradient-to-r from-white/95 via-slate-50/95 to-white/95 dark:from-neutral-900/95 dark:via-black/95 dark:to-neutral-900/95 sticky top-0 z-40 backdrop-blur-xl shadow-lg border-white/20 dark:border-neutral-700/50"
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center" aria-label="Page d'accueil">
-            <img src={logo} alt="Riziky Boutique" className="h-16 w-auto" />
-          </Link>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+          >
+            <Link to="/" className="flex items-center" aria-label="Page d'accueil">
+              <img src={logo} alt="Riziky Boutique" className="h-16 w-auto drop-shadow-lg" />
+            </Link>
+          </motion.div>
 
           {/* Recherche desktop */}
           <div className="hidden md:flex items-center space-x-4 flex-1 max-w-2xl mx-8">
-            <div className="relative w-full" ref={searchRef} role="search">
+            <motion.div 
+              className="relative w-full" 
+              ref={searchRef} 
+              role="search"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
               <label htmlFor="search-desktop" className="sr-only">Rechercher des produits</label>
-              <Input 
-                id="search-desktop" 
-                type="search" 
-                placeholder="Rechercher des produits..." 
-                value={searchTerm} 
-                onChange={e => {
-                  const value = sanitizeInput(e.target.value);
-                  handleSearchChange({
-                    ...e,
-                    target: {
-                      ...e.target,
-                      value
-                    }
-                  });
-                }} 
-                aria-label="Rechercher des produits" 
-                className="w-full pl-10 rounded-xl border-neutral-300 dark:border-neutral-700 shadow-sm focus:ring-2 focus:ring-red-500 focus:border-transparent pr-12 bg-white dark:bg-neutral-800" 
-              />
-              {isSearching ? 
-                <div className="absolute right-10 top-2.5 h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"></div> : 
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-neutral-400" aria-hidden="true" />
-              }
+              <div className="relative">
+                <Input 
+                  id="search-desktop" 
+                  type="search" 
+                  placeholder="Rechercher des produits..." 
+                  value={searchTerm} 
+                  onChange={e => {
+                    const value = sanitizeInput(e.target.value);
+                    handleSearchChange({
+                      ...e,
+                      target: {
+                        ...e.target,
+                        value
+                      }
+                    });
+                  }} 
+                  aria-label="Rechercher des produits" 
+                  className="w-full pl-12 pr-12 h-12 rounded-2xl border-2 border-white/30 dark:border-neutral-700/50 shadow-lg focus:ring-2 focus:ring-red-500/50 focus:border-red-300 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm transition-all duration-300 hover:shadow-xl"
+                />
+                {isSearching ? 
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="absolute right-4 top-3.5 h-5 w-5 border-2 border-red-300 border-t-red-600 rounded-full"
+                  ></motion.div> : 
+                  <Search className="absolute left-4 top-3.5 h-5 w-5 text-neutral-400" aria-hidden="true" />
+                }
+              </div>
               
-              {renderSearchResults()}
-            </div>
+              <AnimatePresence>
+                {renderSearchResults()}
+              </AnimatePresence>
+            </motion.div>
           </div>
 
           {/* Icônes utilisateur pour desktop */}
           <div className="hidden md:flex items-center space-x-5">
-            <Link to="/favoris" className="relative">
-              <Button variant="ghost" size="icon" className="nav-icon rounded-full bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40 h-12 w-12">
-                <Heart className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-              </Button>
-              {favoriteCount > 0 && 
-                <Badge variant="destructive" className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center p-0 text-xs rounded-full">
-                  {favoriteCount}
-                </Badge>
-              }
-            </Link>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+              <Link to="/favoris" className="relative">
+                <Button variant="ghost" size="icon" className="nav-icon rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 hover:from-teal-100 hover:to-emerald-100 dark:from-teal-900/20 dark:to-emerald-900/20 dark:hover:from-teal-900/40 dark:hover:to-emerald-900/40 h-12 w-12 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <Heart className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+                </Button>
+                {favoriteCount > 0 && 
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-2 -right-2"
+                  >
+                    <Badge variant="destructive" className="w-6 h-6 flex items-center justify-center p-0 text-xs rounded-full shadow-lg">
+                      {favoriteCount}
+                    </Badge>
+                  </motion.div>
+                }
+              </Link>
+            </motion.div>
 
-            <Link to="/panier" className="relative">
-              <Button variant="ghost" size="icon" className="nav-icon rounded-full bg-violet-50 hover:bg-violet-100 dark:bg-violet-900/20 dark:hover:bg-violet-900/40 h-12 w-12">
-                <ShoppingCart className="h-6 w-6 text-violet-600 dark:text-violet-400" />
-              </Button>
-              {cartItemsCount > 0 && 
-                <Badge variant="destructive" className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center p-0 text-xs rounded-full">
-                  {cartItemsCount}
-                </Badge>
-              }
-            </Link>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+              <Link to="/panier" className="relative">
+                <Button variant="ghost" size="icon" className="nav-icon rounded-2xl bg-gradient-to-br from-violet-50 to-purple-50 hover:from-violet-100 hover:to-purple-100 dark:from-violet-900/20 dark:to-purple-900/20 dark:hover:from-violet-900/40 dark:hover:to-purple-900/40 h-12 w-12 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <ShoppingCart className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                </Button>
+                {cartItemsCount > 0 && 
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-2 -right-2"
+                  >
+                    <Badge variant="destructive" className="w-6 h-6 flex items-center justify-center p-0 text-xs rounded-full shadow-lg">
+                      {cartItemsCount}
+                    </Badge>
+                  </motion.div>
+                }
+              </Link>
+            </motion.div>
 
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="nav-icon rounded-full bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/20 dark:hover:bg-rose-900/40 h-12 w-12">
-                    <User className="h-6 w-6 text-rose-600 dark:text-rose-400" />
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                    <Button variant="ghost" size="icon" className="nav-icon rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 dark:from-rose-900/20 dark:to-pink-900/20 dark:hover:from-rose-900/40 dark:hover:to-pink-900/40 h-12 w-12 shadow-lg hover:shadow-xl transition-all duration-300">
+                      <User className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+                    </Button>
+                  </motion.div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end">
+                <DropdownMenuContent className="w-56 bg-white/95 dark:bg-neutral-800/95 backdrop-blur-xl border border-white/20 dark:border-neutral-700/50 shadow-2xl rounded-2xl" align="end">
                   <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
                   <DropdownMenuLabel className="font-normal text-xs">
                     {user?.nom} ({user?.role === 'admin' ? 'Admin' : 'Client'})
@@ -311,61 +381,82 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link to="/login">
-                <Button variant="ghost" size="icon" className="nav-icon rounded-full bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/20 dark:hover:bg-rose-900/40 h-12 w-12">
-                  <User className="h-6 w-6 text-rose-600 dark:text-rose-400" />
-                </Button>
-              </Link>
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                <Link to="/login">
+                  <Button variant="ghost" size="icon" className="nav-icon rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 dark:from-rose-900/20 dark:to-pink-900/20 dark:hover:from-rose-900/40 dark:hover:to-pink-900/40 h-12 w-12 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <User className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+                  </Button>
+                </Link>
+              </motion.div>
             )}
           </div>
 
           {/* Menu mobile */}
           <div className="flex md:hidden items-center space-x-4">
-            <Link to="/panier" className="relative">
-              <Button variant="ghost" size="icon" className="nav-icon bg-violet-50 hover:bg-violet-100 dark:bg-violet-900/20 dark:hover:bg-violet-900/40 rounded-full h-10 w-10">
-                <ShoppingCart className="h-6 w-6 text-violet-600 dark:text-violet-400" />
-              </Button>
-              {cartItemsCount > 0 && 
-                <Badge variant="destructive" className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 text-xs rounded-full">
-                  {cartItemsCount}
-                </Badge>
-              }
-            </Link>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+              <Link to="/panier" className="relative">
+                <Button variant="ghost" size="icon" className="nav-icon bg-gradient-to-br from-violet-50 to-purple-50 hover:from-violet-100 hover:to-purple-100 dark:from-violet-900/20 dark:to-purple-900/20 dark:hover:from-violet-900/40 dark:hover:to-purple-900/40 rounded-2xl h-11 w-11 shadow-lg">
+                  <ShoppingCart className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                </Button>
+                {cartItemsCount > 0 && 
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-2 -right-2"
+                  >
+                    <Badge variant="destructive" className="w-5 h-5 flex items-center justify-center p-0 text-xs rounded-full shadow-lg">
+                      {cartItemsCount}
+                    </Badge>
+                  </motion.div>
+                }
+              </Link>
+            </motion.div>
 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="nav-icon h-10 w-10 rounded-full bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40">
-                  <Menu className="h-6 w-6 text-red-600 dark:text-red-400" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="ghost" size="icon" className="nav-icon h-11 w-11 rounded-2xl bg-gradient-to-br from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 dark:from-red-900/20 dark:to-pink-900/20 dark:hover:from-red-900/40 dark:hover:to-pink-900/40 shadow-lg">
+                    <Menu className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  </Button>
+                </motion.div>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border-l border-white/20 dark:border-neutral-700/50">
                 <nav className="flex flex-col h-full">
                   <div className="flex-1 py-4">
-                    <div className="mb-6 relative">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mb-6 relative"
+                    >
                       <Input 
                         type="text" 
                         placeholder="Rechercher des produits..." 
-                        className="w-full pl-10 border-neutral-300" 
+                        className="w-full pl-12 h-12 border-2 border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm" 
                         value={searchTerm} 
                         onChange={handleSearchChange}
                       />
-                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    </div>
+                      <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
+                    </motion.div>
 
                     <div className="space-y-6">    
-                      <div>
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
+                      >
                         <SheetClose asChild>
-                          <Link to="/favoris" className="flex items-center hover:text-primary">
-                            <Heart className="mr-2 h-6 w-6 text-teal-600 dark:text-teal-400" />
-                            <span>Mes favoris</span>
+                          <Link to="/favoris" className="flex items-center hover:text-primary p-3 rounded-xl hover:bg-gradient-to-r hover:from-teal-50 hover:to-emerald-50 dark:hover:from-teal-900/20 dark:hover:to-emerald-900/20 transition-all duration-300">
+                            <Heart className="mr-3 h-6 w-6 text-teal-600 dark:text-teal-400" />
+                            <span className="font-medium">Mes favoris</span>
                             {favoriteCount > 0 && 
-                              <Badge variant="outline" className="ml-2 text-red-600">
+                              <Badge variant="outline" className="ml-auto text-red-600 border-red-200">
                                 {favoriteCount}
                               </Badge>
                             }
                           </Link>
                         </SheetClose>
-                      </div>
+                      </motion.div>
+
                       {isAuthenticated && (
                         <div className="pb-4 border-b">
                           <h3 className="text-sm font-medium mb-3">Mon compte</h3>
@@ -430,52 +521,84 @@ const Navbar = () => {
         </div>
 
         {/* Recherche mobile */}
-        <div className="md:hidden mt-4 relative" ref={searchRef}>
-          <Input 
-            type="text" 
-            placeholder="Rechercher des produits..." 
-            className="w-full pl-10 rounded-xl shadow-sm" 
-            value={searchTerm} 
-            onChange={handleSearchChange}
-          />
-          {isSearching ? 
-            <div className="absolute right-3 top-2.5 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-red-600"></div> : 
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          }
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="md:hidden mt-4 relative" 
+          ref={searchRef}
+        >
+          <div className="relative">
+            <Input 
+              type="text" 
+              placeholder="Rechercher des produits..." 
+              className="w-full pl-12 pr-12 h-12 rounded-2xl shadow-lg border-2 border-white/30 dark:border-neutral-700/50 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm" 
+              value={searchTerm} 
+              onChange={handleSearchChange}
+            />
+            {isSearching ? 
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="absolute right-4 top-3.5 h-4 w-4 border-2 border-red-300 border-t-red-600 rounded-full"
+              ></motion.div> : 
+              <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
+            }
+          </div>
           
-          {renderSearchResults()}
-        </div>
+          <AnimatePresence>
+            {renderSearchResults()}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Menu "Toutes les catégories" - Desktop */}
-        <div className="hidden md:flex mt-4 justify-center" role="navigation" aria-label="Catégories">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="hidden md:flex mt-4 justify-center" 
+          role="navigation" 
+          aria-label="Catégories"
+        >
           <CategoriesDropdown categories={categories} />
-        </div>
+        </motion.div>
 
         {/* Catégories - Mobile (collapsed by default) */}
-        <div className="md:hidden mt-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="md:hidden mt-4"
+        >
           <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="categories">
-              <AccordionTrigger className="py-2 justify-center text-red-800 font-bold">
-                Catégories :
+            <AccordionItem value="categories" className="border-none">
+              <AccordionTrigger className="py-3 justify-center text-red-800 dark:text-red-400 font-bold text-lg hover:no-underline rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 dark:hover:from-red-900/20 dark:hover:to-pink-900/20 transition-all duration-300">
+                Catégories
               </AccordionTrigger>
               <AccordionContent>
-                <div className="grid grid-cols-2 gap-2 pt-2 text-red-800 font-bold">
-                  {categories.map(cat => (
-                    <Link 
-                      key={cat.id} 
-                      to={`/categorie/${cat.name}`} 
-                      className="text-sm py-2 px-3 rounded-md bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 capitalize text-center transition-colors"
+                <div className="grid grid-cols-2 gap-3 pt-3">
+                  {categories.map((cat, index) => (
+                    <motion.div
+                      key={cat.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
                     >
-                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                    </Link>
+                      <Link 
+                        to={`/categorie/${cat.name}`} 
+                        className="text-sm py-3 px-4 rounded-xl bg-gradient-to-br from-neutral-50 to-gray-50 hover:from-red-50 hover:to-pink-50 dark:from-neutral-800 dark:to-neutral-700 dark:hover:from-red-900/20 dark:hover:to-pink-900/20 capitalize text-center transition-all duration-300 font-medium text-red-800 dark:text-red-400 shadow-sm hover:shadow-md block"
+                      >
+                        {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                      </Link>
+                    </motion.div>
                   ))}
                 </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
-        </div>
+        </motion.div>
       </div>
-    </nav>
+    </motion.nav>
   );
 };
 

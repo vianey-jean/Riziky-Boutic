@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Layout from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card } from '@/components/ui/card';
+import { EnhancedCard, EnhancedCardContent, EnhancedCardDescription, EnhancedCardHeader, EnhancedCardTitle } from '@/components/ui/enhanced-card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import PersonalInfoForm from '@/components/profile/PersonalInfoForm';
@@ -11,6 +12,7 @@ import { toast } from '@/components/ui/sonner';
 import { useStore } from '@/contexts/StoreContext';
 import { authAPI } from '@/services/api';
 import { UpdateProfileData } from '@/types/auth';
+import { User, Shield, Settings } from 'lucide-react';
 
 const ProfilePage = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -114,49 +116,117 @@ const ProfilePage = () => {
       setLoading(false);
     }
   };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut"
+      }
+    }
+  };
   
   return (
     <Layout>
-      <div className="container px-4 py-8">
-<div className="max-w-[900px] mx-auto px-4">
-  <h1 className="text-3xl font-bold mb-8">Mon Compte</h1>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-red-50">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white py-24">
+          <div className="absolute inset-0 bg-black/20"></div>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="container mx-auto px-4 relative z-10"
+          >
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="flex justify-center mb-6">
+                <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
+                  <User className="w-12 h-12 text-white" />
+                </div>
+              </div>
+              <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-white to-purple-100 bg-clip-text text-transparent">
+                Mon Compte
+              </h1>
+              <p className="text-xl text-purple-100 leading-relaxed max-w-2xl mx-auto">
+                Gérez vos informations personnelles et personnalisez votre expérience
+              </p>
+            </div>
+          </motion.div>
+        </div>
 
-  <div className="grid gap-6 md:grid-cols-[250px_1fr]">
-    <div className="md:col-span-2">
-      <Tabs defaultValue="informations">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="informations">Informations personnelles</TabsTrigger>
-          <TabsTrigger value="security">Sécurité</TabsTrigger>
-          <TabsTrigger value="preferences">Préférences</TabsTrigger>
-        </TabsList>
+        <div className="container mx-auto px-4 py-16">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="max-w-4xl mx-auto"
+          >
+            <motion.div variants={itemVariants}>
+              <Tabs defaultValue="informations" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-8 h-14 bg-white/70 backdrop-blur-sm border border-purple-200 rounded-xl">
+                  <TabsTrigger 
+                    value="informations" 
+                    className="flex items-center space-x-2 text-lg font-medium rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
+                  >
+                    <User className="w-5 h-5" />
+                    <span>Informations personnelles</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="security" 
+                    className="flex items-center space-x-2 text-lg font-medium rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
+                  >
+                    <Shield className="w-5 h-5" />
+                    <span>Sécurité</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="preferences" 
+                    className="flex items-center space-x-2 text-lg font-medium rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span>Préférences</span>
+                  </TabsTrigger>
+                </TabsList>
 
-        <TabsContent value="informations" className="mt-6">
-          <Card>
-            <PersonalInfoForm
-              profileData={profileData}
-              loading={loading}
-              handleProfileChange={handleChange}
-              handleGenreChange={handleGenreChange}
-              handleProfileSubmit={handleProfileSubmit}
-            />
-          </Card>
-        </TabsContent>
+                <TabsContent value="informations" className="mt-6">
+                  <EnhancedCard className="border-0 shadow-xl">
+                    <PersonalInfoForm
+                      profileData={profileData}
+                      loading={loading}
+                      handleProfileChange={handleChange}
+                      handleGenreChange={handleGenreChange}
+                      handleProfileSubmit={handleProfileSubmit}
+                    />
+                  </EnhancedCard>
+                </TabsContent>
 
-        <TabsContent value="security" className="mt-6">
-          <PasswordForm 
-            loading={loading}
-            onPasswordChange={handlePasswordUpdate}
-          />
-        </TabsContent>
+                <TabsContent value="security" className="mt-6">
+                  <PasswordForm 
+                    loading={loading}
+                    onPasswordChange={handlePasswordUpdate}
+                  />
+                </TabsContent>
 
-        <TabsContent value="preferences" className="mt-6">
-          <PreferencesForm />
-        </TabsContent>
-      </Tabs>
-    </div>
-  </div>
-</div>
-
+                <TabsContent value="preferences" className="mt-6">
+                  <PreferencesForm />
+                </TabsContent>
+              </Tabs>
+            </motion.div>
+          </motion.div>
+        </div>
       </div>
     </Layout>
   );

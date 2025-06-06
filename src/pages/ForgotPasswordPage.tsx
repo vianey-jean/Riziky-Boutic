@@ -4,20 +4,26 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 import {
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
-} from '@/components/ui/card';
+  EnhancedCard,
+  EnhancedCardContent,
+  EnhancedCardDescription,
+  EnhancedCardFooter,
+  EnhancedCardHeader,
+  EnhancedCardTitle,
+} from '@/components/ui/enhanced-card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { EnhancedInput } from '@/components/ui/enhanced-input';
 import {
-  Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage
 } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
 import Layout from '@/components/layout/Layout';
 import { authAPI } from '@/services/api';
 import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
-import { Eye, EyeOff, CheckCircle, Mail } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, Mail, Lock, Key, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -184,207 +190,276 @@ const ForgotPasswordPage: React.FC = () => {
     }
   };
 
-  const toggleNewPasswordVisibility  = () => setShowNewPassword(!showNewPassword);
+  const toggleNewPasswordVisibility = () => setShowNewPassword(!showNewPassword);
   const togglePasswordConfirmVisibility = () => setShowConfirmPassword(!showConfirmPassword);
   
   return (
     <Layout>
-      <div className="flex justify-center items-center min-h-[70vh]">
-        <Card className="w-[400px]">
-          <CardHeader>
-            <CardTitle>Mot de passe oublié</CardTitle>
-            <CardDescription>
-              {userId && !showContactAdmin
-                ? 'Entrez le code temporaire et créez un nouveau mot de passe'
-                : 'Entrez votre adresse email pour commencer'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!userId ? (
-              <Form {...emailForm}>
-                <form onSubmit={emailForm.handleSubmit(onSubmitEmail)} className="space-y-4">
-                  <FormField
-                    control={emailForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="email@example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Vérification..." : "Continuer"}
-                  </Button>
-                </form>
-              </Form>
-            ) : showContactAdmin ? (
-              <div className="space-y-4">
-                <Alert variant="destructive">
-                  <Mail className="h-4 w-4" />
-                  <AlertTitle>Code temporaire non trouvé</AlertTitle>
-                  <AlertDescription>
-                    Aucun code temporaire n'a été défini pour votre compte. Contactez l'administrateur :
-                  </AlertDescription>
-                </Alert>
-                <div className="flex items-center justify-center p-4 bg-muted rounded-md">
-                  <a href="mailto:vianey.jean@ymail.com" className="text-blue-600 font-medium hover:underline">
-                    vianey.jean@ymail.com
-                  </a>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    setUserId(null);
-                    setShowContactAdmin(false);
-                    emailForm.reset();
-                  }}
-                >
-                  Retour
-                </Button>
-              </div>
-            ) : (
-              <Form {...resetForm}>
-                <form onSubmit={resetForm.handleSubmit(onSubmitReset)} className="space-y-4">
-                  <FormField
-                    control={resetForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="email@example.com" disabled {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md"
+        >
+          <EnhancedCard className="backdrop-blur-xl">
+            <EnhancedCardHeader className="text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                className="mx-auto w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mb-4 shadow-xl"
+              >
+                <Key className="h-10 w-10 text-white" />
+              </motion.div>
+              <EnhancedCardTitle>Mot de passe oublié</EnhancedCardTitle>
+              <EnhancedCardDescription>
+                {userId && !showContactAdmin
+                  ? 'Entrez le code temporaire et créez un nouveau mot de passe'
+                  : 'Entrez votre adresse email pour commencer'}
+              </EnhancedCardDescription>
+            </EnhancedCardHeader>
 
-                  <FormField
-                    control={resetForm.control}
-                    name="passwordUnique"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Code temporaire</FormLabel>
-                        <div className="flex space-x-2">
+            <EnhancedCardContent>
+              {!userId ? (
+                <Form {...emailForm}>
+                  <form onSubmit={emailForm.handleSubmit(onSubmitEmail)} className="space-y-6">
+                    <FormField
+                      control={emailForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Email</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Code temporaire"
-                              {...field}
-                              disabled={isTempPasswordValid}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                setIsTempPasswordValid(false);
-                              }}
-                            />
+                            <div className="relative">
+                              <EnhancedInput 
+                                placeholder="email@example.com" 
+                                {...field}
+                                className="pl-12"
+                              />
+                              <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                            </div>
                           </FormControl>
-                          {!isTempPasswordValid ? (
-                            <Button
-                              type="button"
-                              onClick={verifyTempPassword}
-                              disabled={!field.value || isLoading}
-                            >
-                              Vérifier
-                            </Button>
-                          ) : (
-                            <CheckCircle className="h-10 w-10 text-green-500" />
-                          )}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={resetForm.control}
-                    name="newPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nouveau mot de passe</FormLabel>
-                        <FormControl>
-                        <div className="relative">
-                          <Input
-                            {...field}
-                              type={showNewPassword ? 'text' : 'password'}
-                              placeholder="********"
-                          />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-0 top-0"
-                              onClick={toggleNewPasswordVisibility}
-                            >
-                            {showNewPassword ? (
-                             <EyeOff className="h-5 w-5 text-muted-foreground" />
-                               ) : (
-                              <Eye className="h-5 w-5 text-muted-foreground" />
-                                )}
-                               </Button>
-                              </div>
-                        </FormControl>
-                        <FormMessage />
-                        <PasswordStrengthIndicator password={field.value} />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={resetForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirmer le mot de passe</FormLabel>
-                        <FormControl>
-                       <div className="relative">
-                          <Input
-                            {...field}
-                              type={showConfirmPassword ? 'text' : 'password'}
-                               placeholder="********"
-                                  />
-                            <Button
-                              type="button"
-                               variant="ghost"
-                                 size="icon"
-                                className="absolute right-0 top-0"
-                              onClick={togglePasswordConfirmVisibility}
-                            >
-                            {showConfirmPassword ? (
-                              <EyeOff className="h-5 w-5 text-muted-foreground" />
-                               ) : (
-                              <Eye className="h-5 w-5 text-muted-foreground" />
-                                )}
-                            </Button>
-                        </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                        />
+                      ) : (
+                        "Continuer"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              ) : showContactAdmin ? (
+                <div className="space-y-6">
+                  <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-900/20">
+                    <Mail className="h-4 w-4" />
+                    <AlertTitle>Code temporaire non trouvé</AlertTitle>
+                    <AlertDescription>
+                      Aucun code temporaire n'a été défini pour votre compte. Contactez l'administrateur :
+                    </AlertDescription>
+                  </Alert>
+                  <div className="flex items-center justify-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <a href="mailto:vianey.jean@ymail.com" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
+                      vianey.jean@ymail.com
+                    </a>
+                  </div>
                   <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading || !isTempPasswordValid}
+                    variant="outline"
+                    className="w-full h-12 rounded-xl border-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-300"
+                    onClick={() => {
+                      setUserId(null);
+                      setShowContactAdmin(false);
+                      emailForm.reset();
+                    }}
                   >
-                    {isLoading ? "Réinitialisation..." : "Réinitialiser"}
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Retour
                   </Button>
-                </form>
-              </Form>
-            )}
-          </CardContent>
-          <CardFooter>
-            <div className="text-sm text-muted-foreground w-full text-center">
-              <Link to="/login" className="text-blue-600 hover:underline">
+                </div>
+              ) : (
+                <Form {...resetForm}>
+                  <form onSubmit={resetForm.handleSubmit(onSubmitReset)} className="space-y-6">
+                    <FormField
+                      control={resetForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Email</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <EnhancedInput 
+                                placeholder="email@example.com" 
+                                disabled 
+                                {...field}
+                                className="pl-12 bg-gray-50 dark:bg-gray-800"
+                              />
+                              <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={resetForm.control}
+                      name="passwordUnique"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Code temporaire</FormLabel>
+                          <div className="flex space-x-3">
+                            <FormControl>
+                              <div className="relative flex-1">
+                                <EnhancedInput
+                                  placeholder="Code temporaire"
+                                  {...field}
+                                  disabled={isTempPasswordValid}
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    setIsTempPasswordValid(false);
+                                  }}
+                                  className="pl-12"
+                                />
+                                <Key className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                              </div>
+                            </FormControl>
+                            {!isTempPasswordValid ? (
+                              <Button
+                                type="button"
+                                onClick={verifyTempPassword}
+                                disabled={!field.value || isLoading}
+                                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl px-6"
+                              >
+                                Vérifier
+                              </Button>
+                            ) : (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-xl"
+                              >
+                                <CheckCircle className="h-6 w-6 text-green-500" />
+                              </motion.div>
+                            )}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={resetForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Nouveau mot de passe</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <EnhancedInput
+                                {...field}
+                                type={showNewPassword ? 'text' : 'password'}
+                                placeholder="********"
+                                className="pl-12 pr-12"
+                              />
+                              <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-2 top-1 h-10 w-10 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                onClick={toggleNewPasswordVisibility}
+                              >
+                                {showNewPassword ? (
+                                  <EyeOff className="h-4 w-4 text-gray-400" />
+                                ) : (
+                                  <Eye className="h-4 w-4 text-gray-400" />
+                                )}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                          <PasswordStrengthIndicator password={field.value} />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={resetForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Confirmer le mot de passe</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <EnhancedInput
+                                {...field}
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                placeholder="********"
+                                className="pl-12 pr-12"
+                              />
+                              <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-2 top-1 h-10 w-10 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                onClick={togglePasswordConfirmVisibility}
+                              >
+                                {showConfirmPassword ? (
+                                  <EyeOff className="h-4 w-4 text-gray-400" />
+                                ) : (
+                                  <Eye className="h-4 w-4 text-gray-400" />
+                                )}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full h-12 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                      disabled={isLoading || !isTempPasswordValid}
+                    >
+                      {isLoading ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                        />
+                      ) : (
+                        "Réinitialiser"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              )}
+            </EnhancedCardContent>
+
+            <EnhancedCardFooter className="flex flex-col gap-4 text-center">
+              <Link 
+                to="/login" 
+                className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium hover:underline transition-colors duration-200"
+              >
                 Retour à la connexion
               </Link>
-            </div>
-          </CardFooter>
-        </Card>
+            </EnhancedCardFooter>
+          </EnhancedCard>
+        </motion.div>
       </div>
     </Layout>
   );
