@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { X, TrendingUp, ArrowRight, Zap, Sparkles, Package } from 'lucide-react';
+import { X, TrendingUp, ArrowRight, Zap, Sparkles, Package, Star, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from '@/contexts/StoreContext';
@@ -170,68 +169,144 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
   return (
     <AnimatePresence mode="wait">
       <motion.div 
-        className="fixed bottom-4 right-4 z-50 max-w-sm bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 50 }}
-        transition={{ duration: 0.3 }}
+        className="fixed bottom-4 right-4 z-50 max-w-sm"
+        initial={{ opacity: 0, y: 50, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 50, scale: 0.9 }}
+        transition={{ duration: 0.4, type: "spring", stiffness: 300 }}
         key={currentSection.id}
       >
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center text-red-600 dark:text-red-400">
-              <IconComponent className="h-5 w-5 mr-2" />
-              <h3 className="font-semibold">{currentSection.title}</h3>
-            </div>
-            <button 
-              onClick={handleDismiss}
-              className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
-              aria-label="Fermer"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          
-          <div className="space-y-3">
-            {displayedProducts.map(product => (
-              <Link 
-                key={product.id}
-                to={`/produit/${product.id}`}
-                className="flex items-center p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden backdrop-blur-lg">
+          {/* En-tête avec gradient selon la section */}
+          <div className={`p-4 ${
+            currentSection.id === 'featured' ? 'bg-gradient-to-r from-red-500 to-pink-500' :
+            currentSection.id === 'promotional' ? 'bg-gradient-to-r from-orange-500 to-red-500' :
+            currentSection.id === 'new-arrivals' ? 'bg-gradient-to-r from-purple-500 to-blue-500' :
+            'bg-gradient-to-r from-gray-500 to-gray-600'
+          }`}>
+            <div className="flex justify-between items-center">
+              <motion.div 
+                className="flex items-center text-white"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
               >
-                <img 
-                  src={`${import.meta.env.VITE_API_BASE_URL}${product.image || (product.images && product.images[0])}`} 
-                  alt={product.name}
-                  className="w-10 h-10 object-cover rounded-md"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/placeholder.svg';
-                  }}
-                />
-                <div className="ml-3 text-left">
-                  <p className="text-sm font-medium line-clamp-1">{product.name}</p>
-                  <div className="flex items-center space-x-2">
-                    {product.promotion && (
-                      <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded">
-                        -{product.promotion}%
-                      </span>
-                    )}
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                      {product.price.toFixed(2)} €
-                    </p>
+                <div className="bg-white/20 p-2 rounded-full mr-3">
+                  <IconComponent className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">{currentSection.title}</h3>
+                  <div className="flex items-center space-x-1 text-xs opacity-90">
+                    <Star className="h-3 w-3" />
+                    <span>Tendances actuelles</span>
                   </div>
                 </div>
-              </Link>
-            ))}
+              </motion.div>
+              <motion.button 
+                onClick={handleDismiss}
+                className="text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+                aria-label="Fermer"
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <X className="h-4 w-4" />
+              </motion.button>
+            </div>
           </div>
           
-          <div className="mt-3 text-center">
-            <Link 
-              to={currentSection.linkPath}
-              className="inline-flex items-center text-sm text-red-600 dark:text-red-400 hover:underline"
+          <div className="p-4">
+            <div className="space-y-3">
+              {displayedProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Link 
+                    to={`/produit/${product.id}`}
+                    className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 group border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                  >
+                    <div className="relative">
+                      <motion.img 
+                        src={`${import.meta.env.VITE_API_BASE_URL}${product.image || (product.images && product.images[0])}`} 
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded-lg shadow-md"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/placeholder.svg';
+                        }}
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ duration: 0.2 }}
+                      />
+                      {currentSection.id === 'promotional' && product.promotion && (
+                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full font-bold">
+                          <Flame className="h-2 w-2" />
+                        </div>
+                      )}
+                      {currentSection.id === 'new-arrivals' && (
+                        <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded-full">
+                          <Sparkles className="h-2 w-2" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="ml-3 flex-1 min-w-0">
+                      <p className="text-sm font-semibold line-clamp-1 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
+                        {product.name}
+                      </p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        {product.promotion && (
+                          <motion.span 
+                            className="text-xs bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-medium"
+                            whileHover={{ scale: 1.05 }}
+                          >
+                            -{product.promotion}%
+                          </motion.span>
+                        )}
+                        <div className="flex items-center space-x-1">
+                          <p className="text-sm font-bold text-red-600 dark:text-red-400">
+                            {product.price.toFixed(2)} €
+                          </p>
+                          {product.promotion && (
+                            <p className="text-xs text-gray-500 line-through">
+                              {(product.price / (1 - product.promotion / 100)).toFixed(2)} €
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <motion.div
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      whileHover={{ x: 5 }}
+                    >
+                      <ArrowRight className="h-4 w-4 text-gray-400" />
+                    </motion.div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+            
+            <motion.div 
+              className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
             >
-              {currentSection.linkText}
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Link>
+              <Link 
+                to={currentSection.linkPath}
+                className="group flex items-center justify-center text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 py-2 px-4 rounded-xl"
+              >
+                <span>{currentSection.linkText}</span>
+                <motion.div
+                  className="ml-2"
+                  whileHover={{ x: 5 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </motion.div>
+              </Link>
+            </motion.div>
           </div>
         </div>
       </motion.div>

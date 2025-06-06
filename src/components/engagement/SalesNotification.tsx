@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, MapPin, Clock, TrendingUp, Calendar, Award } from 'lucide-react';
+import { ShoppingBag, MapPin, Clock, TrendingUp, Calendar, Award, Sparkles, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 
@@ -91,106 +91,227 @@ const SalesNotification: React.FC = () => {
 
   return (
     <>
-      {/* Statistiques de commandes - repositionnées pour mobile */}
-      <div
-  className="fixed right-4 z-40 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 p-3 max-w-xs lg:top-20"
-  style={{ marginTop: '100px' }}
->
-        <div className="space-y-2">
-
-          <div className="flex items-center space-x-2 text-center">
-            <TrendingUp className="h-4 w-4 text-blue-600" />
-            <span className="text-xs font-semibold text-blue-600">Statistiques</span>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="text-center">
-              <Calendar className="h-3 w-3 text-green-600 mx-auto mb-1" />
-              <div className="font-bold text-green-600 text-sm">{orderStats.today}</div>
-              <div className="text-neutral-600 dark:text-neutral-400 text-xs">Aujourd'hui</div>
-            </div>
+      {/* Statistiques de commandes - design amélioré */}
+      <motion.div
+        initial={{ opacity: 0, x: 100 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="fixed right-4 z-40 rounded-2xl shadow-2xl border max-w-xs lg:top-20"
+        style={{ marginTop: '100px' }}
+      >
+        <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 backdrop-blur-lg border border-white/20 dark:border-gray-700 rounded-2xl p-4 shadow-xl">
+          <div className="space-y-3">
+            <motion.div 
+              className="flex items-center justify-center space-x-2"
+              whileHover={{ scale: 1.05 }}
+            >
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-full">
+                <TrendingUp className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-sm font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Statistiques Live
+              </span>
+              <Sparkles className="h-4 w-4 text-yellow-500" />
+            </motion.div>
             
-            <div className="text-center">
-              <Award className="h-3 w-3 text-purple-600 mx-auto mb-1" />
-              <div className="font-bold text-purple-600 text-sm">{orderStats.week}</div>
-              <div className="text-neutral-600 dark:text-neutral-400 text-xs">Semaine</div>
-            </div>
-            
-            <div className="text-center">
-              <TrendingUp className="h-3 w-3 text-orange-600 mx-auto mb-1" />
-              <div className="font-bold text-orange-600 text-sm">{orderStats.month}</div>
-              <div className="text-neutral-600 dark:text-neutral-400 text-xs">Mois</div>
-            </div>
-            
-            <div className="text-center">
-              <ShoppingBag className="h-3 w-3 text-red-600 mx-auto mb-1" />
-              <div className="font-bold text-red-600 text-sm">{orderStats.year}</div>
-              <div className="text-neutral-600 dark:text-neutral-400 text-xs">Année</div>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <motion.div 
+                className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl border border-green-200 dark:border-green-700"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="bg-green-500 p-1 rounded-full w-6 h-6 mx-auto mb-2 flex items-center justify-center">
+                  <Calendar className="h-3 w-3 text-white" />
+                </div>
+                <motion.div 
+                  className="font-bold text-green-600 text-lg"
+                  key={orderStats.today}
+                  initial={{ scale: 1.2 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {orderStats.today}
+                </motion.div>
+                <div className="text-green-600 text-xs font-medium">Aujourd'hui</div>
+              </motion.div>
+              
+              <motion.div 
+                className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl border border-purple-200 dark:border-purple-700"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="bg-purple-500 p-1 rounded-full w-6 h-6 mx-auto mb-2 flex items-center justify-center">
+                  <Award className="h-3 w-3 text-white" />
+                </div>
+                <motion.div 
+                  className="font-bold text-purple-600 text-lg"
+                  key={orderStats.week}
+                  initial={{ scale: 1.2 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {orderStats.week}
+                </motion.div>
+                <div className="text-purple-600 text-xs font-medium">Semaine</div>
+              </motion.div>
+              
+              <motion.div 
+                className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl border border-orange-200 dark:border-orange-700"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="bg-orange-500 p-1 rounded-full w-6 h-6 mx-auto mb-2 flex items-center justify-center">
+                  <TrendingUp className="h-3 w-3 text-white" />
+                </div>
+                <motion.div 
+                  className="font-bold text-orange-600 text-lg"
+                  key={orderStats.month}
+                  initial={{ scale: 1.2 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {orderStats.month}
+                </motion.div>
+                <div className="text-orange-600 text-xs font-medium">Mois</div>
+              </motion.div>
+              
+              <motion.div 
+                className="text-center p-3 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-xl border border-red-200 dark:border-red-700"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="bg-red-500 p-1 rounded-full w-6 h-6 mx-auto mb-2 flex items-center justify-center">
+                  <ShoppingBag className="h-3 w-3 text-white" />
+                </div>
+                <motion.div 
+                  className="font-bold text-red-600 text-lg"
+                  key={orderStats.year}
+                  initial={{ scale: 1.2 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {orderStats.year}
+                </motion.div>
+                <div className="text-red-600 text-xs font-medium">Année</div>
+              </motion.div>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Notification de vente - améliorée pour tous les écrans */}
+      {/* Notification de vente - design amélioré */}
       <AnimatePresence>
         {currentNotification && (
           <motion.div
-            initial={{ opacity: 0, x: -400 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -400 }}
+            initial={{ opacity: 0, x: -400, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -400, scale: 0.8 }}
             transition={{ 
               type: "spring",
-              stiffness: 100,
+              stiffness: 120,
               damping: 20,
               duration: 0.6
             }}
-            className="fixed mt-100px bottom-4  left-4 z-50 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl shadow-xl p-4 max-w-xs sm:max-w-sm border-2 border-green-300 mt-16 sm:mt-0"
+            className="fixed bottom-4 left-4 z-50 max-w-xs sm:max-w-sm mt-16 sm:mt-0"
           >
-            <div className="flex items-start space-x-3">
-              <div className="bg-white/20 rounded-full p-2 animate-pulse flex-shrink-0">
-                <ShoppingBag className="h-5 w-5" />
+            <div className="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 text-white rounded-2xl shadow-2xl p-4 border-2 border-green-300/50 backdrop-blur-sm relative overflow-hidden">
+              {/* Éléments décoratifs */}
+              <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-400/20 rounded-full -translate-y-10 translate-x-10"></div>
+              <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-8 -translate-x-8"></div>
+              
+              <div className="relative flex items-start space-x-3">
+                <motion.div 
+                  className="bg-white/25 backdrop-blur-sm rounded-full p-2 flex-shrink-0"
+                  animate={{ 
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <ShoppingBag className="h-5 w-5" />
+                </motion.div>
+                
+                <div className="flex-1 min-w-0">
+                  <motion.div
+                    initial={{ y: -10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <p className="font-bold text-sm mb-1 flex items-center">
+                      🎉 Nouvelle vente ! 
+                      <Zap className="h-3 w-3 ml-1 text-yellow-300" />
+                    </p>
+                    <p className="text-xs opacity-95 mb-1 truncate">
+                      <span className="font-semibold">{currentNotification.customerName}</span> vient d'acheter
+                    </p>
+                  </motion.div>
+                  
+                  <motion.p 
+                    className="text-xs font-bold bg-white/25 backdrop-blur-sm rounded-lg px-2 py-1 mb-2 truncate border border-white/20"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    {currentNotification.name}
+                  </motion.p>
+                  
+                  <motion.div 
+                    className="flex items-center justify-between text-xs opacity-90 mb-2 space-x-1"
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <div className="flex items-center space-x-1 flex-1 min-w-0 bg-white/15 rounded-md px-2 py-1">
+                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{currentNotification.location}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 flex-shrink-0 bg-white/15 rounded-md px-2 py-1">
+                      <Clock className="h-3 w-3" />
+                      <span>{currentNotification.time}</span>
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="grid grid-cols-2 gap-2 text-xs"
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                  >
+                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-2 text-center border border-white/20">
+                      <div className="font-bold text-yellow-200 text-xs">Quantité</div>
+                      <div className="font-semibold text-lg">{currentNotification.quantity}x</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-2 text-center border border-white/20">
+                      <div className="font-bold text-yellow-200 text-xs">Total</div>
+                      <div className="font-semibold text-lg">{currentNotification.subtotal.toFixed(2)}€</div>
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="mt-2 text-xs bg-gradient-to-r from-white/20 to-white/30 backdrop-blur-sm rounded-lg px-2 py-1 text-center border border-white/20"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 1 }}
+                  >
+                    <span className="font-semibold">Prix: {currentNotification.price.toFixed(2)}€</span>
+                  </motion.div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm mb-1">🎉 Nouvelle vente !</p>
-                <p className="text-xs opacity-95 mb-1 truncate">
-                  <span className="font-semibold">{currentNotification.customerName}</span> vient d'acheter
-                </p>
-                <p className="text-xs font-bold bg-white/20 rounded px-2 py-1 mb-2 truncate">
-                  {currentNotification.name}
-                </p>
-                <div className="flex items-center justify-between text-xs opacity-90 mb-2 space-x-1">
-                  <div className="flex items-center space-x-1 flex-1 min-w-0">
-                    <MapPin className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">{currentNotification.location}</span>
-                  </div>
-                  <div className="flex items-center space-x-1 flex-shrink-0">
-                    <Clock className="h-3 w-3" />
-                    <span>{currentNotification.time}</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-white/20 rounded px-2 py-1 text-center">
-                    <div className="font-bold text-yellow-200 text-xs">Quantité</div>
-                    <div className="font-semibold">{currentNotification.quantity}x</div>
-                  </div>
-                  <div className="bg-white/20 rounded px-2 py-1 text-center">
-                    <div className="font-bold text-yellow-200 text-xs">Total</div>
-                    <div className="font-semibold">{currentNotification.subtotal.toFixed(2)}€</div>
-                  </div>
-                </div>
-                <div className="mt-2 text-xs bg-white/20 rounded px-2 py-1 text-center">
-                  <span className="font-semibold">Prix: {currentNotification.price.toFixed(2)}€</span>
-                </div>
-              </div>
+              
+              {/* Barre de progression animée améliorée */}
+              <motion.div
+                initial={{ width: "100%" }}
+                animate={{ width: "0%" }}
+                transition={{ duration: 5, ease: "linear" }}
+                className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-b-2xl"
+              />
+              
+              {/* Indicateur de temps restant */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className="absolute top-2 right-2 text-xs opacity-75"
+              >
+                5s
+              </motion.div>
             </div>
-            
-            {/* Barre de progression animée */}
-            <motion.div
-              initial={{ width: "100%" }}
-              animate={{ width: "0%" }}
-              transition={{ duration: 5, ease: "linear" }}
-              className="absolute bottom-0 left-0 h-1 bg-white/30 rounded-b-xl"
-            />
           </motion.div>
         )}
       </AnimatePresence>

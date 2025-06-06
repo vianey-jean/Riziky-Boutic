@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -146,7 +145,7 @@ const HomePage = () => {
               </motion.div>
             )}
 
-            {/* Flash Sale Banner */}
+            {/* Flash Sale Banner - Always rendered when not searching */}
             {!searchParams.get('q') && (
               <motion.div variants={itemVariants}>
                 <FlashSaleBanner />
