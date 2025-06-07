@@ -28,11 +28,10 @@ export interface Order {
   userEmail: string;
   items: OrderItem[];
   totalAmount: number;
-  originalAmount?: number;
   shippingAddress: ShippingAddress;
   paymentMethod: string;
   codePromoUsed?: string | null;
-  status: 'confirmée' | 'en préparation' | 'en livraison' | 'livrée' | 'annulée';
+  status: 'confirmée' | 'en préparation' | 'en livraison' | 'livrée';
   createdAt: string;
   updatedAt: string;
 }

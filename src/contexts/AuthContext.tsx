@@ -2,21 +2,20 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { authAPI, User } from '../services/api';
 import { UpdateProfileData } from '@/types/auth';
-import { notificationService } from '@/services/NotificationService';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
-  login: (email: string, password: string, redirectTo?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   register: (nom: string, email: string, password: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
   updateProfile: (data: UpdateProfileData) => Promise<void>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-  setRedirectAfterLogin: (path: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,17 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [redirectAfterLogin, setRedirectAfterLoginState] = useState<string | null>(null);
-
-  const setRedirectAfterLogin = (path: string) => {
-    setRedirectAfterLoginState(path);
-    localStorage.setItem('redirectAfterLogin', path);
-  };
-
-  const clearRedirectAfterLogin = () => {
-    setRedirectAfterLoginState(null);
-    localStorage.removeItem('redirectAfterLogin');
-  };
+  const { toast } = useToast();
 
   const validateToken = async () => {
     const token = localStorage.getItem('authToken');
@@ -52,7 +41,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error("Erreur de vérification du token:", error);
       localStorage.removeItem('authToken');
-      notificationService.sessionExpired();
     }
     
     setLoading(false);
@@ -66,109 +54,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     verifyToken();
-
-    // Récupérer la redirection sauvegardée s'il y en a une
-    const savedRedirect = localStorage.getItem('redirectAfterLogin');
-    if (savedRedirect) {
-      setRedirectAfterLoginState(savedRedirect);
-    }
-
-    // Notification de bienvenue pour les utilisateurs connectés
-    const hasShownWelcome = sessionStorage.getItem('welcomeShown');
-    if (user && !hasShownWelcome) {
-      const title = user.genre === 'femme' ? 'Mme' : user.genre === 'homme' ? 'M.' : '';
-      notificationService.welcome(`${title} ${user.nom}`);
-      sessionStorage.setItem('welcomeShown', 'true');
-    }
   }, []);
 
-  const login = async (email: string, password: string, redirectTo?: string): Promise<void> => {
+  const login = async (email: string, password: string): Promise<void> => {
     try {
       console.log("Tentative de connexion avec:", { email });
-      
-      // Vérifier d'abord le mode maintenance
-      const isMaintenanceMode = await checkMaintenanceMode();
-      console.log("Mode maintenance:", isMaintenanceMode);
-      
-      if (isMaintenanceMode) {
-        notificationService.maintenanceMode();
-      }
-      
-      // Faire la connexion
       const response = await authAPI.login({ email, password });
-      console.log("Réponse de connexion:", response.data.user?.role);
-      
-      // En mode maintenance, seuls les admins peuvent se connecter
-      if (isMaintenanceMode && response.data.user?.role !== 'admin') {
-        notificationService.accessDenied();
-        throw new Error('Seuls les administrateurs peuvent se connecter en mode maintenance');
-      }
-      
       localStorage.setItem('authToken', response.data.token);
       setUser(response.data.user);
-      
-      // Notification de connexion réussie
-      const title = response.data.user.genre === 'femme' ? 'Mme' : response.data.user.genre === 'homme' ? 'M.' : '';
-      notificationService.loginSuccess(`${title} ${response.data.user.nom}`);
+      toast({
+        title: 'Connexion réussie',
+        variant: 'default',
+      });
 
-      // Déterminer la redirection
-      let targetUrl = '/';
-      
-      // 1. Si une redirection spécifique est demandée
-      if (redirectTo) {
-        targetUrl = redirectTo;
-      }
-      // 2. Si une redirection était sauvegardée (favori, panier, etc.)
-      else if (redirectAfterLogin) {
-        targetUrl = redirectAfterLogin;
-        clearRedirectAfterLogin();
-      }
-      // 3. Mode maintenance : admin vers paramètres, autre vers home
-      else if (isMaintenanceMode && response.data.user.role === 'admin') {
-        targetUrl = '/admin/parametres';
-      }
-      // 4. Mode normal : admin vers dashboard, client vers home
-      else if (!isMaintenanceMode && response.data.user.role === 'admin') {
-        targetUrl = '/admin';
-      }
-      
-      console.log('Redirection vers:', targetUrl);
-      window.location.href = targetUrl;
+      // Navigation via window.location pour éviter les problèmes de hooks
+      window.location.href = '/';
     } catch (error: any) {
       console.error("Erreur de connexion:", error);
       
-      const errorMessage = error.response?.data?.message || error.message || "Erreur de connexion";
-      notificationService.error('Erreur de connexion', errorMessage);
+      const errorMessage = error.response?.data?.message || "Erreur de connexion";
+      toast({
+        title: errorMessage,
+        variant: 'destructive',
+      });
 
       throw error;
     }
   };
 
-  // Vérifier le mode maintenance avec la nouvelle API publique
-  const checkMaintenanceMode = async (): Promise<boolean> => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public-settings/general`);
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Mode maintenance vérifié:', data?.maintenanceMode);
-        return data?.maintenanceMode || false;
-      }
-      return false;
-    } catch (error) {
-      console.error('Erreur vérification mode maintenance:', error);
-      notificationService.networkError();
-      return false;
-    }
-  };
-
   const logout = () => {
     localStorage.removeItem('authToken');
-    clearRedirectAfterLogin();
     setUser(null);
-    notificationService.logoutSuccess();
+    toast({
+      title: 'Vous êtes déconnecté',
+      variant: 'destructive',
+    });
 
-    // Navigation vers la page index
-    window.location.href = '/';
+    // Navigation via window.location pour éviter les problèmes de hooks
+    window.location.href = '/login';
   };
 
   const register = async (nom: string, email: string, password: string) => {
@@ -176,15 +99,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await authAPI.register({ nom, email, password });
       localStorage.setItem('authToken', response.data.token);
       setUser(response.data.user);
-      
-      const title = response.data.user.genre === 'femme' ? 'Mme' : response.data.user.genre === 'homme' ? 'M.' : '';
-      notificationService.success('Inscription réussie', `Bienvenue ${title} ${response.data.user.nom}`);
+      toast({
+        title: 'Inscription réussie',
+        variant: 'default',
+      });
 
       // Navigation via window.location pour éviter les problèmes de hooks
       window.location.href = '/';
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Erreur lors de l\'inscription';
-      notificationService.error('Erreur d\'inscription', errorMessage);
+      toast({
+        title: errorMessage,
+        variant: 'destructive',
+      });
       throw error;
     }
   };
@@ -192,10 +119,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const forgotPassword = async (email: string) => {
     try {
       await authAPI.forgotPassword(email);
-      notificationService.emailSent();
     } catch (error) {
       console.error("Erreur de demande de réinitialisation:", error);
-      notificationService.error('Erreur', 'Une erreur est survenue lors de l\'envoi de l\'email');
+      toast({
+        title: 'Une erreur est survenue',
+        variant: 'destructive',
+      });
+     
       throw error;
     }
   };
@@ -203,10 +133,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const resetPassword = async (email: string, code: string, newPassword: string) => {
     try {
       await authAPI.resetPassword({ email, passwordUnique: code, newPassword });
-      notificationService.passwordChanged();
     } catch (error) {
       console.error("Erreur de réinitialisation de mot de passe:", error);
-      notificationService.error('Erreur', 'Une erreur est survenue lors de la réinitialisation');
+      toast({
+        title: 'Une erreur est survenue',
+        variant: 'destructive',
+      });
+      
       throw error;
     }
   };
@@ -217,18 +150,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       const isTokenValid = await validateToken();
       if (!isTokenValid) {
-        notificationService.sessionExpired();
+        toast({
+          title: 'Votre session a expiré, veuillez vous reconnecter',
+          variant: 'destructive',
+        });
         window.location.href = '/login';
         throw new Error('Session expirée');
       }
       
       const response = await authAPI.updateProfile(user.id, data);
       setUser(prev => prev ? { ...prev, ...response.data } : null);
-      notificationService.profileUpdated();
+      toast({
+        title: 'Profil mis à jour avec succès',
+        variant: 'default',
+      });
      
     } catch (error: any) {
       console.error("Erreur de mise à jour du profil:", error);
-      notificationService.error('Erreur', error.response?.data?.message || 'Erreur lors de la mise à jour du profil');
+      toast({
+        title: error.response?.data?.message || 'Erreur lors de la mise à jour du profil',
+        variant: 'destructive',
+      });
+     
       throw error;
     }
   };
@@ -239,17 +182,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       const isTokenValid = await validateToken();
       if (!isTokenValid) {
-        notificationService.sessionExpired();
+        toast({
+          title: 'Votre session a expiré, veuillez vous reconnecter',
+          variant: 'destructive',
+        });
         window.location.href = '/login';
         throw new Error('Session expirée');
       }
       
       await authAPI.updatePassword(user.id, currentPassword, newPassword);
-      notificationService.passwordChanged();
+      toast({
+        title: 'Mot de passe mis à jour avec succès',
+        variant: 'default',
+      });
       
     } catch (error: any) {
       console.error("Erreur de mise à jour du mot de passe:", error);
-      notificationService.error('Erreur', error.response?.data?.message || 'Erreur lors de la mise à jour du mot de passe');
+      toast({
+        title: error.response?.data?.message || 'Erreur lors de la mise à jour du mot de passe',
+        variant: 'destructive',
+      });
+     
       throw error;
     }
   };
@@ -269,7 +222,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     resetPassword,
     updateProfile,
     updatePassword,
-    setRedirectAfterLogin,
   };
 
   return (

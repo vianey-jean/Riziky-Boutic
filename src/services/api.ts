@@ -8,6 +8,7 @@ export { productsService as productsAPI } from './modules/products.service';
 export { cartService as cartAPI } from './modules/cart.service';
 export { ordersService as ordersAPI } from './modules/orders.service';
 export { categoriesService as categoriesAPI } from './modules/categories.service';
+export { flashSaleService as flashSaleAPI } from './modules/flashSale.service';
 
 // Import cartService for legacy compatibility
 import { cartService } from './modules/cart.service';
@@ -47,4 +48,5 @@ export type { Favorites } from '@/types/favorites';
 export type { CodePromo } from '@/types/codePromo';
 export type { Remboursement, RemboursementFormData } from '@/types/remboursement';
 export type { Message, Conversation, ServiceConversation } from '@/types/chat';
+export type { FlashSale, FlashSaleFormData } from '@/types/flashSale';
 export type { Category, CategoryFormData } from '@/types/category';

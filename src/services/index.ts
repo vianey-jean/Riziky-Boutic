@@ -9,8 +9,8 @@ export { contactsAPI } from './contactsAPI';
 export { adminChatAPI, clientChatAPI } from './chatAPI';
 export { codePromosAPI, codePromoAPI } from './codePromosAPI';
 export { remboursementsAPI } from './remboursementsAPI';
+export { flashSaleAPI } from './flashSaleAPI';
 export { categoriesAPI } from './categoriesAPI';
-export { settingsAPI } from './settingsAPI';
 
 // Export API configuration
 export { API } from './apiConfig';
@@ -26,6 +26,7 @@ export type { Favorites } from '@/types/favorites';
 export type { CodePromo } from '@/types/codePromo';
 export type { Remboursement, RemboursementFormData } from '@/types/remboursement';
 export type { Message, Conversation, ServiceConversation } from '@/types/chat';
+export type { FlashSale, FlashSaleFormData } from '@/types/flashSale';
 export type { Category, CategoryFormData } from '@/types/category';
 
 // Legacy compatibility - keep the old api.ts exports working

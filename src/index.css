@@ -72,11 +72,6 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  }
-  
-  .dark body {
-    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
   }
 }
 
@@ -88,90 +83,21 @@
   @apply transition-transform duration-200 hover:scale-105;
 }
 
-/* Enhanced Animations */
+
+
+/* Animations */
 @keyframes fade-in {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slide-up {
-  0% { opacity: 0; transform: translateY(50px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slide-down {
-  0% { opacity: 0; transform: translateY(-50px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slide-left {
-  0% { opacity: 0; transform: translateX(50px); }
-  100% { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes slide-right {
-  0% { opacity: 0; transform: translateX(-50px); }
-  100% { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes scale-in {
-  0% { opacity: 0; transform: scale(0.9); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes bounce-in {
-  0% { opacity: 0; transform: scale(0.3); }
-  50% { opacity: 1; transform: scale(1.1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
-  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 .fade-in {
-  animation: fade-in 0.6s ease-out;
+  animation: fade-in 0.3s ease-in-out;
 }
 
-.slide-up {
-  animation: slide-up 0.8s ease-out;
-}
-
-.slide-down {
-  animation: slide-down 0.8s ease-out;
-}
-
-.slide-left {
-  animation: slide-left 0.8s ease-out;
-}
-
-.slide-right {
-  animation: slide-right 0.8s ease-out;
-}
-
-.scale-in {
-  animation: scale-in 0.5s ease-out;
-}
-
-.bounce-in {
-  animation: bounce-in 0.8s ease-out;
+@keyframes shimmer {
+  0% { background-position: -200%; }
+  100% { background-position: 200%; }
 }
 
 .shimmer-effect {
@@ -180,197 +106,55 @@
   animation: shimmer 1.5s infinite;
 }
 
-.gradient-animation {
-  background: linear-gradient(-45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
-  background-size: 400% 400%;
-  animation: gradient-shift 15s ease infinite;
-}
-
-.pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.float-animation {
-  animation: float 6s ease-in-out infinite;
-}
-
-/* Enhanced Glass Effects */
+/* Améliorations pour touches de luxe */
 .glass-effect {
-  @apply backdrop-blur-xl bg-white/80 dark:bg-black/80 border border-white/20 dark:border-white/10;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  @apply backdrop-blur-sm bg-white/80 dark:bg-black/80;
 }
 
-.glass-card {
-  @apply backdrop-blur-xl bg-white/90 dark:bg-black/90 border border-white/20 dark:border-white/10 rounded-2xl;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-/* Luxury Gradients */
 .luxury-gradient {
-  @apply bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 dark:from-red-950/20 dark:via-pink-950/20 dark:to-purple-950/20;
+  @apply bg-gradient-to-r from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-black;
 }
 
-.premium-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.sunset-gradient {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.ocean-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-/* Enhanced Card Effects */
 .card-hover {
-  @apply transition-all duration-500 hover:shadow-2xl hover:-translate-y-2;
+  @apply transition-all duration-300 hover:shadow-lg;
 }
 
-.card-premium {
-  @apply bg-gradient-to-br from-white to-gray-50 dark:from-neutral-900 dark:to-black border-0 shadow-xl;
-  box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-/* Product Enhancement */
+/* Style pour les nouvelles étiquettes de produits */
 .product-badge {
-  @apply absolute top-3 right-3 px-3 py-1 text-xs font-bold rounded-full shadow-lg;
+  @apply absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded;
 }
 
 .sale-badge {
-  @apply product-badge bg-gradient-to-r from-red-500 to-red-600 text-white;
+  @apply product-badge bg-red-600 text-white;
 }
 
 .new-badge {
-  @apply product-badge bg-gradient-to-r from-blue-500 to-blue-600 text-white;
+  @apply product-badge bg-blue-600 text-white;
 }
 
 .exclusive-badge {
-  @apply product-badge bg-gradient-to-r from-purple-500 to-purple-600 text-white;
+  @apply product-badge bg-purple-600 text-white;
 }
 
-.trending-badge {
-  @apply product-badge bg-gradient-to-r from-orange-500 to-orange-600 text-white;
-}
-
-/* Icon Enhancements */
+/* Style pour les icônes */
 .navbar-icon {
-  @apply h-6 w-6 transition-all duration-300 hover:scale-110 hover:text-red-500;
+  @apply h-6 w-6;
 }
 
-.action-icon {
-  @apply transition-all duration-300 hover:scale-110 hover:rotate-6;
-}
-
-/* Product Card Enhancements */
+/* Composant de carte produit amélioré */
 .product-card {
-  @apply rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2;
-  background: linear-gradient(145deg, #ffffff, #f8f9fa);
-}
-
-.dark .product-card {
-  background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+  @apply rounded-xl overflow-hidden transition-all duration-300;
 }
 
 .product-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
+  @apply shadow-xl transform translate-y-[-5px];
 }
 
+/* Améliorations pour les images */
 .product-image {
-  @apply object-contain w-full h-auto transition-all duration-700 hover:scale-110;
+  @apply object-contain w-full h-auto transition-transform duration-300;
 }
 
-.product-overlay {
-  @apply absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300;
-}
-
-/* Text Effects */
-.text-gradient {
-  @apply bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 bg-clip-text text-transparent;
-}
-
-.text-shimmer {
-  background: linear-gradient(90deg, #000 25%, #fff 50%, #000 75%);
-  background-size: 200% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 2s infinite;
-}
-
-/* Scroll Enhancements */
-.scroll-smooth {
-  scroll-behavior: smooth;
-}
-
-/* Loading States */
-.skeleton-pulse {
-  @apply animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700;
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Interactive Elements */
-.interactive-hover {
-  @apply transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95;
-}
-
-.button-premium {
-  @apply relative overflow-hidden bg-gradient-to-r from-red-500 to-pink-500 text-white font-semibold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300;
-}
-
-.button-premium::before {
-  content: '';
-  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full;
-  animation: shimmer 2s infinite;
-}
-
-.button-premium:hover::before {
-  animation: shimmer 0.8s ease-in-out;
-}
-
-/* Responsive Utilities */
-.responsive-grid {
-  @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6;
-}
-
-.responsive-text {
-  @apply text-sm sm:text-base md:text-lg lg:text-xl;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-800;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-gradient-to-b from-red-400 to-red-600 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply from-red-500 to-red-700;
-}
-
-/* Focus States */
-.focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
-}
-
-/* Print Styles */
-@media print {
-  .no-print {
-    display: none !important;
-  }
+.product-card:hover .product-image {
+  @apply transform scale-105;
 }

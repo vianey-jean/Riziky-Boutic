@@ -15,8 +15,7 @@ API.interceptors.request.use(
       config.headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Réduire les appels cachés pour éviter le rate limiting
-    if (config.method === 'get' && !config.url?.includes('/flash-sales/active')) {
+    if (config.method === 'get') {
       config.params = {
         ...config.params,
         _t: Date.now(),
@@ -44,21 +43,9 @@ API.interceptors.response.use(
   error => {
     console.error("API Error:", error.response || error);
     
-    // Gérer spécifiquement l'erreur 429
-    if (error.response && error.response.status === 429) {
-      console.warn("Rate limit atteint, attente avant nouvelle tentative...");
-      return new Promise(resolve => {
-        setTimeout(() => {
-          resolve(API.request(error.config));
-        }, 2000);
-      });
-    }
-    
     if (error.response && error.response.status === 401 && 
         !error.config.url.includes('/auth/login') && 
-        !error.config.url.includes('/auth/verify-token') &&
-        !error.config.url.includes('/settings/general') &&
-        !window.location.pathname.includes('/login')) {
+        !error.config.url.includes('/auth/verify-token')) {
       console.log("Session expirée, redirection vers la page de connexion...");
       localStorage.removeItem('authToken');
       window.location.href = '/login';

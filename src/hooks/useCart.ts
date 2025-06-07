@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { StoreCartItem } from '@/types/cart';
 import { Product } from '@/types/product';
 import { cartAPI, productsAPI } from '@/services/api';
-import { notificationService } from '@/services/NotificationService';
+import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useCart = () => {
@@ -42,14 +41,12 @@ export const useCart = () => {
           }
         } catch (err) {
           console.error(`Erreur lors du chargement du produit ${item.productId}:`, err);
-          notificationService.error('Erreur', `Impossible de charger un produit du panier`);
         }
       }
       
       setCart(cartItems);
     } catch (error) {
       console.error("Erreur lors du chargement du panier:", error);
-      notificationService.error('Erreur', 'Impossible de charger votre panier');
       setCart([]);
     } finally {
       setLoading(false);
@@ -71,12 +68,16 @@ export const useCart = () => {
 
   const addToCart = async (product: Product, quantity: number = 1) => {
     if (!isAuthenticated || !user) {
-      notificationService.error('Connexion requise', 'Vous devez être connecté pour ajouter un produit au panier');
+      toast.error('Vous devez être connecté pour ajouter un produit au panier', {
+        style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
+        duration: 4000,
+        position: 'top-center',
+      });
       return;
     }
     
     if (product.stock !== undefined && product.stock < quantity) {
-      notificationService.stockInsufficient(product.stock);
+      toast.error(`Stock insuffisant. Disponible: ${product.stock}`);
       return;
     }
     
@@ -84,7 +85,7 @@ export const useCart = () => {
     const existingQuantity = existingItemIndex >= 0 ? cart[existingItemIndex].quantity : 0;
     
     if (product.stock !== undefined && (existingQuantity + quantity) > product.stock) {
-      notificationService.stockInsufficient(product.stock);
+      toast.error(`Stock insuffisant. Disponible: ${product.stock}`);
       return;
     }
     
@@ -99,27 +100,23 @@ export const useCart = () => {
         setCart([...cart, { product, quantity }]);
       }
       
-      notificationService.addToCart(product.name);
+      toast.success('Produit ajouté au panier');
     } catch (error) {
       console.error("Erreur lors de l'ajout au panier:", error);
-      notificationService.error('Erreur', 'Impossible d\'ajouter le produit au panier');
+      toast.error('Erreur lors de l\'ajout au panier');
     }
   };
 
   const removeFromCart = async (productId: string) => {
     if (!isAuthenticated || !user) return;
     
-    const product = cart.find(item => item.product.id === productId)?.product;
-    
     try {
       await cartAPI.removeItem(user.id, productId);
       setCart(cart.filter(item => item.product.id !== productId));
-      if (product) {
-        notificationService.removeFromCart(product.name);
-      }
+      toast.info('Produit supprimé du panier');
     } catch (error) {
       console.error("Erreur lors de la suppression du panier:", error);
-      notificationService.error('Erreur', 'Impossible de supprimer le produit du panier');
+      toast.error('Erreur lors de la suppression du produit');
     }
   };
 
@@ -133,7 +130,7 @@ export const useCart = () => {
     
     const product = products.find(p => p.id === productId);
     if (product && product.stock !== undefined && quantity > product.stock) {
-      notificationService.stockInsufficient(product.stock);
+      toast.error(`Stock insuffisant. Disponible: ${product.stock}`);
       return;
     }
     
@@ -148,10 +145,9 @@ export const useCart = () => {
       });
       
       setCart(updatedCart);
-      notificationService.success('Quantité mise à jour', 'La quantité a été modifiée dans votre panier');
     } catch (error) {
       console.error("Erreur lors de la mise à jour du panier:", error);
-      notificationService.error('Erreur', 'Impossible de modifier la quantité');
+      toast.error('Erreur lors de la mise à jour de la quantité');
     }
   };
 
@@ -161,10 +157,9 @@ export const useCart = () => {
     try {
       await cartAPI.clear(user.id);
       setCart([]);
-      notificationService.success('Panier vidé', 'Votre panier a été vidé avec succès');
     } catch (error) {
       console.error("Erreur lors de la suppression du panier:", error);
-      notificationService.error('Erreur', 'Impossible de vider le panier');
+      toast.error('Erreur lors de la suppression du panier');
     }
   };
 

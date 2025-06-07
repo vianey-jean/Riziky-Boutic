@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Order } from '@/types/order';
 import { ordersAPI, cartAPI } from '@/services/api';
 import { StoreCartItem } from '@/types/cart';
-import { notificationService } from '@/services/NotificationService';
+import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useOrders = () => {
@@ -28,7 +28,6 @@ export const useOrders = () => {
       }
     } catch (error) {
       console.error("Erreur lors du chargement des commandes:", error);
-      notificationService.error('Erreur', 'Impossible de charger vos commandes');
       setOrders([]);
     } finally {
       setLoading(false);
@@ -51,7 +50,7 @@ export const useOrders = () => {
     codePromo?: { code: string; productId: string; pourcentage: number }
   ): Promise<Order | null> => {
     if (!isAuthenticated || !user || selectedCartItems.length === 0) {
-      notificationService.error('Erreur', 'Impossible de créer la commande: utilisateur non connecté ou panier vide');
+      toast.error('Impossible de créer la commande: utilisateur non connecté ou panier vide');
       return null;
     }
 
@@ -102,16 +101,16 @@ export const useOrders = () => {
           }
         }
         
-        notificationService.orderPlaced(response.data.id);
+        toast.success('Commande créée avec succès');
         fetchOrders();
         return response.data;
       } else {
-        notificationService.error('Erreur', 'Échec de la création de la commande');
+        toast.error('Échec de la création de la commande');
         return null;
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erreur lors de la création de la commande:", error);
-      notificationService.error('Erreur de commande', error.response?.data?.message || 'Erreur lors de la création de la commande');
+      toast.error('Erreur lors de la création de la commande');
       return null;
     }
   };
