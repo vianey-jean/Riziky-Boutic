@@ -39,18 +39,19 @@ const FlashSaleBanner: React.FC = () => {
         setIsLoading(true);
         console.log('🔄 Récupération de la vente flash active via API...');
         
-        // Utiliser l'API au lieu d'accéder directement au fichier
         const response = await flashSaleAPI.getActive();
         
         if (response.data) {
           console.log('✅ Vente flash active trouvée:', response.data);
           setActiveFlashSale(response.data);
-        } else {
-          console.log('ℹ️ Aucune vente flash active');
-          setActiveFlashSale(null);
         }
-      } catch (error) {
-        console.error('❌ Erreur lors du chargement de la vente flash:', error);
+      } catch (error: any) {
+        // Gérer spécifiquement l'erreur 404 (pas de vente flash active)
+        if (error.response && error.response.status === 404) {
+          console.log('ℹ️ Aucune vente flash active (404)');
+        } else {
+          console.error('❌ Erreur lors du chargement de la vente flash:', error);
+        }
         setActiveFlashSale(null);
       } finally {
         setIsLoading(false);
@@ -90,6 +91,7 @@ const FlashSaleBanner: React.FC = () => {
     return () => clearInterval(timer);
   }, [activeFlashSale]);
 
+  // Ne pas afficher si en cours de chargement, pas de vente flash ou expirée
   if (isLoading || !activeFlashSale || isExpired) return null;
 
   const timeUnits = [
