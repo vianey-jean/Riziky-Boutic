@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -42,7 +43,6 @@ const FlashSalePage: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isExpired, setIsExpired] = useState(false);
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [flashSaleInfo, setFlashSaleInfo] = useState<{
     title: string;
     description: string;
@@ -51,8 +51,8 @@ const FlashSalePage: React.FC = () => {
     endDate: string;
   } | null>(null);
 
-  // Récupérer les produits de vente flash depuis l'API
-  const fetchFlashSaleProducts = async () => {
+  // Fonction pour récupérer les produits de vente flash depuis l'API
+  const fetchProducts = async () => {
     try {
       console.log('🔍 Chargement des produits de vente flash depuis l\'API');
 
@@ -64,12 +64,12 @@ const FlashSalePage: React.FC = () => {
 
       if (!products || products.length === 0) {
         console.log('❌ Aucun produit dans la réponse API');
-        throw new Error('Aucun produit de vente flash disponible');
+        return { products: [], flashSaleInfo: null };
       }
 
       // Utiliser les informations du premier produit pour la vente flash
       const firstProduct = products[0];
-      const saleInfo = {
+      const flashSaleData = {
         title: firstProduct.flashSaleTitle || 'Vente Flash',
         description: firstProduct.flashSaleDescription || 'Profitez de nos offres exceptionnelles !',
         discount: firstProduct.flashSaleDiscount || 0,
@@ -86,7 +86,7 @@ const FlashSalePage: React.FC = () => {
         originalPrice: product.originalFlashPrice || product.originalPrice || product.price
       }));
 
-      return { products: processedProducts, saleInfo };
+      return { products: processedProducts, flashSaleInfo: flashSaleData };
 
     } catch (error) {
       console.error('💥 Erreur lors du chargement des produits de vente flash via API:', error);
@@ -94,16 +94,14 @@ const FlashSalePage: React.FC = () => {
     }
   };
 
-  const handleDataSuccess = (data: { products: Product[], saleInfo: any }) => {
+  const handleDataSuccess = (data: { products: Product[], flashSaleInfo: any }) => {
     setFlashSaleProducts(data.products);
-    setFlashSaleInfo(data.saleInfo);
-    setIsLoading(false);
+    setFlashSaleInfo(data.flashSaleInfo);
   };
 
   const handleMaxRetriesReached = () => {
     setFlashSaleProducts([]);
     setFlashSaleInfo(null);
-    setIsLoading(false);
   };
 
   // Calculer le temps restant
@@ -138,11 +136,20 @@ const FlashSalePage: React.FC = () => {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-20">
-            <Flame className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Aucune vente flash active</h2>
-            <p className="text-gray-600">Il n'y a actuellement aucune vente flash disponible.</p>
-          </div>
+          <PageDataLoader
+            fetchFunction={fetchProducts}
+            onSuccess={handleDataSuccess}
+            onMaxRetriesReached={handleMaxRetriesReached}
+            loadingMessage="Chargement des produits..."
+            loadingSubmessage="Récupération de notre catalogue complet..."
+            errorMessage="Erreur de chargement des produits"
+          >
+            <div className="text-center py-20">
+              <Flame className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Aucune vente flash active</h2>
+              <p className="text-gray-600">Il n'y a actuellement aucune vente flash disponible.</p>
+            </div>
+          </PageDataLoader>
         </div>
       </Layout>
     );
@@ -173,12 +180,12 @@ const FlashSalePage: React.FC = () => {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <PageDataLoader
-          fetchFunction={fetchFlashSaleProducts}
+          fetchFunction={fetchProducts}
           onSuccess={handleDataSuccess}
           onMaxRetriesReached={handleMaxRetriesReached}
-          loadingMessage="Chargement de la vente flash..."
-          loadingSubmessage="Récupération des offres exceptionnelles..."
-          errorMessage="Erreur de chargement de la vente flash"
+          loadingMessage="Chargement des produits..."
+          loadingSubmessage="Récupération de notre catalogue complet..."
+          errorMessage="Erreur de chargement des produits"
         >
           {/* En-tête de la vente flash */}
           <motion.div
