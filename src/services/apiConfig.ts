@@ -41,7 +41,12 @@ API.interceptors.response.use(
     return response;
   },
   error => {
-    console.error("API Error:", error.response || error);
+    // Ne pas traiter les 404 sur les flash-sales comme des erreurs
+    if (error.response?.status === 404 && error.config.url.includes('/flash-sales/active')) {
+      console.log("ℹ️ Aucune vente flash active (comportement normal)");
+    } else {
+      console.error("API Error:", error.response || error);
+    }
     
     if (error.response && error.response.status === 401 && 
         !error.config.url.includes('/auth/login') && 
