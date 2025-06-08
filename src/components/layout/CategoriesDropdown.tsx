@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Menu } from 'lucide-react';
 import { Category } from '@/types/category';
+import { getSecureCategoryId } from '@/services/secureCategories';
 
 interface CategoriesDropdownProps {
   categories: Category[];
@@ -24,7 +25,7 @@ const CategoriesDropdown: React.FC<CategoriesDropdownProps> = ({ categories }) =
         {categories.map(cat => (
           <Link 
             key={cat.id}
-            to={`/categorie/${cat.name}`}
+            to={`/categorie/${getSecureCategoryId(cat.name)}`}
             className="text-red-900 font-bold hover:text-red-600 capitalize transition-colors px-2 py-1"
           >
             {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
@@ -53,7 +54,7 @@ const CategoriesDropdown: React.FC<CategoriesDropdownProps> = ({ categories }) =
         {categories.map(cat => (
           <DropdownMenuItem key={cat.id} asChild>
             <Link 
-              to={`/categorie/${cat.name}`}
+              to={`/categorie/${getSecureCategoryId(cat.name)}`}
               className="w-full capitalize hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors text-red-900 font-bold"
               onClick={() => setIsOpen(false)}
             >

@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
 import { authAPI } from '@/services/api';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Mail, User, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, User, Lock, ShoppingBag, UserPlus } from 'lucide-react';
 import { debounce } from 'lodash';
 import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
 
@@ -91,127 +91,195 @@ const RegisterPage = () => {
 
   return (
     <Layout>
-      <div className="flex justify-center items-center min-h-[70vh]">
-        <Card className="w-[400px]">
-          <CardHeader>
-            <CardTitle>Inscription</CardTitle>
-            <CardDescription>Créez un nouveau compte</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="nom"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nom</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input placeholder="Votre nom" {...field} />
-                          <User className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input placeholder="email@example.com" {...field} />
-                          <Mail className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mot de passe</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="********"
-                            {...field}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-5 w-5 text-muted-foreground" />
-                            ) : (
-                              <Eye className="h-5 w-5 text-muted-foreground" />
-                            )}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                      <PasswordStrengthIndicator password={field.value} />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirmer le mot de passe</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showConfirmPassword ? "text" : "password"}
-                            placeholder="********"
-                            {...field}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          >
-                            {showConfirmPassword ? (
-                              <EyeOff className="h-5 w-5 text-muted-foreground" />
-                            ) : (
-                              <Eye className="h-5 w-5 text-muted-foreground" />
-                            )}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={emailExists || isLoading}>
-                  {isLoading ? "Inscription en cours..." : "S'inscrire"}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-          <CardFooter>
-            <div className="text-sm text-muted-foreground w-full text-center">
-              Déjà un compte ?{' '}
-              <Link to="/login" className="text-brand-blue hover:underline">
-                Se connecter
-              </Link>
+      <div className="min-h-[90vh] bg-gradient-to-br from-red-50 via-white to-red-50 dark:from-red-950/20 dark:via-neutral-950 dark:to-red-950/20 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          {/* Header with Logo */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-600 to-red-700 rounded-2xl shadow-lg mb-4">
+              <ShoppingBag className="h-8 w-8 text-white" />
             </div>
-          </CardFooter>
-        </Card>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Riziky Boutique
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Créez votre compte pour commencer
+            </p>
+          </div>
+
+          <Card className="shadow-2xl border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+            <CardHeader className="space-y-1 pb-6">
+              <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent flex items-center justify-center gap-2">
+                <UserPlus className="h-6 w-6 text-red-600" />
+                Inscription
+              </CardTitle>
+              <CardDescription className="text-center text-gray-600 dark:text-gray-400">
+                Rejoignez notre communauté de beauté
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  <FormField
+                    control={form.control}
+                    name="nom"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Nom complet
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              placeholder="Votre nom complet" 
+                              {...field} 
+                              className="pl-12 h-12 border-gray-200 dark:border-gray-700 focus:border-red-500 focus:ring-red-500 rounded-xl"
+                            />
+                            <User className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Adresse email
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              placeholder="votre@email.com" 
+                              {...field} 
+                              className="pl-12 h-12 border-gray-200 dark:border-gray-700 focus:border-red-500 focus:ring-red-500 rounded-xl"
+                            />
+                            <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                        {emailExists && (
+                          <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                            Cet email est déjà utilisé
+                          </p>
+                        )}
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Mot de passe
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder="••••••••"
+                              {...field}
+                              className="pl-12 pr-12 h-12 border-gray-200 dark:border-gray-700 focus:border-red-500 focus:ring-red-500 rounded-xl"
+                            />
+                            <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-2 top-1.5 h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-gray-500" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                        <PasswordStrengthIndicator password={field.value} />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Confirmer le mot de passe
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showConfirmPassword ? "text" : "password"}
+                              placeholder="••••••••"
+                              {...field}
+                              className="pl-12 pr-12 h-12 border-gray-200 dark:border-gray-700 focus:border-red-500 focus:ring-red-500 rounded-xl"
+                            />
+                            <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-2 top-1.5 h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-gray-500" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button 
+                    type="submit" 
+                    className="w-full h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]" 
+                    disabled={emailExists || isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Création du compte...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        Créer mon compte
+                      </div>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+
+            <CardFooter className="pt-6">
+              <div className="text-sm text-center text-gray-600 dark:text-gray-400 w-full">
+                Déjà un compte ?{' '}
+                <Link 
+                  to="/login" 
+                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-semibold hover:underline transition-colors"
+                >
+                  Se connecter
+                </Link>
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
     </Layout>
   );

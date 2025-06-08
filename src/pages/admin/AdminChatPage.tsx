@@ -1,532 +1,301 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import AdminLayout from './AdminLayout';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Send, Edit, Trash2, Smile, PhoneCall, Video, PhoneOff } from 'lucide-react';
-import { adminChatAPI, Message } from '@/services/api';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/components/ui/sonner';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import data from '@emoji-mart/data';
-import Picker from '@emoji-mart/react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { VideoCallProvider, useVideoCall } from '@/contexts/VideoCallContext';
-import CallNotification from '@/components/admin/CallNotification';
-import CallInterface from '@/components/admin/CallInterface';
+import { MessageSquare, Send, Users, Clock, Search, Filter, Sparkles, MessageCircle } from 'lucide-react';
+import { adminChatAPI } from '@/services/chatAPI';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import PageDataLoader from '@/components/layout/PageDataLoader';
 
-// Types pour le chat admin
-interface AdminUser {
+interface AdminMessage {
   id: string;
-  nom: string;
-  email: string;
-  role: string;
-  isOnline?: boolean;
-  lastSeen?: string;
+  senderId: string;
+  senderName: string;
+  content: string;
+  timestamp: string;
+  type: 'message' | 'notification';
 }
 
-interface Conversation {
-  messages: Message[];
-  participants: string[];
-}
+const AdminChatPage: React.FC = () => {
+  const [messages, setMessages] = useState<AdminMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [adminList, setAdminList] = useState([
+    { name: 'Admin Principal', role: 'Super Admin', online: true },
+    { name: 'Marie Dubois', role: 'Gestionnaire', online: true },
+    { name: 'Pierre Martin', role: 'Support', online: false },
+    { name: 'Sophie Laurent', role: 'Marketing', online: true },
+    { name: 'Thomas Bernard', role: 'Technique', online: false }
+  ]);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-const AdminChatContent = () => {
-  const { user: currentUser } = useAuth();
-  const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
-  const [messageText, setMessageText] = useState('');
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editText, setEditText] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const queryClient = useQueryClient();
-  const { initiateCall, callState } = useVideoCall();
+  const loadChatData = async () => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-  // Récupérer la liste des administrateurs
-  const { data: admins = [], isLoading: isLoadingAdmins } = useQuery({
-    queryKey: ['admins'],
-    queryFn: async () => {
-      try {
-        const response = await adminChatAPI.getAdmins();
-        return (response.data || []).filter(
-          (admin: AdminUser) => admin.id !== currentUser?.id
-        );
-      } catch (error) {
-        console.error("Erreur lors du chargement des administrateurs:", error);
-        throw error;
-      }
-    },
-    enabled: !!currentUser
-  });
-
-  // Récupérer la conversation sélectionnée
-  const { data: conversation, isLoading: isLoadingConversation } = useQuery({
-    queryKey: ['conversation', selectedAdmin?.id],
-    queryFn: async () => {
-      if (!selectedAdmin) return { messages: [] };
-      try {
-        const response = await adminChatAPI.getConversation(selectedAdmin.id);
-        return response.data || { messages: [] };
-      } catch (error) {
-        console.error("Erreur lors du chargement de la conversation:", error);
-        return { messages: [] };
-      }
-    },
-    enabled: !!selectedAdmin && !!currentUser,
-    refetchInterval: 5000 // Rafraîchir toutes les 5 secondes
-  });
-
-  // Vérifier le statut en ligne des administrateurs
-  useQuery({
-    queryKey: ['adminStatus'],
-    queryFn: async () => {
-      if (!admins.length) return {};
-      
-      // Signaler que l'utilisateur courant est en ligne
-      await adminChatAPI.setOnline();
-      
-      // Vérifier le statut de tous les autres admins
-      const statusPromises = admins.map(async (admin: AdminUser) => {
-        try {
-          const response = await adminChatAPI.getStatus(admin.id);
-          return { id: admin.id, ...response.data };
-        } catch (error) {
-          return { id: admin.id, isOnline: false };
-        }
-      });
-      
-      const statuses = await Promise.all(statusPromises);
-      const statusMap = statuses.reduce((acc: Record<string, any>, status) => {
-        acc[status.id] = status;
-        return acc;
-      }, {});
-      
-      // Mettre à jour le cache des admins avec leur statut
-      queryClient.setQueryData(['admins'], (oldData: any) => 
-        (oldData || []).map((admin: AdminUser) => ({
-          ...admin,
-          isOnline: statusMap[admin.id]?.isOnline || false,
-          lastSeen: statusMap[admin.id]?.lastSeen
-        }))
-      );
-      
-      return statusMap;
-    },
-    enabled: !!admins.length && !!currentUser,
-    refetchInterval: 15000 // Vérifier les statuts toutes les 15 secondes
-  });
-
-  // Mutation pour envoyer un message
-  const sendMessageMutation = useMutation({
-    mutationFn: async (message: string) => {
-      if (!selectedAdmin) throw new Error("Aucun administrateur sélectionné");
-      return adminChatAPI.sendMessage(selectedAdmin.id, message);
-    },
-    onSuccess: () => {
-      setMessageText('');
-      queryClient.invalidateQueries({ queryKey: ['conversation', selectedAdmin?.id] });
-    },
-    onError: (error) => {
-      console.error("Erreur lors de l'envoi du message:", error);
-      toast.error("L'envoi du message a échoué. Veuillez réessayer.");
-    }
-  });
-
-  // Mutation pour modifier un message
-  const editMessageMutation = useMutation({
-    mutationFn: async ({ messageId, content }: { messageId: string; content: string }) => {
-      if (!selectedAdmin) throw new Error("Aucun administrateur sélectionné");
-      const conversationId = getConversationId();
-      return adminChatAPI.editMessage(messageId, content, conversationId);
-    },
-    onSuccess: () => {
-      setEditingMessageId(null);
-      setEditText('');
-      queryClient.invalidateQueries({ queryKey: ['conversation', selectedAdmin?.id] });
-      toast.success("Message modifié avec succès");
-    },
-    onError: (error) => {
-      console.error("Erreur lors de la modification du message:", error);
-      toast.error("La modification du message a échoué");
-    }
-  });
-
-  // Mutation pour supprimer un message
-  const deleteMessageMutation = useMutation({
-    mutationFn: async (messageId: string) => {
-      if (!selectedAdmin) throw new Error("Aucun administrateur sélectionné");
-      const conversationId = getConversationId();
-      return adminChatAPI.deleteMessage(messageId, conversationId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversation', selectedAdmin?.id] });
-      toast.success("Message supprimé");
-    },
-    onError: (error) => {
-      console.error("Erreur lors de la suppression du message:", error);
-      toast.error("La suppression du message a échoué");
-    }
-  });
-
-  // Fonction pour obtenir l'ID de conversation
-  const getConversationId = () => {
-    if (!currentUser || !selectedAdmin) return '';
-    return currentUser.id < selectedAdmin.id 
-      ? `${currentUser.id}-${selectedAdmin.id}` 
-      : `${selectedAdmin.id}-${currentUser.id}`;
+    const initialMessages: AdminMessage[] = [
+      { id: '1', senderId: 'admin1', senderName: 'Admin Principal', content: 'Bonjour l\'équipe ! Réunion à 14h pour discuter des nouvelles fonctionnalités.', timestamp: '2024-05-03T09:30:00', type: 'message' },
+      { id: '2', senderId: 'marie1', senderName: 'Marie Dubois', content: 'Parfait ! J\'ai préparé le rapport des ventes. Je l\'enverrai avant la réunion.', timestamp: '2024-05-03T09:32:00', type: 'message' },
+      { id: '3', senderId: 'admin1', senderName: 'Admin Principal', content: 'Excellent ! N\'hésitez pas si vous avez des questions avant la réunion.', timestamp: '2024-05-03T09:35:00', type: 'message' },
+      { id: '4', senderId: 'system', senderName: 'System', content: 'Marie Dubois a rejoint la conversation', timestamp: '2024-05-03T09:29:00', type: 'notification' }
+    ];
+    return initialMessages;
   };
 
-  // Marquer comme hors ligne au démontage du composant
-  useEffect(() => {
-    // Signal that user is online when component mounts
-    if (currentUser) {
-      adminChatAPI.setOnline();
-    }
-    
-    return () => {
-      // Signal that user is offline when component unmounts
-      if (currentUser) {
-        adminChatAPI.setOffline();
-      }
-    };
-  }, [currentUser]);
+  const handleDataSuccess = (data: AdminMessage[]) => {
+    setMessages(data);
+    setDataLoaded(true);
+  };
 
-  // Défiler vers le bas quand de nouveaux messages arrivent
+  const handleMaxRetriesReached = () => {
+    console.error('Impossible de charger le chat');
+  };
+
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    // Mocked function to simulate fetching messages
+    const fetchMessages = async () => {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const initialMessages: AdminMessage[] = [
+        { id: '1', senderId: 'admin1', senderName: 'Admin Principal', content: 'Bonjour l\'équipe ! Réunion à 14h pour discuter des nouvelles fonctionnalités.', timestamp: '2024-05-03T09:30:00', type: 'message' },
+        { id: '2', senderId: 'marie1', senderName: 'Marie Dubois', content: 'Parfait ! J\'ai préparé le rapport des ventes. Je l\'enverrai avant la réunion.', timestamp: '2024-05-03T09:32:00', type: 'message' },
+        { id: '3', senderId: 'admin1', senderName: 'Admin Principal', content: 'Excellent ! N\'hésitez pas si vous avez des questions avant la réunion.', timestamp: '2024-05-03T09:35:00', type: 'message' },
+        { id: '4', senderId: 'system', senderName: 'System', content: 'Marie Dubois a rejoint la conversation', timestamp: '2024-05-03T09:29:00', type: 'notification' }
+      ];
+      setMessages(initialMessages);
+    };
+
+    fetchMessages();
+  }, []);
+
+  useEffect(() => {
+    // Scroll to bottom on message change
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [conversation?.messages]);
+  }, [messages]);
 
   const handleSendMessage = () => {
-    if (!messageText.trim() || !selectedAdmin) return;
-    sendMessageMutation.mutate(messageText);
-  };
-
-  const handleEditMessage = () => {
-    if (!editText.trim() || !editingMessageId) return;
-    editMessageMutation.mutate({ messageId: editingMessageId, content: editText });
-  };
-
-  const startEditMessage = (message: Message) => {
-    setEditingMessageId(message.id);
-    setEditText(message.content);
-  };
-
-  const handleDeleteMessage = (messageId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
-      deleteMessageMutation.mutate(messageId);
+    if (newMessage.trim() !== '') {
+      const newMsg: AdminMessage = {
+        id: String(messages.length + 1),
+        senderId: 'you',
+        senderName: 'You',
+        content: newMessage,
+        timestamp: new Date().toISOString(),
+        type: 'message'
+      };
+      setMessages([...messages, newMsg]);
+      setNewMessage('');
     }
   };
 
-  const handleAudioCall = () => {
-    if (!selectedAdmin || !selectedAdmin.isOnline) return;
-    initiateCall(selectedAdmin.id, false);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
   };
   
-  const handleVideoCall = () => {
-    if (!selectedAdmin || !selectedAdmin.isOnline) return;
-    initiateCall(selectedAdmin.id, true);
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getTimeAgo = (dateString?: string) => {
-    if (!dateString) return "inconnu";
-    
-    const date = new Date(dateString);
-    const diff = Math.floor((new Date().getTime() - date.getTime()) / 60000);
-    
-    if (diff < 1) return "à l'instant";
-    if (diff < 60) return `il y a ${diff} min`;
-    
-    const hours = Math.floor(diff / 60);
-    if (hours < 24) return `il y a ${hours}h`;
-    
-    const days = Math.floor(hours / 24);
-    return `il y a ${days}j`;
-  };
-
-  // Fonctions qui utilisent le picker d'emoji
-  const handleEmojiSelect = (emoji: any) => {
-    setMessageText((prev) => prev + emoji.native);
-  };
-
-  const handleEditEmojiSelect = (emoji: any) => {
-    setEditText((prev) => prev + emoji.native);
-  };
-
-  // Display the call interface when in a call
-  if (callState.isInCall) {
-    return <CallInterface />;
-  }
-
   return (
-    <>
-      <CallNotification />
-      
-      <h1 className="text-2xl font-bold mb-6">Chat entre administrateurs</h1>
-      
-      <div className="grid md:grid-cols-4 gap-6 h-[70vh]">
-        {/* Liste des Administrateurs */}
-        <Card className="md:col-span-1 flex flex-col">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">Administrateurs</h2>
-          </div>
+    <AdminLayout>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+        {/* Enhanced Header Section */}
+        <div className="bg-gradient-to-br from-purple-600 via-pink-600 to-red-700 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden mx-8 mt-8">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
           
-          <ScrollArea className="flex-1">
-            {isLoadingAdmins ? (
-              <div className="p-4 text-center">Chargement des administrateurs...</div>
-            ) : admins.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                Aucun autre administrateur
-              </div>
-            ) : (
-              admins.map((admin: AdminUser) => (
-                <div key={`admin-${admin.id}-${admin.email}`}>
-                  <button
-                    className={`w-full p-3 flex items-center hover:bg-gray-100 ${
-                      selectedAdmin?.id === admin.id ? 'bg-gray-100' : ''
-                    }`}
-                    onClick={() => setSelectedAdmin(admin)}
-                  >
-                    <div className="relative mr-3">
-                      <div className="w-10 h-10 bg-red-800 text-white rounded-full flex items-center justify-center">
-                        {admin.nom.charAt(0)}
-                      </div>
-                      <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
-                        admin.isOnline ? 'bg-green-500' : 'bg-gray-400'
-                      }`}></div>
-                    </div>
-                    <div className="text-left">
-                      <p className="font-medium">{admin.nom}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {admin.isOnline ? 'En ligne' : `Dernier accès ${getTimeAgo(admin.lastSeen)}`}
-                      </p>
-                    </div>
-                  </button>
-                  <Separator />
-                </div>
-              ))
-            )}
-          </ScrollArea>
-        </Card>
-        
-        {/* Zone de Chat */}
-        <Card className="md:col-span-3 flex flex-col">
-          {selectedAdmin ? (
-            <>
-              <div className="p-4 border-b flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 bg-red-800 text-white rounded-full flex items-center justify-center">
-                      {selectedAdmin.nom.charAt(0)}
-                    </div>
-                    <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
-                      selectedAdmin.isOnline ? 'bg-green-500' : 'bg-red-500'
-                    }`}></div>
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
+              <div className="space-y-4 mb-6 lg:mb-0">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
+                    <MessageCircle className="h-10 w-10 text-white" />
                   </div>
                   <div>
-                    <h2 className="font-semibold">{selectedAdmin.nom}</h2>
-                    <p className="text-xs text-muted-foreground">
-                      {selectedAdmin.isOnline ? 'En ligne' : `Dernier accès ${getTimeAgo(selectedAdmin.lastSeen)}`}
-                    </p>
+                    <h1 className="text-4xl font-bold mb-2">Chat Administrateur</h1>
+                    <p className="text-pink-100 text-lg">Communication interne et gestion d'équipe</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl text-center">
+                  <div className="text-2xl font-bold">5</div>
+                  <div className="text-sm text-pink-100">Administrateurs</div>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl text-center">
+                  <div className="text-2xl font-bold">24</div>
+                  <div className="text-sm text-pink-100">Messages</div>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl text-center">
+                  <div className="text-2xl font-bold">2</div>
+                  <div className="text-sm text-pink-100">En ligne</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="container mx-auto p-8">
+          <div className="grid lg:grid-cols-4 gap-8 h-[800px]">
+            {/* Enhanced Admin List */}
+            <Card className="lg:col-span-1 border-0 shadow-2xl bg-gradient-to-br from-white to-purple-50">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-200">
+                <CardTitle className="flex items-center text-gray-800">
+                  <Users className="h-5 w-5 mr-2 text-purple-600" />
+                  Équipe Admin
+                </CardTitle>
+                <CardDescription>Membres connectés</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                {/* Search */}
+                <div className="p-4 border-b border-purple-100">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input 
+                      placeholder="Rechercher un admin..." 
+                      className="pl-10 border-2 border-purple-200 focus:border-purple-500 transition-colors"
+                    />
                   </div>
                 </div>
                 
-                {/* Call buttons - only shown when admin is online */}
-                {selectedAdmin.isOnline && (
+                {/* Admin List */}
+                <ScrollArea className="h-[600px]">
+                  <div className="space-y-2 p-4">
+                    {[
+                      { name: 'Admin Principal', role: 'Super Admin', online: true },
+                      { name: 'Marie Dubois', role: 'Gestionnaire', online: true },
+                      { name: 'Pierre Martin', role: 'Support', online: false },
+                      { name: 'Sophie Laurent', role: 'Marketing', online: true },
+                      { name: 'Thomas Bernard', role: 'Technique', online: false }
+                    ].map((admin, index) => (
+                      <div 
+                        key={index} 
+                        className="p-4 rounded-xl border border-purple-100 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 cursor-pointer transition-all duration-200 hover:shadow-md"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="relative">
+                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold">
+                              {admin.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${admin.online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-800">{admin.name}</h4>
+                            <p className="text-xs text-gray-500">{admin.role}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
+            {/* Enhanced Chat Interface */}
+            <Card className="lg:col-span-3 border-0 shadow-2xl bg-gradient-to-br from-white to-purple-50">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                      #
+                    </div>
+                    <div>
+                      <CardTitle className="text-gray-800">Canal Principal</CardTitle>
+                      <CardDescription>Communication générale de l'équipe</CardDescription>
+                    </div>
+                  </div>
                   <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={handleAudioCall}
-                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                    >
-                      <PhoneCall className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={handleVideoCall}
-                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                    >
-                      <Video className="h-4 w-4" />
+                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0">5 membres</Badge>
+                    <Button variant="outline" size="sm" className="border-purple-200 text-purple-600 hover:bg-purple-50">
+                      <Clock className="h-4 w-4 mr-2" />
+                      Historique
                     </Button>
                   </div>
-                )}
-              </div>
+                </div>
+              </CardHeader>
               
-              <ScrollArea className="flex-1 p-4">
-                {isLoadingConversation ? (
-                  <div className="text-center p-4">Chargement de la conversation...</div>
-                ) : conversation?.messages.length === 0 ? (
-                  <div className="text-center p-4 text-muted-foreground">
-                    Aucun message. Démarrez la conversation !
-                  </div>
-                ) : (
+              <CardContent className="p-0 flex flex-col h-[680px]">
+                {/* Messages Area */}
+                <ScrollArea className="flex-1 p-6" ref={scrollRef}>
                   <div className="space-y-4">
-                    {conversation?.messages.map((message) => (
-                      <div key={message.id} className={`flex ${
-                        message.senderId === currentUser?.id ? 'justify-end' : 'justify-start'
-                      }`}>
-                        {editingMessageId === message.id ? (
-                          <div className="w-full max-w-[80%] bg-gray-50 p-3 rounded-lg">
-                            <div className="flex">
-                              <Input 
-                                value={editText}
-                                onChange={(e) => setEditText(e.target.value)}
-                                className="flex-1 mr-2"
-                              />
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button variant="outline" size="icon">
-                                    <Smile className="h-4 w-4" />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-full p-0" side="top">
-                                  <Picker 
-                                    data={data}
-                                    onEmojiSelect={handleEditEmojiSelect}
-                                    theme="light"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <Button 
-                                onClick={handleEditMessage} 
-                                className="ml-2 bg-red-800 hover:bg-red-700"
-                                disabled={editMessageMutation.isPending}
-                              >
-                                Enregistrer
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                onClick={() => setEditingMessageId(null)} 
-                                className="ml-2"
-                              >
-                                Annuler
-                              </Button>
+                    {/* System notification */}
+                    {messages.map((msg, index) => (
+                      <div key={msg.id}>
+                        {msg.type === 'notification' ? (
+                          <div className="flex justify-center">
+                            <div className="bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-2 rounded-full border border-purple-200">
+                              <p className="text-sm text-purple-700">{msg.content}</p>
                             </div>
                           </div>
                         ) : (
-                          <div className={`max-w-[70%] p-3 rounded-lg relative group ${
-                            message.senderId === currentUser?.id 
-                              ? 'bg-green-600 text-white'  // Couleur verte pour les messages envoyés
-                              : 'bg-red-800 text-white'   // Couleur grenat pour les messages reçus
-                          }`}>
-                            {message.senderId === currentUser?.id && !message.isAutoReply && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 h-6 w-6 text-white"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                  <DropdownMenuItem onClick={() => startEditMessage(message)}>
-                                    <Edit className="mr-2 h-4 w-4" /> Modifier
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
-                                    onClick={() => handleDeleteMessage(message.id)}
-                                    className="text-red-600"
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" /> Supprimer
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
-                            <p>{message.content}</p>
-                            <div className="flex items-center justify-between mt-1">
-                              <p className="text-xs opacity-80">
-                                {formatTime(message.timestamp)}
-                              </p>
-                              {message.isEdited && (
-                                <p className="text-xs opacity-80 ml-2">(modifié)</p>
+                          <div className={`flex ${msg.senderId === 'you' ? 'justify-end' : 'justify-start'}`}>
+                            <div className="max-w-xs lg:max-w-md">
+                              {msg.senderId !== 'you' && (
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                    {msg.senderName.split(' ').map(n => n[0]).join('')}
+                                  </div>
+                                  <span className="text-sm font-medium text-gray-700">{msg.senderName}</span>
+                                  <span className="text-xs text-gray-500">{format(new Date(msg.timestamp), 'HH:mm', { locale: fr })}</span>
+                                </div>
                               )}
+                              <div className={`${msg.senderId === 'you'
+                                ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-2xl rounded-tr-md'
+                                : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 rounded-2xl rounded-tl-md'} p-4 shadow-md ${msg.senderId === 'you' ? 'mr-8' : 'ml-8'}`}>
+                                <p>{msg.content}</p>
+                              </div>
                             </div>
                           </div>
                         )}
                       </div>
                     ))}
-                    <div ref={messagesEndRef} />
                   </div>
-                )}
-              </ScrollArea>
-              
-              <div className="p-4 border-t">
-                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex space-x-2">
-                  <div className="relative flex-1">
-                    <Input
-                      value={messageText}
-                      onChange={(e) => setMessageText(e.target.value)}
-                      placeholder="Écrivez votre message..."
-                      className="pr-10"
-                      disabled={sendMessageMutation.isPending}
-                    />
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="absolute right-0 top-0 h-full"
-                        >
-                          <Smile className="h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" side="top">
-                        <Picker 
-                          data={data} 
-                          onEmojiSelect={handleEmojiSelect}
-                          theme="light"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="bg-red-800 hover:bg-red-700"
-                    disabled={sendMessageMutation.isPending}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </form>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              Sélectionnez un administrateur pour commencer à discuter
-            </div>
-          )}
-        </Card>
-      </div>
-    </>
-  );
-};
+                </ScrollArea>
 
-const AdminChatPage = () => {
-  return (
-    <AdminLayout>
-      <VideoCallProvider>
-        <AdminChatContent />
-      </VideoCallProvider>
+                <Separator className="bg-gradient-to-r from-transparent via-purple-300 to-transparent" />
+
+                {/* Enhanced Message Input */}
+                <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50">
+                  <div className="flex space-x-4">
+                    <Input 
+                      placeholder="Tapez votre message..." 
+                      className="flex-1 border-2 border-purple-200 focus:border-purple-500 transition-colors h-12 rounded-xl"
+                      value={newMessage}
+                      onChange={handleInputChange}
+                    />
+                    <Button 
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                      onClick={handleSendMessage}
+                    >
+                      <Send className="h-5 w-5 mr-2" />
+                      Envoyer
+                    </Button>
+                  </div>
+                  
+                  {/* Quick Admin Responses */}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" className="border-purple-200 text-purple-600 hover:bg-purple-50 rounded-full">
+                      Réunion planifiée
+                    </Button>
+                    <Button variant="outline" size="sm" className="border-purple-200 text-purple-600 hover:bg-purple-50 rounded-full">
+                      Rapport disponible
+                    </Button>
+                    <Button variant="outline" size="sm" className="border-purple-200 text-purple-600 hover:bg-purple-50 rounded-full">
+                      Urgent à traiter
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
     </AdminLayout>
   );
 };

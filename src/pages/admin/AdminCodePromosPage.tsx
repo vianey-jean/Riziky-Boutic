@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { codePromosAPI } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,391 +26,438 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import PageDataLoader from '@/components/layout/PageDataLoader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/sonner';
-import { PercentIcon, Edit, Trash2, PlusCircle, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { CodePromo } from '@/types/codePromo';
-const AUTH_BASE_URL = import.meta.env.VITE_AUTH_BASE_URL || "https://ton-backend.com";
+import { Percent, Plus, Search, Trash2, Tag, Gift, TrendingUp, Users, Calendar } from 'lucide-react';
 
+const AdminCodePromosPage: React.FC = () => {
+  const [codePromos, setCodePromos] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [productOptions, setProductOptions] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState('');
+  const [pourcentage, setPourcentage] = useState(10);
+  const [quantite, setQuantite] = useState(1);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
-const AdminCodePromosPage = () => {
-  const { user } = useAuth();
-  const [codePromos, setCodePromos] = useState<CodePromo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedCodePromo, setSelectedCodePromo] = useState<CodePromo | null>(null);
-  
-  // État pour la création d'un nouveau code promo
-  const [pourcentage, setPourcentage] = useState<number>(10);
-  const [quantite, setQuantite] = useState<number>(1);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [newQuantity, setNewQuantity] = useState<number>(0);
-  
-  // Charger les codes promos existants
-  const fetchCodePromos = async () => {
-    setLoading(true);
-    try {
-      const response = await codePromosAPI.getAll();
-      setCodePromos(response.data);
-    } catch (error) {
-      console.error("Erreur lors du chargement des codes promos:", error);
-      toast.error("Erreur lors du chargement des codes promos");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (isAuthenticated && user && user.role !== 'admin') {
+      window.location.href = '/';
+      toast.error("Accès non autorisé");
+    } else if (!isAuthenticated) {
+      window.location.href = '/login';
     }
-  };
-  
+  }, [isAuthenticated, user]);
+
   useEffect(() => {
     fetchCodePromos();
   }, []);
-  
-  // Recherche de produits
-  useEffect(() => {
-    const searchProducts = async () => {
-      if (searchQuery.length >= 3) {
-        try {
-          const response = await codePromosAPI.searchProducts(searchQuery);
-          setSearchResults(response.data);
-        } catch (error) {
-          console.error("Erreur lors de la recherche de produits:", error);
-          setSearchResults([]);
-        }
-      } else {
-        setSearchResults([]);
+
+  const fetchCodePromos = async () => {
+    setIsLoading(true);
+    try {
+      const response = await codePromosAPI.getAll();
+      if (response.data) {
+        setCodePromos(response.data);
       }
-    };
-    
-    const debounceSearch = setTimeout(searchProducts, 300);
-    return () => clearTimeout(debounceSearch);
-  }, [searchQuery]);
-  
-  // Créer un nouveau code promo
-  const handleCreateCodePromo = async () => {
-    if (!selectedProduct) {
-      toast.error("Veuillez sélectionner un produit");
+    } catch (error) {
+      console.error('Erreur lors du chargement des codes promo:', error);
+      toast.error('Erreur lors du chargement des codes promo');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const searchProducts = async (query) => {
+    if (!query || query.length < 2) {
+      setProductOptions([]);
       return;
     }
-    
+
+    try {
+      const response = await codePromosAPI.searchProducts(query);
+      if (response.data) {
+        setProductOptions(response.data);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la recherche de produits:', error);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    searchProducts(value);
+  };
+
+  const handleCreatePromoCode = async () => {
+    if (!selectedProduct) {
+      toast.error('Veuillez sélectionner un produit');
+      return;
+    }
+
+    if (pourcentage <= 0 || pourcentage > 100) {
+      toast.error('Le pourcentage doit être entre 1 et 100');
+      return;
+    }
+
+    if (quantite <= 0) {
+      toast.error('La quantité doit être positive');
+      return;
+    }
+
     try {
       await codePromosAPI.create({
-        pourcentage,
-        quantite,
-        productId: selectedProduct.id
+        productId: selectedProduct,
+        pourcentage: pourcentage,
+        quantite: quantite
       });
-      
-      toast.success("Code promo créé avec succès");
-      setIsCreateModalOpen(false);
-      resetForm();
+
+      toast.success('Code promo créé avec succès');
       fetchCodePromos();
+      setSelectedProduct('');
+      setPourcentage(10);
+      setQuantite(1);
+      setIsDialogOpen(false);
     } catch (error) {
-      console.error("Erreur lors de la création du code promo:", error);
-      toast.error("Erreur lors de la création du code promo");
+      console.error('Erreur lors de la création du code promo:', error);
+      toast.error('Erreur lors de la création du code promo');
     }
   };
-  
-  // Mettre à jour un code promo
-  const handleUpdateCodePromo = async () => {
-    if (!selectedCodePromo) return;
-    
+
+  const handleDeletePromoCode = async (id) => {
     try {
-      await codePromosAPI.update(selectedCodePromo.id, newQuantity);
-      toast.success("Code promo mis à jour avec succès");
-      setIsEditModalOpen(false);
+      await codePromosAPI.delete(id);
+      toast.success('Code promo supprimé avec succès');
       fetchCodePromos();
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du code promo:", error);
-      toast.error("Erreur lors de la mise à jour du code promo");
+      console.error('Erreur lors de la suppression du code promo:', error);
+      toast.error('Erreur lors de la suppression du code promo');
     }
   };
-  
-  // Supprimer un code promo
-  const handleDeleteCodePromo = async () => {
-    if (!selectedCodePromo) return;
-    
-    try {
-      await codePromosAPI.delete(selectedCodePromo.id);
-      toast.success("Code promo supprimé avec succès");
-      setIsDeleteModalOpen(false);
-      fetchCodePromos();
-    } catch (error) {
-      console.error("Erreur lors de la suppression du code promo:", error);
-      toast.error("Erreur lors de la suppression du code promo");
-    }
-  };
-  
-  // Réinitialiser le formulaire
-  const resetForm = () => {
-    setPourcentage(10);
-    setQuantite(1);
-    setSearchQuery('');
-    setSearchResults([]);
-    setSelectedProduct(null);
-    setNewQuantity(0);
-  };
-  
-  // Ouvrir le modal d'édition
-  const openEditModal = (codePromo: CodePromo) => {
-    setSelectedCodePromo(codePromo);
-    setNewQuantity(codePromo.quantite);
-    setIsEditModalOpen(true);
-  };
-  
-  // Ouvrir le modal de suppression
-  const openDeleteModal = (codePromo: CodePromo) => {
-    setSelectedCodePromo(codePromo);
-    setIsDeleteModalOpen(true);
-  };
-  
+
+  const filteredCodePromos = codePromos.filter(code => 
+    code.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalCodes = codePromos.length;
+  const activeCodes = codePromos.filter(code => code.quantite > 0).length;
+  const totalUsages = codePromos.reduce((sum, code) => sum + (code.initialQuantite - code.quantite), 0);
+  const averageDiscount = codePromos.length > 0 ? codePromos.reduce((sum, code) => sum + code.pourcentage, 0) / codePromos.length : 0;
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+
+                            <PageDataLoader
+               
+                  loadingMessage="Chargement de votre boutique..."
+                  loadingSubmessage="Préparation de votre expérience shopping premium..."
+                  errorMessage="Erreur de chargement des produits" fetchFunction={function (): Promise<any> {
+                    throw new Error('Function not implemented.');
+                  } } onSuccess={function (data: any): void {
+                    throw new Error('Function not implemented.');
+                  } } children={''}        >
+        
+                </PageDataLoader>
+                
+        {/* <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-pink-50">
+          <div className="text-center space-y-6">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-20 w-20 border-4 border-purple-500 border-t-transparent mx-auto"></div>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-400 to-pink-500 opacity-20 animate-pulse"></div>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Chargement des codes promo
+              </h2>
+              <p className="text-gray-600">Veuillez patienter...</p>
+            </div>
+          </div>
+        </div> */}
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
-      <div className="container mx-auto py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Gestion des Codes Promo</h1>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Créer un code promo
-          </Button>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Codes Promo</CardTitle>
-            <CardDescription>Liste des codes promo disponibles</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-800"></div>
+      <div className="space-y-8 p-6">
+        {/* Enhanced Header */}
+        <div className="bg-gradient-to-br from-purple-600 via-pink-600 to-indigo-700 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
+          
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
+              <div className="space-y-4 mb-6 lg:mb-0">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
+                    <Percent className="h-10 w-10 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2">Gestion des Codes Promo</h1>
+                    <p className="text-purple-100 text-lg">Créez et gérez vos codes de réduction</p>
+                  </div>
+                </div>
               </div>
-            ) : codePromos.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Aucun code promo disponible</p>
+              
+              <Button 
+                onClick={() => setIsDialogOpen(true)}
+                size="lg"
+                className="bg-white text-purple-600 hover:bg-purple-50 border-0 shadow-xl font-semibold px-8 py-3 rounded-xl transition-all duration-300 hover:scale-105"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Nouveau Code Promo
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="group hover:shadow-2xl transition-all duration-300 border-0 bg-gradient-to-br from-purple-50 to-pink-100 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-600 text-sm font-medium">Total Codes</p>
+                  <p className="text-3xl font-bold text-purple-800 mt-1">{totalCodes}</p>
+                </div>
+                <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-3 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow">
+                  <Tag className="h-8 w-8 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="group hover:shadow-2xl transition-all duration-300 border-0 bg-gradient-to-br from-green-50 to-emerald-100 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-600 text-sm font-medium">Codes Actifs</p>
+                  <p className="text-3xl font-bold text-green-800 mt-1">{activeCodes}</p>
+                </div>
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow">
+                  <Gift className="h-8 w-8 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="group hover:shadow-2xl transition-all duration-300 border-0 bg-gradient-to-br from-blue-50 to-cyan-100 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-600 text-sm font-medium">Utilisations</p>
+                  <p className="text-3xl font-bold text-blue-800 mt-1">{totalUsages}</p>
+                </div>
+                <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-3 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow">
+                  <Users className="h-8 w-8 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="group hover:shadow-2xl transition-all duration-300 border-0 bg-gradient-to-br from-orange-50 to-red-100 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-600 text-sm font-medium">Remise Moyenne</p>
+                  <p className="text-3xl font-bold text-orange-800 mt-1">{averageDiscount.toFixed(1)}%</p>
+                </div>
+                <div className="bg-gradient-to-br from-orange-500 to-red-600 p-3 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow">
+                  <TrendingUp className="h-8 w-8 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Enhanced Search */}
+        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b">
+            <CardTitle className="flex items-center text-gray-800">
+              <Search className="h-5 w-5 mr-2 text-gray-600" />
+              Rechercher des codes promo
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <Input
+              placeholder="Rechercher un code..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-12 text-lg border-2 border-gray-200 focus:border-purple-500 transition-colors"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Enhanced Codes List */}
+        <Card className="border-0 shadow-xl bg-white">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b">
+            <CardTitle className="text-gray-800">
+              Liste des Codes Promo ({filteredCodePromos.length})
+            </CardTitle>
+            <CardDescription>
+              Gérez vos codes de réduction
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {filteredCodePromos.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="bg-gradient-to-br from-purple-100 to-pink-200 p-8 rounded-3xl w-fit mx-auto mb-6">
+                  <Percent className="h-16 w-16 text-purple-500 mx-auto" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-700 mb-2">Aucun code promo trouvé</h3>
+                <p className="text-gray-500 mb-6">Créez votre premier code de réduction</p>
+                <Button 
+                  onClick={() => setIsDialogOpen(true)}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer un code promo
+                </Button>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-<TableRow>
-  <TableHead className="text-center text-red-600 font-bold">Code</TableHead>
-  <TableHead className="text-center text-red-600 font-bold">Pourcentage</TableHead>
-  <TableHead className="text-center text-red-600 font-bold">Quantité</TableHead>
-  <TableHead className="text-center text-red-600 font-bold">Produit</TableHead>
-  <TableHead className="text-center text-red-600 font-bold">Actions</TableHead>
-</TableRow>
-
-                </TableHeader>
-                <TableBody>
-                  {codePromos.map((codePromo) => (
-                    <TableRow key={codePromo.id}>
-                      <TableCell className="font-medium">{codePromo.code}</TableCell>
-                      <TableCell>{codePromo.pourcentage}%</TableCell>
-                      <TableCell>
-                        <Badge variant={codePromo.quantite > 0 ? "outline" : "destructive"}>
-                          {codePromo.quantite}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{codePromo.productName || codePromo.productId}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" onClick={() => openEditModal(codePromo)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => openDeleteModal(codePromo)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="p-6">
+                <div className="rounded-2xl border border-gray-200 overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
+                      <TableRow className="border-b-2 border-gray-200">
+                        <TableHead className="font-bold text-gray-700">Code</TableHead>
+                        <TableHead className="font-bold text-gray-700">Produit</TableHead>
+                        <TableHead className="font-bold text-gray-700">Remise</TableHead>
+                        <TableHead className="font-bold text-gray-700">Utilisations restantes</TableHead>
+                        <TableHead className="text-right font-bold text-gray-700">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCodePromos.map((codePromo) => (
+                        <TableRow 
+                          key={codePromo.id} 
+                          className="hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-all duration-200 border-b border-gray-100"
+                        >
+                          <TableCell className="font-mono font-bold text-purple-700 bg-purple-50 rounded-lg mx-1">
+                            {codePromo.code}
+                          </TableCell>
+                          <TableCell className="text-gray-700">{codePromo.productId}</TableCell>
+                          <TableCell>
+                            <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0">
+                              -{codePromo.pourcentage}%
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={codePromo.quantite > 0 ? "outline" : "destructive"} className="font-semibold">
+                              {codePromo.quantite}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeletePromoCode(codePromo.id)}
+                              className="border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
-        
-        {/* Modal de création */}
-        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Créer un nouveau code promo</DialogTitle>
-              <DialogDescription>
-                Remplissez le formulaire pour créer un nouveau code promo
+
+        {/* Enhanced Creation Dialog */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-2xl border-0 shadow-2xl">
+            <DialogHeader className="border-b pb-4">
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Créer un nouveau code promo
+              </DialogTitle>
+              <DialogDescription className="text-gray-600">
+                Générez automatiquement un code de réduction pour un produit
               </DialogDescription>
             </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="grid gap-4">
-                <Label htmlFor="pourcentage">Pourcentage de réduction</Label>
-                <div className="flex items-center">
-                  <Input
-                    id="pourcentage"
-                    type="number"
-                    min="1"
-                    max="99"
-                    value={pourcentage}
-                    onChange={(e) => setPourcentage(parseInt(e.target.value))}
-                    className="mr-2"
-                  />
-                  <span>%</span>
-                </div>
-              </div>
-              
-              <div className="grid gap-4">
-                <Label htmlFor="quantite">Nombre de codes disponibles</Label>
+
+            <div className="space-y-6 py-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-700">Rechercher un produit</Label>
                 <Input
-                  id="quantite"
-                  type="number"
-                  min="1"
-                  value={quantite}
-                  onChange={(e) => setQuantite(parseInt(e.target.value))}
+                  placeholder="Tapez le nom du produit..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="h-12 border-2 focus:border-purple-500 transition-colors"
                 />
               </div>
-              
-              <div className="grid gap-4">
-                <Label htmlFor="produit">Produit applicable</Label>
-                <div className="relative">
-                  <div className="flex items-center">
-                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+
+              {productOptions.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-gray-700">Sélectionner un produit</Label>
+                  <select
+                    value={selectedProduct}
+                    onChange={(e) => setSelectedProduct(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition-colors"
+                  >
+                    <option value="">Choisir un produit</option>
+                    {productOptions.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name} {product.price ? `- ${product.price}€` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-gray-700">Pourcentage de remise</Label>
+                  <div className="flex items-center space-x-2">
                     <Input
-                      id="produit"
-                      placeholder="Rechercher un produit (min. 3 caractères)"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-8"
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={pourcentage}
+                      onChange={(e) => setPourcentage(Number(e.target.value))}
+                      className="h-12 border-2 focus:border-purple-500 transition-colors"
                     />
+                    <span className="text-purple-600 font-bold text-lg">%</span>
                   </div>
-                  
-                  {searchResults.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
-                      {searchResults.map(product => (
-                        <div 
-                          key={product.id}
-                          className="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
-                          onClick={() => {
-                            setSelectedProduct(product);
-                            setSearchQuery(product.name);
-                            setSearchResults([]);
-                          }}
-                        >
-                          <img 
-                            src={`${AUTH_BASE_URL}${product.image}`} 
-                            alt={product.name}
-                            className="w-10 h-10 object-cover rounded mr-2"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
-                            }}
-                          />
-                          <div className="flex-1">
-                            <div>{product.name}</div>
-                            <div className="text-sm text-gray-500">{product.price} €</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
-                
-                {selectedProduct && (
-                  <div className="mt-2 p-2 border rounded-md">
-                    <div className="flex items-center">
-                      <img 
-                        src={`${AUTH_BASE_URL}${selectedProduct.image}`} 
-                        alt={selectedProduct.name}
-                        className="w-12 h-12 object-cover rounded mr-3"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = `${AUTH_BASE_URL}/uploads/placeholder.jpg`;
-                        }}
-                      />
-                      <div>
-                        <div className="font-medium">{selectedProduct.name}</div>
-                        <div className="text-sm text-gray-500">{selectedProduct.price} €</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Annuler</Button>
-              </DialogClose>
-              <Button onClick={handleCreateCodePromo}>Créer</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Modal d'édition */}
-        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Modifier le code promo</DialogTitle>
-              <DialogDescription>
-                Modifiez la quantité disponible pour ce code promo
-              </DialogDescription>
-            </DialogHeader>
-            
-            {selectedCodePromo && (
-              <div className="space-y-4 py-4">
-                <div className="p-3 bg-muted rounded-md">
-                  <div className="font-medium">Code: {selectedCodePromo.code}</div>
-                  <div>Réduction: {selectedCodePromo.pourcentage}%</div>
-                </div>
-                
-                <div className="grid gap-4">
-                  <Label htmlFor="newQuantity">Quantité disponible</Label>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-gray-700">Nombre d'utilisations</Label>
                   <Input
-                    id="newQuantity"
                     type="number"
-                    min="0"
-                    value={newQuantity}
-                    onChange={(e) => setNewQuantity(parseInt(e.target.value))}
+                    min="1"
+                    value={quantite}
+                    onChange={(e) => setQuantite(Number(e.target.value))}
+                    className="h-12 border-2 focus:border-purple-500 transition-colors"
                   />
                 </div>
               </div>
-            )}
-            
-            <DialogFooter>
+            </div>
+
+            <DialogFooter className="border-t pt-4">
               <DialogClose asChild>
-                <Button variant="outline">Annuler</Button>
+                <Button variant="outline" className="px-6">
+                  Annuler
+                </Button>
               </DialogClose>
-              <Button onClick={handleUpdateCodePromo}>Enregistrer</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Modal de suppression */}
-        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Supprimer le code promo</DialogTitle>
-              <DialogDescription>
-                Êtes-vous sûr de vouloir supprimer ce code promo ? Cette action est irréversible.
-              </DialogDescription>
-            </DialogHeader>
-            
-            {selectedCodePromo && (
-              <div className="p-3 bg-muted rounded-md my-4">
-                <div className="font-medium">Code: {selectedCodePromo.code}</div>
-                <div>Réduction: {selectedCodePromo.pourcentage}%</div>
-                <div>Quantité: {selectedCodePromo.quantite}</div>
-              </div>
-            )}
-            
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Annuler</Button>
-              </DialogClose>
-              <Button variant="destructive" onClick={handleDeleteCodePromo}>
-                Supprimer
+              <Button
+                onClick={handleCreatePromoCode}
+                disabled={!selectedProduct}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Créer le code
               </Button>
             </DialogFooter>
           </DialogContent>

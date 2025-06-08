@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from './AdminLayout';
@@ -9,12 +8,14 @@ import { flashSaleAPI } from '@/services/flashSaleAPI';
 import { productsAPI } from '@/services/productsAPI';
 import { FlashSaleForm } from '@/components/admin/FlashSaleForm';
 import { Plus, Clock, Play, Pause, Trash2, Edit, Flame } from 'lucide-react';
+import PageDataLoader from '@/components/layout/PageDataLoader';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const AdminFlashSalesPage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingFlashSale, setEditingFlashSale] = useState(null);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -24,6 +25,7 @@ const AdminFlashSalesPage: React.FC = () => {
       const response = await flashSaleAPI.getAll();
       return response.data;
     },
+    enabled: dataLoaded,
   });
 
   const { data: products = [] } = useQuery({
@@ -32,7 +34,24 @@ const AdminFlashSalesPage: React.FC = () => {
       const response = await productsAPI.getAll();
       return response.data;
     },
+    enabled: dataLoaded,
   });
+
+  const loadFlashSalesData = async () => {
+    const [flashSalesResponse, productsResponse] = await Promise.all([
+      flashSaleAPI.getAll(),
+      productsAPI.getAll()
+    ]);
+    return { flashSales: flashSalesResponse.data, products: productsResponse.data };
+  };
+
+  const handleDataSuccess = () => {
+    setDataLoaded(true);
+  };
+
+  const handleMaxRetriesReached = () => {
+    toast({ title: 'Erreur de connexion', description: 'Impossible de charger les données', variant: 'destructive' });
+  };
 
   const deleteMutation = useMutation({
     mutationFn: flashSaleAPI.delete,
@@ -104,13 +123,18 @@ const AdminFlashSalesPage: React.FC = () => {
     setEditingFlashSale(null);
   };
 
-  if (isLoading) {
+  if (!dataLoaded) {
     return (
       <AdminLayout>
-        <div className="text-center py-20">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto mb-6"></div>
-          <h2 className="text-xl font-semibold">Chargement des ventes flash...</h2>
-        </div>
+        <PageDataLoader
+          fetchFunction={loadFlashSalesData}
+          onSuccess={handleDataSuccess}
+          onMaxRetriesReached={handleMaxRetriesReached}
+          loadingMessage="Chargement des ventes flash..."
+          loadingSubmessage="Préparation de votre panel d'administration..."
+          errorMessage="Erreur de chargement des ventes flash"
+        >
+        </PageDataLoader>
       </AdminLayout>
     );
   }

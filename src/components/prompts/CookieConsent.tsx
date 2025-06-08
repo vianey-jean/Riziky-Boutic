@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Cookie, X, ExternalLink, Shield } from 'lucide-react';
+import { Cookie, X, ExternalLink, Shield, Sparkles, Lock } from 'lucide-react';
 import { toast } from "sonner";
 
 // Interface pour les préférences de cookies
@@ -155,145 +154,168 @@ const CookieConsent: React.FC = () => {
     <AnimatePresence>
       {showConsent && (
         <motion.div
-          className="fixed inset-x-0 bottom-0 z-50 p-4"
+          className="fixed inset-x-0 bottom-0 z-50 p-3"
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.4, type: "spring", damping: 25 }}
         >
-          <div className="max-w-4xl mx-auto bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 p-6">
-            <div className="flex items-start">
-              <div className="hidden sm:flex h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 items-center justify-center flex-shrink-0 mr-4">
-                <Cookie className="h-6 w-6 text-red-600 dark:text-red-400" />
-              </div>
+          <div className="max-w-3xl mx-auto bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 p-6 relative overflow-hidden">
+            {/* Éléments décoratifs animés - réduits */}
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-red-500/10 to-pink-500/10 rounded-full -translate-y-12 translate-x-12"></div>
+            <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-blue-500/10 to-purple-500/10 rounded-full translate-y-10 -translate-x-10"></div>
+            
+            <div className="flex items-start relative z-10">
+              <motion.div 
+                className="hidden sm:flex h-12 w-12 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 items-center justify-center flex-shrink-0 mr-4 shadow-lg"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.2, type: "spring", damping: 15 }}
+              >
+                <Cookie className="h-6 w-6 text-white" />
+              </motion.div>
               
               <div className="flex-1">
                 <div className="flex justify-between items-start">
-                  <h3 className="text-lg font-semibold mb-2">Notre site utilise des cookies</h3>
-                  <button onClick={dismiss} className="text-neutral-400 hover:text-neutral-600">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <h3 className="text-lg font-bold mb-1 bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                      Notre site utilise des cookies
+                    </h3>
+                  </motion.div>
+                  <motion.button 
+                    onClick={dismiss} 
+                    className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-all duration-300 hover:scale-110 p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 ml-2"
+                    aria-label="Fermer"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     <X className="h-5 w-5" />
-                  </button>
+                  </motion.button>
                 </div>
                 
-                <div className="flex items-center gap-1 mb-4 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 p-2 rounded-md">
-                  <Shield className="h-4 w-4" />
-                  <span>Conforme au RGPD et à la directive ePrivacy</span>
-                </div>
-                
-                <p className="text-neutral-600 dark:text-neutral-300 mb-4">
-                  Nous utilisons des cookies pour améliorer votre expérience de navigation, 
-                  personnaliser le contenu et les publicités, fournir des fonctionnalités de 
-                  médias sociaux et analyser notre trafic. Nous partageons également des informations 
-                  sur votre utilisation de notre site avec nos partenaires. Vous avez le droit de contrôler vos données personnelles.
-                </p>
-                
-                {showDetails ? (
-                  <div className="mb-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Cookies essentiels</p>
-                        <p className="text-sm text-neutral-500">Nécessaires au fonctionnement du site</p>
-                      </div>
-                      <input 
-                        type="checkbox" 
-                        checked={preferences.essential} 
-                        disabled 
-                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Cookies de performance</p>
-                        <p className="text-sm text-neutral-500">Analyse des visites pour améliorer le site</p>
-                      </div>
-                      <input 
-                        type="checkbox" 
-                        checked={preferences.performance} 
-                        onChange={() => togglePreference('performance')} 
-                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
-                        aria-label="Accepter les cookies de performance"
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Cookies fonctionnels</p>
-                        <p className="text-sm text-neutral-500">Se souvenir de vos préférences</p>
-                      </div>
-                      <input 
-                        type="checkbox" 
-                        checked={preferences.functional} 
-                        onChange={() => togglePreference('functional')} 
-                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
-                        aria-label="Accepter les cookies fonctionnels"
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Cookies de publicité</p>
-                        <p className="text-sm text-neutral-500">Personnalisation des publicités</p>
-                      </div>
-                      <input 
-                        type="checkbox" 
-                        checked={preferences.targeting} 
-                        onChange={() => togglePreference('targeting')} 
-                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
-                        aria-label="Accepter les cookies de publicité"
-                      />
-                    </div>
+                <motion.div 
+                  className="flex items-center gap-2 mb-4 text-xs bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-700 dark:text-blue-300 p-2 rounded-lg border border-blue-200 dark:border-blue-800"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <div className="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <Shield className="h-3 w-3 text-white" />
                   </div>
-                ) : null}
+                  <div className="flex items-center gap-1">
+                    <Lock className="h-3 w-3" />
+                    <span className="font-medium">Conforme au RGPD</span>
+                  </div>
+                </motion.div>
                 
-                <div className="flex flex-col sm:flex-row gap-3 items-center">
+                <motion.p 
+                  className="text-neutral-600 dark:text-neutral-300 mb-4 leading-relaxed text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Nous utilisons des cookies pour améliorer votre expérience et analyser notre trafic.
+                </motion.p>
+                
+                {showDetails && (
+                  <motion.div 
+                    className="mb-4 space-y-3"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {[
+                      { key: 'essential', title: 'Cookies essentiels', desc: 'Nécessaires au fonctionnement', disabled: true, color: 'from-green-500 to-emerald-500' },
+                      { key: 'performance', title: 'Cookies de performance', desc: 'Analyse des visites', disabled: false, color: 'from-blue-500 to-cyan-500' },
+                      { key: 'functional', title: 'Cookies fonctionnels', desc: 'Préférences utilisateur', disabled: false, color: 'from-purple-500 to-violet-500' },
+                      { key: 'targeting', title: 'Cookies de publicité', desc: 'Publicités personnalisées', disabled: false, color: 'from-orange-500 to-red-500' }
+                    ].map((cookie, index) => (
+                      <motion.div 
+                        key={cookie.key}
+                        className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.6 + index * 0.1 }}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 bg-gradient-to-r ${cookie.color} rounded-lg flex items-center justify-center`}>
+                            <Sparkles className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-white text-sm">{cookie.title}</p>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400">{cookie.desc}</p>
+                          </div>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={preferences[cookie.key as keyof typeof preferences] as boolean} 
+                          disabled={cookie.disabled}
+                          onChange={() => !cookie.disabled && togglePreference(cookie.key as keyof Omit<CookiePreferences, 'consentDate' | 'version'>)} 
+                          className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                          aria-label={`Accepter les ${cookie.title.toLowerCase()}`}
+                        />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+                
+                <motion.div 
+                  className="flex flex-col sm:flex-row gap-3 items-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
                   <Button 
                     variant="default" 
-                    className="w-full sm:w-auto bg-red-600 hover:bg-red-700" 
+                    className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-lg px-6 py-2 font-semibold text-sm"
                     onClick={acceptAll}
                   >
-                    Accepter tous les cookies
+                    <Cookie className="h-4 w-4 mr-2" />
+                    Accepter tous
                   </Button>
                   
                   <Button 
                     variant="outline" 
-                    className="w-full sm:w-auto" 
+                    className="w-full sm:w-auto border-2 border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 text-gray-700 transition-all duration-300 rounded-lg px-4 py-2 font-medium text-sm"
                     onClick={showDetails ? saveCustomPreferences : acceptEssential}
                   >
-                    {showDetails ? 'Enregistrer mes préférences' : 'Accepter uniquement les cookies essentiels'}
+                    {showDetails ? 'Enregistrer' : 'Essentiels uniquement'}
                   </Button>
                   
                   <Button
                     variant="link"
                     onClick={() => setShowDetails(!showDetails)}
-                    className="text-sm text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                    className="text-xs text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 font-medium"
                   >
-                    {showDetails ? 'Masquer les détails' : 'Personnaliser mes choix'}
+                    {showDetails ? 'Masquer' : 'Personnaliser'}
                   </Button>
-                </div>
+                </motion.div>
                 
-                <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-500">
-                  <Link 
-                    to="/politique-cookies" 
-                    className="flex items-center hover:text-neutral-700 dark:hover:text-neutral-200"
-                  >
-                    Politique de cookies <ExternalLink className="h-3 w-3 ml-1" />
-                  </Link>
-                  <span>•</span>
-                  <Link 
-                    to="/politique-confidentialite" 
-                    className="flex items-center hover:text-neutral-700 dark:hover:text-neutral-200"
-                  >
-                    Politique de confidentialité <ExternalLink className="h-3 w-3 ml-1" />
-                  </Link>
-                  <span>•</span>
-                  <Link 
-                    to="/mentions-legales" 
-                    className="flex items-center hover:text-neutral-700 dark:hover:text-neutral-200"
-                  >
-                    Mentions légales <ExternalLink className="h-3 w-3 ml-1" />
-                  </Link>
-                </div>
+                <motion.div 
+                  className="mt-4 flex flex-wrap gap-3 text-xs text-neutral-500 dark:text-neutral-400"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  {[
+                    { to: "/politique-cookies", text: "Politique de cookies" },
+                    { to: "/politique-confidentialite", text: "Confidentialité" },
+                    { to: "/mentions-legales", text: "Mentions légales" }
+                  ].map((link, index) => (
+                    <Link 
+                      key={index}
+                      to={link.to} 
+                      className="flex items-center hover:text-red-600 dark:hover:text-red-400 transition-colors duration-300 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      {link.text} <ExternalLink className="h-2 w-2 ml-1" />
+                    </Link>
+                  ))}
+                </motion.div>
               </div>
             </div>
           </div>

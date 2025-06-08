@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface DataRetryLoaderProps<T> {
   fetchFunction: () => Promise<T>;
@@ -14,6 +15,9 @@ interface DataRetryLoaderProps<T> {
   loadingComponent?: React.ReactNode;
   errorMessage?: string;
   children?: React.ReactNode;
+  loadingVariant?: 'default' | 'boutique' | 'elegant' | 'premium';
+  loadingMessage?: string;
+  loadingSubmessage?: string;
 }
 
 export function DataRetryLoader<T>({
@@ -24,7 +28,10 @@ export function DataRetryLoader<T>({
   retryInterval = 5000,
   loadingComponent,
   errorMessage = "Erreur de chargement des données",
-  children
+  children,
+  loadingVariant = 'boutique',
+  loadingMessage = "Chargement de votre boutique...",
+  loadingSubmessage = "Connexion au serveur en cours..."
 }: DataRetryLoaderProps<T>) {
   const [isLoading, setIsLoading] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
@@ -83,36 +90,36 @@ export function DataRetryLoader<T>({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center p-8">
-        {loadingComponent || (
-          <>
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mb-4"></div>
-            <p className="text-gray-600">
-              Chargement des données... {retryCount > 0 && `(Tentative ${retryCount + 1}/${maxRetries})`}
-            </p>
-          </>
-        )}
-      </div>
+      loadingComponent || (
+        <LoadingSpinner
+          variant={loadingVariant}
+          size="lg"
+          message={`${loadingMessage} ${retryCount > 0 ? `(Tentative ${retryCount + 1}/${maxRetries})` : ''}`}
+          submessage={loadingSubmessage}
+        />
+      )
     );
   }
 
   if (hasError) {
     return (
-      <Alert className="border-red-200 bg-red-50">
-        <AlertCircle className="h-4 w-4 text-red-600" />
-        <AlertDescription className="flex items-center justify-between">
-          <span>{errorMessage}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleManualRetry}
-            className="ml-4"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Réessayer
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <div className="flex flex-col items-center justify-center p-8">
+        <Alert className="border-red-200 bg-red-50 dark:bg-red-950/20 max-w-md">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="flex items-center justify-between">
+            <span className="text-red-800 dark:text-red-200">{errorMessage}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManualRetry}
+              className="ml-4 border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Réessayer
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
 

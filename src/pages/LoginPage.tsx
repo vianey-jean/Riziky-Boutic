@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
 import { authAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, ShoppingBag } from 'lucide-react';
 import PasswordStrengthIndicator from '@/components/auth/PasswordStrengthIndicator';
 
 // ✅ Validation schemas
@@ -94,111 +94,174 @@ const LoginPage = () => {
 
   return (
     <Layout>
-      <div className="flex justify-center items-center min-h-[70vh]">
-        <Card className="w-[400px]">
-          <CardHeader>
-            <CardTitle>Connexion</CardTitle>
-            <CardDescription>Accédez à votre compte</CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            {step === 'email' ? (
-              <Form {...emailForm}>
-                <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4">
-                  <FormField
-                    control={emailForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              {...field}
-                              placeholder="email@example.com"
-                              onChange={(e) => field.onChange(e.target.value.trim())}
-                            />
-                            <Mail className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Chargement..." : "Continuer"}
-                  </Button>
-                </form>
-              </Form>
-            ) : (
-              <Form {...passwordForm}>
-                <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-                <p className="text-sm text-green-600 mb-4">
-                    Connecté en tant que : <strong>{userEmail}</strong>
-                </p>
-
-                  <FormField
-                    control={passwordForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Mot de passe</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              {...field}
-                              type={showPassword ? 'text' : 'password'}
-                              placeholder="********"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-0 top-0"
-                              onClick={togglePasswordVisibility}
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-5 w-5 text-muted-foreground" />
-                              ) : (
-                                <Eye className="h-5 w-5 text-muted-foreground" />
-                              )}
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                        <PasswordStrengthIndicator password={field.value} />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Connexion..." : "Se connecter"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full mt-2"
-                    onClick={() => setStep('email')}
-                    disabled={isLoading}
-                  >
-                    Modifier l'email
-                  </Button>
-                </form>
-              </Form>
-            )}
-          </CardContent>
-
-          <CardFooter className="flex flex-col gap-2">
-            <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
-              Mot de passe oublié ?
-            </Link>
-            <div className="text-sm text-muted-foreground">
-              Pas encore de compte ?{" "}
-              <Link to="/register" className="text-blue-600 hover:underline">
-                S'inscrire
-              </Link>
+      <div className="min-h-[90vh] bg-gradient-to-br from-red-50 via-white to-red-50 dark:from-red-950/20 dark:via-neutral-950 dark:to-red-950/20 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          {/* Header with Logo */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-600 to-red-700 rounded-2xl shadow-lg mb-4">
+              <ShoppingBag className="h-8 w-8 text-white" />
             </div>
-          </CardFooter>
-        </Card>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Riziky Boutique
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Connectez-vous à votre compte
+            </p>
+          </div>
+
+          <Card className="shadow-2xl border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+            <CardHeader className="space-y-1 pb-6">
+              <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
+                Connexion
+              </CardTitle>
+              <CardDescription className="text-center text-gray-600 dark:text-gray-400">
+                {step === 'email' ? 'Entrez votre adresse email' : 'Entrez votre mot de passe'}
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-6">
+              {step === 'email' ? (
+                <Form {...emailForm}>
+                  <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-6">
+                    <FormField
+                      control={emailForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            Adresse email
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                {...field}
+                                placeholder="votre@email.com"
+                                onChange={(e) => field.onChange(e.target.value.trim())}
+                                className="pl-12 h-12 border-gray-200 dark:border-gray-700 focus:border-red-500 focus:ring-red-500 rounded-xl"
+                              />
+                              <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Vérification...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          Continuer
+                          <ArrowRight className="h-4 w-4" />
+                        </div>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              ) : (
+                <Form {...passwordForm}>
+                  <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
+                    <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+                      <p className="text-sm text-green-700 dark:text-green-300 font-medium">
+                        Connecté en tant que : <span className="font-bold">{userEmail}</span>
+                      </p>
+                    </div>
+
+                    <FormField
+                      control={passwordForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            Mot de passe
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                {...field}
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                className="pl-12 pr-12 h-12 border-gray-200 dark:border-gray-700 focus:border-red-500 focus:ring-red-500 rounded-xl"
+                              />
+                              <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-2 top-1.5 h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                onClick={togglePasswordVisibility}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4 text-gray-500" />
+                                ) : (
+                                  <Eye className="h-4 w-4 text-gray-500" />
+                                )}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                          <PasswordStrengthIndicator password={field.value} />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="space-y-3">
+                      <Button 
+                        type="submit" 
+                        className="w-full h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]" 
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Connexion...
+                          </div>
+                        ) : (
+                          'Se connecter'
+                        )}
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-12 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-300"
+                        onClick={() => setStep('email')}
+                        disabled={isLoading}
+                      >
+                        ← Modifier l'email
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              )}
+            </CardContent>
+
+            <CardFooter className="flex flex-col space-y-4 pt-6">
+              <Link 
+                to="/forgot-password" 
+                className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium hover:underline transition-colors"
+              >
+                Mot de passe oublié ?
+              </Link>
+              <div className="text-sm text-center text-gray-600 dark:text-gray-400">
+                Pas encore de compte ?{" "}
+                <Link 
+                  to="/register" 
+                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-semibold hover:underline transition-colors"
+                >
+                  S'inscrire maintenant
+                </Link>
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
     </Layout>
   );

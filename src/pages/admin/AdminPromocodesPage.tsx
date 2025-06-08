@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -31,6 +30,7 @@ import { codePromosAPI, CodePromo } from '@/services/api';
 import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import PageDataLoader from '@/components/layout/PageDataLoader';
 
 // Define proper product type
 interface Product {
@@ -43,6 +43,7 @@ interface Product {
 const AdminPromocodesPage: React.FC = () => {
   const [codePromos, setCodePromos] = useState<CodePromo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [productOptions, setProductOptions] = useState<Product[]>([]);
@@ -60,6 +61,22 @@ const AdminPromocodesPage: React.FC = () => {
       navigate('/login');
     }
   }, [isAuthenticated, user, navigate]);
+
+  const loadPromoCodesData = async () => {
+    const response = await codePromosAPI.getAll();
+    return response.data;
+  };
+
+  const handleDataSuccess = (data: CodePromo[]) => {
+    setCodePromos(data);
+    setDataLoaded(true);
+    setIsLoading(false);
+  };
+
+  const handleMaxRetriesReached = () => {
+    toast.error('Impossible de charger les codes promo');
+    setIsLoading(false);
+  };
 
   useEffect(() => {
     fetchCodePromos();
@@ -165,6 +182,22 @@ const AdminPromocodesPage: React.FC = () => {
     }
   };
 
+  if (!dataLoaded) {
+    return (
+      <AdminLayout>
+        <PageDataLoader
+          fetchFunction={loadPromoCodesData}
+          onSuccess={handleDataSuccess}
+          onMaxRetriesReached={handleMaxRetriesReached}
+          loadingMessage="Chargement des codes promo..."
+          loadingSubmessage="Récupération des promotions..."
+          errorMessage="Erreur de chargement des codes promo"
+        >
+        </PageDataLoader>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
@@ -203,7 +236,7 @@ const AdminPromocodesPage: React.FC = () => {
                         <SelectContent>
                           {productOptions.map((product) => (
                             <SelectItem key={product.id} value={product.id}>
-                              {product.name} {product.price ? `- ${product.price}€` : ''}
+                              {product.name} {product.price ? `- ${Number(product.price).toFixed(2)}€` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -218,8 +251,11 @@ const AdminPromocodesPage: React.FC = () => {
                         type="number"
                         min="1"
                         max="100"
-                        value={pourcentage}
-                        onChange={(e) => setPourcentage(Number(e.target.value))}
+                        value={pourcentage || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPourcentage(val === '' ? 0 : Number(val));
+                        }}
                       />
                       <span className="ml-2">%</span>
                     </div>
@@ -230,8 +266,11 @@ const AdminPromocodesPage: React.FC = () => {
                     <Input
                       type="number"
                       min="1"
-                      value={quantite}
-                      onChange={(e) => setQuantite(Number(e.target.value))}
+                      value={quantite || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setQuantite(val === '' ? 0 : Number(val));
+                      }}
                     />
                   </div>
 
@@ -253,7 +292,7 @@ const AdminPromocodesPage: React.FC = () => {
               <CardHeader>
                 <CardTitle>Liste des codes promo</CardTitle>
                 <CardDescription>
-                  {filteredCodePromos.length} codes promo disponibles
+                  {filteredCodePromos.length || 0} codes promo disponibles
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -294,8 +333,8 @@ const AdminPromocodesPage: React.FC = () => {
                               {codePromo.code}
                             </TableCell>
                             <TableCell>{codePromo.productId}</TableCell>
-                            <TableCell>{codePromo.pourcentage}%</TableCell>
-                            <TableCell>{codePromo.quantite}</TableCell>
+                            <TableCell>{Number(codePromo.pourcentage) || 0}%</TableCell>
+                            <TableCell>{Number(codePromo.quantite) || 0}</TableCell>
                             <TableCell className="text-right">
                               <Button
                                 variant="ghost"

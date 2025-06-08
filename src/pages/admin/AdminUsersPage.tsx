@@ -25,7 +25,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import API from '@/services/api';
 import { User } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { Shield, ShieldX, LockKeyhole, Edit, Key } from 'lucide-react';
+import { Shield, ShieldX, LockKeyhole, Edit, Key, Users, Calendar, Mail } from 'lucide-react';
 
 const AdminUsersPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -87,7 +87,6 @@ const AdminUsersPage = () => {
   });
 
   const handleRoleChange = (user: User) => {
-    // Tous les admins peuvent modifier les rôles maintenant
     if (currentUser?.role !== 'admin') {
       toast({
         title: "Accès refusé",
@@ -97,7 +96,6 @@ const AdminUsersPage = () => {
       return;
     }
     
-    // Ne pas permettre la modification du compte Admin principal (id: "1")
     if (user.id === "1") {
       toast({
         title: "Action non autorisée",
@@ -138,90 +136,189 @@ const AdminUsersPage = () => {
     }
   };
 
+  const adminCount = users.filter((user: User) => user.role === 'admin').length;
+  const clientCount = users.filter((user: User) => user.role === 'client').length;
+
   return (
     <AdminLayout>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gestion des Utilisateurs</h1>
-      </div>
-      
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Date d'inscription</TableHead>
-              <TableHead>Rôle</TableHead>
-              <TableHead>Mot de passe</TableHead>
-              <TableHead>Changer le mot de passe</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user: User & { password?: string, passwordUnique?: string }, index: number) => (
-              <TableRow key={`user-${user.id}-${index}`}>
-                <TableCell className="font-medium">{user.nom}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{new Date(user.dateCreation).toLocaleDateString('fr-FR')}</TableCell>
-                <TableCell>
-                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                    user.role === 'admin' ? 'bg-red-700 text-white' : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {user.role === 'admin' ? (
-                      <><Shield className="h-3 w-3" /> Administrateur</>
-                    ) : (
-                      <><ShieldX className="h-3 w-3" /> Client</>
-                    )}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  {user.password && (
-                    <div className="flex items-center gap-1">
-                      <LockKeyhole className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm font-mono">{user.password}</span>
+      <div className="space-y-8">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-2xl p-8 border border-blue-200 dark:border-blue-800">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+            <div className="flex items-center space-x-4 mb-4 md:mb-0">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-3 rounded-2xl shadow-lg">
+                <Users className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300 bg-clip-text text-transparent">
+                  Gestion des Utilisateurs
+                </h1>
+                <p className="text-blue-600 dark:text-blue-400">
+                  Administration des comptes et permissions
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Admins</p>
+                    <p className="text-xl font-bold text-blue-700 dark:text-blue-300">{adminCount}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-green-200 dark:border-green-700">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Clients</p>
+                    <p className="text-xl font-bold text-green-700 dark:text-green-300">{clientCount}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Users Table */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="p-6 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              Liste des utilisateurs ({users.length})
+            </h2>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50 dark:bg-gray-800/50">
+                  <TableHead className="font-semibold">
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-4 w-4" />
+                      <span>Utilisateur</span>
                     </div>
-                  )}
-                  {user.passwordUnique && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <Key className="h-4 w-4 text-amber-500" />
-                      <span className="text-sm font-mono text-amber-600">{user.passwordUnique}</span>
+                  </TableHead>
+                  <TableHead className="font-semibold">
+                    <div className="flex items-center space-x-2">
+                      <Mail className="h-4 w-4" />
+                      <span>Email</span>
                     </div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleSetTempPassword(user)}
-                    className="flex gap-1 items-center"
-                  >
-                    <Edit className="h-4 w-4" /> Modifier
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  {user.id !== "1" && (
-                    <Button 
-                      variant={user.role === 'admin' ? 'destructive' : 'default'}
-                      size="sm" 
-                      onClick={() => handleRoleChange(user)}
-                      disabled={!currentUser || currentUser.role !== 'admin'}
-                    >
-                      {user.role === 'admin' ? 'Rétrograder' : 'Promouvoir'}
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  </TableHead>
+                  <TableHead className="font-semibold">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>Inscription</span>
+                    </div>
+                  </TableHead>
+                  <TableHead className="font-semibold">Rôle</TableHead>
+                  <TableHead className="font-semibold">
+                    <div className="flex items-center space-x-2">
+                      <LockKeyhole className="h-4 w-4" />
+                      <span>Mots de passe</span>
+                    </div>
+                  </TableHead>
+                  <TableHead className="font-semibold">Modifier MDP</TableHead>
+                  <TableHead className="font-semibold">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user: User & { password?: string, passwordUnique?: string }, index: number) => (
+                  <TableRow key={`user-${user.id}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
+                          user.role === 'admin' ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-blue-500 to-blue-600'
+                        }`}>
+                          {user.nom.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">{user.nom}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">ID: {user.id}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                        <span className="text-gray-900 dark:text-gray-100">{user.email}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {new Date(user.dateCreation).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+                        user.role === 'admin' 
+                          ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg' 
+                          : 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 dark:from-blue-900 dark:to-blue-800 dark:text-blue-200'
+                      }`}>
+                        {user.role === 'admin' ? (
+                          <><Shield className="h-3 w-3" /> Administrateur</>
+                        ) : (
+                          <><ShieldX className="h-3 w-3" /> Client</>
+                        )}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-2">
+                        {user.password && (
+                          <div className="flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                            <LockKeyhole className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm font-mono text-gray-700 dark:text-gray-300">{user.password}</span>
+                          </div>
+                        )}
+                        {user.passwordUnique && (
+                          <div className="flex items-center gap-2 p-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
+                            <Key className="h-4 w-4 text-amber-600" />
+                            <span className="text-sm font-mono text-amber-700 dark:text-amber-400">{user.passwordUnique}</span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleSetTempPassword(user)}
+                        className="hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-900/20"
+                      >
+                        <Edit className="h-4 w-4 mr-1" /> 
+                        Modifier
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      {user.id !== "1" && (
+                        <Button 
+                          variant={user.role === 'admin' ? 'destructive' : 'default'}
+                          size="sm" 
+                          onClick={() => handleRoleChange(user)}
+                          disabled={!currentUser || currentUser.role !== 'admin'}
+                          className="shadow-lg hover:shadow-xl transition-shadow"
+                        >
+                          {user.role === 'admin' ? 'Rétrograder' : 'Promouvoir'}
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       </div>
       
       {/* Confirmation Dialog for Role Change */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
           <DialogHeader>
-            <DialogTitle>Confirmer le changement de rôle</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-semibold">Confirmer le changement de rôle</DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
               {selectedUser?.role === 'admin'
                 ? `Êtes-vous sûr de vouloir rétrograder ${selectedUser?.nom} au rôle de client ?`
                 : `Êtes-vous sûr de vouloir promouvoir ${selectedUser?.nom} au rôle d'administrateur ?`
@@ -235,6 +332,7 @@ const AdminUsersPage = () => {
             <Button 
               onClick={confirmRoleChange}
               variant={selectedUser?.role === 'admin' ? 'destructive' : 'default'}
+              className="shadow-lg"
             >
               Confirmer
             </Button>
@@ -244,10 +342,10 @@ const AdminUsersPage = () => {
 
       {/* Dialog for Temporary Password */}
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
           <DialogHeader>
-            <DialogTitle>Définir un mot de passe temporaire</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl font-semibold">Définir un mot de passe temporaire</DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
               {`Créez un mot de passe à usage unique pour ${selectedUser?.nom}. L'utilisateur pourra l'utiliser pour réinitialiser son mot de passe.`}
             </DialogDescription>
           </DialogHeader>
@@ -257,7 +355,7 @@ const AdminUsersPage = () => {
               value={tempPassword}
               onChange={(e) => setTempPassword(e.target.value)}
               placeholder="Mot de passe à usage unique"
-              className="w-full"
+              className="w-full border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
           <DialogFooter>
@@ -267,6 +365,7 @@ const AdminUsersPage = () => {
             <Button 
               onClick={confirmTempPassword}
               disabled={!tempPassword}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg"
             >
               Enregistrer
             </Button>

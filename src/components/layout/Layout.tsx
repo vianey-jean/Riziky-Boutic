@@ -5,7 +5,6 @@ import Footer from './Footer';
 import PromoBanner from './PromoBanner';
 import BenefitsSection from './BenefitsSection';
 import PaymentBadges from './PaymentBadges';
-import SecurityInfo from './SecurityInfo';
 import LayoutPrompts from './LayoutPrompts';
 import ClientServiceChatWidget from '@/components/chat/ClientServiceChatWidget';
 import AdminServiceChatWidget from '@/components/chat/AdminServiceChatWidget';
@@ -69,11 +68,10 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
       
       <main className="flex-grow" role="main">
         {children}
-        <BenefitsSection hidePrompts={hidePrompts} />
-        <PaymentBadges hidePrompts={hidePrompts} />
+        <BenefitsSection />
+        <PaymentBadges />
       </main>
       
-      <SecurityInfo />
       <Footer />
       
       <LayoutPrompts 
