@@ -1,27 +1,29 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminLayout from './AdminLayout';
 import PageDataLoader from '@/components/layout/PageDataLoader';
+import AdminPageTitle from '@/components/admin/AdminPageTitle';
+import UserStatusCard from '@/components/admin/UserStatusCard';
+import ChatMessage from '@/components/admin/ChatMessage';
+import MessageInput from '@/components/admin/MessageInput';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Send, Edit, Trash2, Smile, PhoneCall, Video, PhoneOff } from 'lucide-react';
+import { 
+  MessageCircle, 
+  PhoneCall, 
+  Video, 
+  Users, 
+  Zap,
+  Phone,
+  VideoIcon,
+  MessageSquare,
+  UserCheck
+} from 'lucide-react';
 import { adminChatAPI, Message } from '@/services/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/ui/sonner';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import data from '@emoji-mart/data';
-import Picker from '@emoji-mart/react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { VideoCallProvider, useVideoCall } from '@/contexts/VideoCallContext';
 import CallNotification from '@/components/admin/CallNotification';
 import CallInterface from '@/components/admin/CallInterface';
@@ -187,13 +189,13 @@ const AdminChatContent = () => {
 
   // Marquer comme hors ligne au démontage du composant
   useEffect(() => {
-    // Signal that user is online when component mounts
+    // Signal que l'utilisateur est en ligne quand le composant monte
     if (currentUser) {
       adminChatAPI.setOnline();
     }
     
     return () => {
-      // Signal that user is offline when component unmounts
+      // Signal que l'utilisateur est hors ligne quand le composant démonte
       if (currentUser) {
         adminChatAPI.setOffline();
       }
@@ -280,240 +282,156 @@ const AdminChatContent = () => {
     <>
       <CallNotification />
       
-      <h1 className="text-2xl font-bold mb-6">Chat entre administrateurs</h1>
+      <AdminPageTitle 
+        title="Chat Administrateurs" 
+        icon={MessageCircle}
+        description="Communiquez en temps réel avec les autres administrateurs"
+      />
       
       <div className="grid md:grid-cols-4 gap-6 h-[70vh]">
         {/* Liste des Administrateurs */}
-        <Card className="md:col-span-1 flex flex-col">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">Administrateurs</h2>
+        <Card className="md:col-span-1 flex flex-col bg-gradient-to-b from-white to-gray-50">
+          <div className="p-4 border-b bg-gradient-to-r from-blue-500 to-purple-600">
+            <div className="flex items-center space-x-2">
+              <Users className="h-5 w-5 text-white" />
+              <h2 className="font-semibold text-white">Administrateurs</h2>
+              <div className="ml-auto bg-white/20 px-2 py-1 rounded-full">
+                <span className="text-xs text-white font-medium">{admins.length}</span>
+              </div>
+            </div>
           </div>
           
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 p-2">
             {isLoadingAdmins ? (
-              <div className="p-4 text-center">Chargement des administrateurs...</div>
+              <div className="p-4 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                <p className="mt-2 text-sm text-gray-500">Chargement...</p>
+              </div>
             ) : admins.length === 0 ? (
               <div className="p-4 text-center text-muted-foreground">
-                Aucun autre administrateur
+                <UserCheck className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+                <p>Aucun autre administrateur</p>
               </div>
             ) : (
-              admins.map((admin: AdminUser) => (
-                <div key={`admin-${admin.id}-${admin.email}`}>
-                  <button
-                    className={`w-full p-3 flex items-center hover:bg-gray-100 ${
-                      selectedAdmin?.id === admin.id ? 'bg-gray-100' : ''
-                    }`}
+              <div className="space-y-2">
+                {admins.map((admin: AdminUser) => (
+                  <UserStatusCard
+                    key={`admin-${admin.id}-${admin.email}`}
+                    user={admin}
+                    isSelected={selectedAdmin?.id === admin.id}
                     onClick={() => setSelectedAdmin(admin)}
+                    showActions={selectedAdmin?.id === admin.id && admin.isOnline}
                   >
-                    <div className="relative mr-3">
-                      <div className="w-10 h-10 bg-red-800 text-white rounded-full flex items-center justify-center">
-                        {admin.nom.charAt(0)}
-                      </div>
-                      <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
-                        admin.isOnline ? 'bg-green-500' : 'bg-gray-400'
-                      }`}></div>
-                    </div>
-                    <div className="text-left">
-                      <p className="font-medium">{admin.nom}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {admin.isOnline ? 'En ligne' : `Dernier accès ${getTimeAgo(admin.lastSeen)}`}
-                      </p>
-                    </div>
-                  </button>
-                  <Separator />
-                </div>
-              ))
+                    {selectedAdmin?.id === admin.id && admin.isOnline && (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={handleAudioCall}
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 h-8 w-8"
+                        >
+                          <Phone className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={handleVideoCall}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 w-8"
+                        >
+                          <VideoIcon className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </UserStatusCard>
+                ))}
+              </div>
             )}
           </ScrollArea>
         </Card>
         
         {/* Zone de Chat */}
-        <Card className="md:col-span-3 flex flex-col">
+        <Card className="md:col-span-3 flex flex-col bg-white shadow-lg">
           {selectedAdmin ? (
             <>
-              <div className="p-4 border-b flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 bg-red-800 text-white rounded-full flex items-center justify-center">
-                      {selectedAdmin.nom.charAt(0)}
+              <div className="p-4 border-b bg-gradient-to-r from-gray-50 to-gray-100">
+                <UserStatusCard
+                  user={selectedAdmin}
+                  showActions={selectedAdmin.isOnline}
+                >
+                  {selectedAdmin.isOnline && (
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={handleAudioCall}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
+                        <PhoneCall className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={handleVideoCall}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Video className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
-                      selectedAdmin.isOnline ? 'bg-green-500' : 'bg-red-500'
-                    }`}></div>
-                  </div>
-                  <div>
-                    <h2 className="font-semibold">{selectedAdmin.nom}</h2>
-                    <p className="text-xs text-muted-foreground">
-                      {selectedAdmin.isOnline ? 'En ligne' : `Dernier accès ${getTimeAgo(selectedAdmin.lastSeen)}`}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Call buttons - only shown when admin is online */}
-                {selectedAdmin.isOnline && (
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={handleAudioCall}
-                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                    >
-                      <PhoneCall className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={handleVideoCall}
-                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                    >
-                      <Video className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
+                  )}
+                </UserStatusCard>
               </div>
               
-              <ScrollArea className="flex-1 p-4">
+              <ScrollArea className="flex-1 p-4 bg-gradient-to-b from-gray-50 to-white max-h-[70vh] overflow-y-auto">
                 {isLoadingConversation ? (
-                  <div className="text-center p-4">Chargement de la conversation...</div>
+                  <div className="text-center p-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                    <p className="mt-4 text-gray-500">Chargement de la conversation...</p>
+                  </div>
                 ) : conversation?.messages.length === 0 ? (
-                  <div className="text-center p-4 text-muted-foreground">
-                    Aucun message. Démarrez la conversation !
+                  <div className="text-center p-8 text-muted-foreground">
+                    <MessageSquare className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Aucun message</h3>
+                    <p>Démarrez la conversation en envoyant le premier message !</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {conversation?.messages.map((message) => (
-                      <div key={message.id} className={`flex ${
-                        message.senderId === currentUser?.id ? 'justify-end' : 'justify-start'
-                      }`}>
-                        {editingMessageId === message.id ? (
-                          <div className="w-full max-w-[80%] bg-gray-50 p-3 rounded-lg">
-                            <div className="flex">
-                              <Input 
-                                value={editText}
-                                onChange={(e) => setEditText(e.target.value)}
-                                className="flex-1 mr-2"
-                              />
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button variant="outline" size="icon">
-                                    <Smile className="h-4 w-4" />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-full p-0" side="top">
-                                  <Picker 
-                                    data={data}
-                                    onEmojiSelect={handleEditEmojiSelect}
-                                    theme="light"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <Button 
-                                onClick={handleEditMessage} 
-                                className="ml-2 bg-red-800 hover:bg-red-700"
-                                disabled={editMessageMutation.isPending}
-                              >
-                                Enregistrer
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                onClick={() => setEditingMessageId(null)} 
-                                className="ml-2"
-                              >
-                                Annuler
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className={`max-w-[70%] p-3 rounded-lg relative group ${
-                            message.senderId === currentUser?.id 
-                              ? 'bg-green-600 text-white'  // Couleur verte pour les messages envoyés
-                              : 'bg-red-800 text-white'   // Couleur grenat pour les messages reçus
-                          }`}>
-                            {message.senderId === currentUser?.id && !message.isAutoReply && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 h-6 w-6 text-white"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                  <DropdownMenuItem onClick={() => startEditMessage(message)}>
-                                    <Edit className="mr-2 h-4 w-4" /> Modifier
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
-                                    onClick={() => handleDeleteMessage(message.id)}
-                                    className="text-red-600"
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" /> Supprimer
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
-                            <p>{message.content}</p>
-                            <div className="flex items-center justify-between mt-1">
-                              <p className="text-xs opacity-80">
-                                {formatTime(message.timestamp)}
-                              </p>
-                              {message.isEdited && (
-                                <p className="text-xs opacity-80 ml-2">(modifié)</p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <ChatMessage
+                        key={message.id}
+                        message={message}
+                        isOwn={message.senderId === currentUser?.id}
+                        isEditing={editingMessageId === message.id}
+                        editText={editText}
+                        onEdit={handleEditMessage}
+                        onDelete={handleDeleteMessage}
+                        onStartEdit={startEditMessage}
+                        onCancelEdit={() => setEditingMessageId(null)}
+                        onEditTextChange={setEditText}
+                        onEmojiSelect={handleEditEmojiSelect}
+                        isPending={editMessageMutation.isPending}
+                      />
                     ))}
                     <div ref={messagesEndRef} />
                   </div>
                 )}
               </ScrollArea>
               
-              <div className="p-4 border-t">
-                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex space-x-2">
-                  <div className="relative flex-1">
-                    <Input
-                      value={messageText}
-                      onChange={(e) => setMessageText(e.target.value)}
-                      placeholder="Écrivez votre message..."
-                      className="pr-10"
-                      disabled={sendMessageMutation.isPending}
-                    />
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="absolute right-0 top-0 h-full"
-                        >
-                          <Smile className="h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" side="top">
-                        <Picker 
-                          data={data} 
-                          onEmojiSelect={handleEmojiSelect}
-                          theme="light"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="bg-red-800 hover:bg-red-700"
-                    disabled={sendMessageMutation.isPending}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </form>
-              </div>
+              <MessageInput
+                value={messageText}
+                onChange={setMessageText}
+                onSend={handleSendMessage}
+                onEmojiSelect={handleEmojiSelect}
+                disabled={sendMessageMutation.isPending}
+                placeholder="Écrivez votre message..."
+              />
             </>
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              Sélectionnez un administrateur pour commencer à discuter
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-gradient-to-b from-gray-50 to-white">
+              <div className="text-center">
+                <Zap className="h-20 w-20 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-xl font-medium mb-2">Sélectionnez un administrateur</h3>
+                <p className="text-gray-500">Choisissez un administrateur dans la liste pour commencer à discuter</p>
+              </div>
             </div>
           )}
         </Card>
@@ -528,7 +446,6 @@ const AdminChatPage = () => {
       <VideoCallProvider>
         <PageDataLoader
           fetchFunction={async () => {
-            // Simuler une vérification d'authentification et de données
             await new Promise(resolve => setTimeout(resolve, 1000));
             return { success: true };
           }}

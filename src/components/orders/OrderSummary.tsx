@@ -6,6 +6,7 @@ import { formatPrice, formatDate } from '@/lib/utils';
 import OrderStatusBadge from '@/components/orders/OrderStatusBadge';
 import { ChevronRight, Package } from 'lucide-react';
 import { Order } from '@/services/api';
+import { getSecureOrderId } from '@/services/secureIds';
 
 interface OrderSummaryProps {
   order: Order;
@@ -51,7 +52,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
         <div className="text-right">
           <div className="font-medium">{formatPrice(order.totalAmount)}</div>
           <Button variant="ghost" size="sm" asChild className="mt-2">
-            <Link to={`/commande/${order.id}`}>
+            <Link to={`/${getSecureOrderId(order.id)}`}>
               Détails <ChevronRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>

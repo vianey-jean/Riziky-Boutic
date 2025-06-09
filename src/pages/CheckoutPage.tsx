@@ -49,6 +49,9 @@ const DELIVERY_PRICES = {
   "Trois-Bassins": 20
 };
 
+// Constante pour le taux de taxe (20% de TVA)
+const TAX_RATE = 0.20;
+
 const CheckoutPage = () => {
   const { selectedCartItems, getCartTotal, createOrder } = useStore();
   const { user } = useAuth();
@@ -281,7 +284,11 @@ const CheckoutPage = () => {
   }, 0);
   
   const hasPromoDiscount = subtotal !== discountedSubtotal;
-  const orderTotal = discountedSubtotal + deliveryPrice;
+  
+  // Calcul des taxes (20% de TVA)
+  const taxAmount = discountedSubtotal * TAX_RATE;
+  
+  const orderTotal = discountedSubtotal + deliveryPrice + taxAmount;
   
   // URL de base pour les images
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -699,7 +706,13 @@ const CheckoutPage = () => {
                         <p className="font-semibold">-{formatPrice(subtotal - discountedSubtotal)}</p>
                       </div>
                     )}
-                    
+
+                    {/**C'est ici pour ajouter le taxe: */}
+                    <div className="flex justify-between text-gray-600">
+                      <p>TVA (20%)</p>
+                      <p className="font-semibold">{formatPrice(taxAmount)}</p>
+                    </div>
+
                     <div className="flex justify-between text-gray-600">
                       <p className="flex items-center">
                         <Truck className="h-4 w-4 mr-1" />
@@ -745,7 +758,7 @@ const CheckoutPage = () => {
                     )}
                     
                     <div className="flex justify-between font-bold text-xl pt-4 border-t-2">
-                      <p className="text-gray-900">Total</p>
+                      <p className="text-gray-900">Total TTC</p>
                       <p className="text-red-600">{formatPrice(orderTotal)}</p>
                     </div>
                   </div>

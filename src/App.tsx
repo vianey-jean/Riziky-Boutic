@@ -114,10 +114,6 @@ function AppRoutes() {
         <Route path={secureRoutes.get('/forgot-password')?.substring(1)} element={<ForgotPasswordPage />} />
         <Route path="/forgot-password" element={<Navigate to={secureRoutes.get('/forgot-password') || '/'} replace />} />
         
-        {/* Route de détail produit avec l'ID sécurisé directement dans le chemin */}
-        <Route path="/:productId" element={<ProductDetail />} />
-        <Route path="/produit/:productId" element={<Navigate to="/:productId" replace />} />
-        
         <Route path="/categorie/:categoryName" element={<CategoryPage />} />
         
         {/* Pages d'information */}
@@ -196,12 +192,6 @@ function AppRoutes() {
           </SecureRoute>
         } />
         <Route path="/commandes" element={<Navigate to={secureRoutes.get('/commandes') || '/'} replace />} />
-        
-        <Route path="/commande/:orderId" element={
-          <ProtectedRoute>
-            <OrderPage />
-          </ProtectedRoute>
-        } />
         
         <Route path={secureRoutes.get('/profil')?.substring(1)} element={
           <SecureRoute>
@@ -325,6 +315,18 @@ function AppRoutes() {
         
         {/* Route NotFound spécifique */}
         <Route path="/page/notfound" element={<NotFound />} />
+        
+        {/* Route sécurisée pour les détails de commande avec ID sécurisé - AVANT les produits */}
+        <Route path="/:secureOrderId" element={
+          <SecureRoute>
+            <ProtectedRoute>
+              <OrderPage />
+            </ProtectedRoute>
+          </SecureRoute>
+        } />
+        
+        {/* Route de détail produit avec l'ID sécurisé directement dans le chemin - APRÈS les commandes */}
+        <Route path="/produit/:productId" element={<ProductDetail />} />
         
         {/* Route 404 - tous les liens qui n'existent pas */}
         <Route path="*" element={<NotFound />} />
