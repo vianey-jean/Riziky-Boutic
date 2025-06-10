@@ -4,15 +4,19 @@ import { Link } from 'react-router-dom';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Product } from '@/contexts/StoreContext';
-import { getSecureProductId } from '@/services/secureIds';
+import { Product, useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { getSecureId } from '@/services/secureIds';
 import { Star, Heart, ShoppingCart, Sparkles } from 'lucide-react';
+import { toast } from '@/components/ui/sonner';
 
 interface FeaturedProductsCarouselProps {
   products: Product[];
 }
 
 const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> = ({ products }) => {
+  const { addToCart, toggleFavorite, isFavorite } = useStore();
+  const { isAuthenticated } = useAuth();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const PRODUCT_PLACEHOLDER_IMAGE = '/placeholder.svg';
 
@@ -23,7 +27,7 @@ const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> = ({ pro
   };
 
   const getSecureProductUrl = (productId: string) => {
-    return `/${getSecureProductId(productId, 'product')}`;
+    return `/produit/${getSecureId(productId, 'product')}`;
   };
 
   const calculatePromotionTimeRemaining = (endDate: string) => {
@@ -36,6 +40,33 @@ const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> = ({ pro
     const minutesRemaining = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
     
     return `${hoursRemaining}h ${minutesRemaining}m`;
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      toast.error("Vous devez être connecté pour ajouter un produit au panier");
+      return;
+    }
+    
+    addToCart(product);
+    toast.success("Produit ajouté au panier");
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      toast.error("Vous devez être connecté pour ajouter aux favoris");
+      return;
+    }
+    
+    toggleFavorite(product);
+    const isCurrentlyFavorite = isFavorite(product.id);
+    toast.success(isCurrentlyFavorite ? "Retiré des favoris" : "Ajouté aux favoris");
   };
 
   if (products.length === 0) return null;
@@ -90,10 +121,16 @@ const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> = ({ pro
                           </Badge>
                         )}
                         <div className="flex space-x-2">
-                          <div className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 cursor-pointer">
-                            <Heart className="h-4 w-4 text-gray-600 dark:text-gray-300 hover:text-red-500 transition-colors" />
+                          <div 
+                            className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 cursor-pointer"
+                            onClick={(e) => handleToggleFavorite(e, product)}
+                          >
+                            <Heart className={`h-4 w-4 transition-colors ${isFavorite(product.id) ? 'text-red-500 fill-red-500' : 'text-gray-600 dark:text-gray-300 hover:text-red-500'}`} />
                           </div>
-                          <div className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 cursor-pointer">
+                          <div 
+                            className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 cursor-pointer"
+                            onClick={(e) => handleAddToCart(e, product)}
+                          >
                             <ShoppingCart className="h-4 w-4 text-gray-600 dark:text-gray-300 hover:text-blue-500 transition-colors" />
                           </div>
                         </div>
@@ -148,7 +185,10 @@ const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> = ({ pro
                       </div>
 
                       {/* Quick add button */}
-                      <button className="w-full mt-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2">
+                      <button 
+                        className="w-full mt-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2"
+                        onClick={(e) => handleAddToCart(e, product)}
+                      >
                         <ShoppingCart className="h-4 w-4" />
                         <span>Ajouter au panier</span>
                       </button>

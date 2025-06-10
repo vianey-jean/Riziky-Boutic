@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -152,10 +151,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
       navigator.share({
         title: product.name,
         text: product.description,
-        url: window.location.origin + `/${secureId}`
+        url: window.location.origin + `/produit/${secureId}`
       });
     } else {
-      navigator.clipboard.writeText(window.location.origin + `/${secureId}`);
+      navigator.clipboard.writeText(window.location.origin + `/produit/${secureId}`);
       notificationService.success("Lien copié", "Le lien du produit a été copié dans le presse-papiers");
     }
   };
@@ -194,7 +193,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <Card className={`overflow-hidden ${heightClasses[size]} flex flex-col border-0 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl bg-gradient-to-br from-white to-gray-50 dark:from-neutral-900 dark:to-black ${featured ? 'ring-2 ring-gradient-to-r from-red-500 to-pink-500 shadow-2xl' : ''}`}>
           {/* Image Container with Enhanced Effects */}
           <div className="relative h-[65%] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-900 overflow-hidden rounded-t-2xl">
-            <Link to={`/${secureId}`} className="block h-full">
+            <Link to={`/produit/${secureId}`} className="block h-full">
               <AnimatePresence mode="wait">
                 {displayImages.length > 0 ? (
                   <motion.img 
@@ -330,7 +329,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           
           {/* Enhanced Product Info */}
           <CardContent className="p-4 flex flex-col flex-grow bg-white dark:bg-neutral-900">
-            <Link to={`/${secureId}`} className="block group">
+            <Link to={`/produit/${secureId}`} className="block group">
               <h3 className="font-semibold text-lg mb-2 hover:text-red-600 transition-colors line-clamp-2 text-left group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-red-500 group-hover:to-pink-500">
                 {product.name}
               </h3>

@@ -3,15 +3,19 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Product } from '@/contexts/StoreContext';
-import { getSecureProductId } from '@/services/secureIds';
+import { Product, useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { getSecureId } from '@/services/secureIds';
 import { Clock, Zap, Star, Heart, ShoppingCart, Flame } from 'lucide-react';
+import { toast } from '@/components/ui/sonner';
 
 interface PromotionalProductsGridProps {
   products: Product[];
 }
 
 const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ products }) => {
+  const { addToCart, toggleFavorite, isFavorite } = useStore();
+  const { isAuthenticated } = useAuth();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const PRODUCT_PLACEHOLDER_IMAGE = '/placeholder.svg';
 
@@ -22,7 +26,7 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
   };
 
   const getSecureProductUrl = (productId: string) => {
-    return `/${getSecureProductId(productId, 'product')}`;
+    return `/produit/${getSecureId(productId, 'product')}`;
   };
 
   const calculatePromotionTimeRemaining = (endDate: string) => {
@@ -35,6 +39,33 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
     const minutesRemaining = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
     
     return `${hoursRemaining}h ${minutesRemaining}m`;
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      toast.error("Vous devez être connecté pour ajouter un produit au panier");
+      return;
+    }
+    
+    addToCart(product);
+    toast.success("Produit ajouté au panier");
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      toast.error("Vous devez être connecté pour ajouter aux favoris");
+      return;
+    }
+    
+    toggleFavorite(product);
+    const isCurrentlyFavorite = isFavorite(product.id);
+    toast.success(isCurrentlyFavorite ? "Retiré des favoris" : "Ajouté aux favoris");
   };
 
   if (products.length === 0) return null;
@@ -103,10 +134,16 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
                         
                         {/* Action buttons overlay */}
                         <div className="absolute inset-0 flex items-center justify-center space-x-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                          <button className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:scale-110 transition-transform">
-                            <Heart className="h-5 w-5 text-red-500" />
+                          <button 
+                            className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:scale-110 transition-transform"
+                            onClick={(e) => handleToggleFavorite(e, product)}
+                          >
+                            <Heart className={`h-5 w-5 ${isFavorite(product.id) ? 'text-red-500 fill-red-500' : 'text-red-500'}`} />
                           </button>
-                          <button className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:scale-110 transition-transform">
+                          <button 
+                            className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:scale-110 transition-transform"
+                            onClick={(e) => handleAddToCart(e, product)}
+                          >
                             <ShoppingCart className="h-5 w-5 text-blue-500" />
                           </button>
                         </div>
@@ -167,7 +204,10 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
                       </div>
 
                       {/* Add to cart button */}
-                      <button className="w-full mt-6 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2 shadow-lg">
+                      <button 
+                        className="w-full mt-6 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2 shadow-lg"
+                        onClick={(e) => handleAddToCart(e, product)}
+                      >
                         <ShoppingCart className="h-5 w-5" />
                         <span>Profiter de l'offre</span>
                       </button>

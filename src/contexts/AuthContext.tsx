@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { authAPI, User } from '../services/api';
 import { UpdateProfileData } from '@/types/auth';
@@ -84,6 +83,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('maintenanceAdminBypass'); // Supprimer le marqueur admin
     setUser(null);
     toast({
       title: 'Vous êtes déconnecté',

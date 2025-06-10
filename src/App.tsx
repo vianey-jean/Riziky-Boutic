@@ -1,13 +1,16 @@
+
 import React, { useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import { Toaster } from './components/ui/sonner';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { StoreProvider } from './contexts/StoreContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import SecureRoute from './components/SecureRoute';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { initSecureRoutes, getSecureRoute } from './services/secureIds';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 
 // Composant de chargement
 import { Skeleton } from './components/ui/skeleton';
@@ -31,6 +34,9 @@ const LoadingFallback = () => (
 
 // Chargement paresseux des pages pour optimiser les performances
 const HomePage = lazy(() => import('./pages/HomePage'));
+const MaintenancePage = lazy(() => import('./pages/MaintenancePage'));
+const MaintenanceLoginPage = lazy(() => import('./pages/MaintenanceLoginPage'));
+const RegisterBlockPage = lazy(() => import('./pages/RegisterBlockPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
@@ -81,14 +87,115 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 60000, // 1 minute (données considérées fraiches pendant 1 min)
-      gcTime: 5 * 60 * 1000, // 5 minutes (conserver les données en cache 5 min)
+      staleTime: 60000,
+      gcTime: 5 * 60 * 1000,
     },
   },
 });
 
 // Initialiser les routes sécurisées
 const secureRoutes = initSecureRoutes();
+
+// Composant pour vérifier le mode maintenance
+const MaintenanceChecker = ({ children }: { children: React.ReactNode }) => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const location = useLocation();
+  const { user, isAdmin } = useAuth();
+  
+  const { data: siteSettings, isLoading, refetch } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: async () => {
+      console.log('=== VÉRIFICATION MODE MAINTENANCE ===');
+      console.log('URL de l\'API:', `${API_BASE_URL}/api/site-settings`);
+      const response = await axios.get(`${API_BASE_URL}/api/site-settings`);
+      console.log('Réponse complète des paramètres:', response.data);
+      return response.data;
+    },
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  // Recharger les paramètres à chaque changement de route
+  useEffect(() => {
+    console.log('=== CHANGEMENT DE ROUTE ===');
+    console.log('Route actuelle:', location.pathname);
+    refetch();
+  }, [location.pathname, refetch]);
+
+  if (isLoading) {
+    console.log('Chargement des paramètres en cours...');
+    return <LoadingFallback />;
+  }
+
+  // Vérifier les paramètres de maintenance
+  const isMaintenanceMode = siteSettings?.system?.maintenanceMode;
+  
+  // Vérifier si l'utilisateur est un admin connecté via maintenance-login
+  const isMaintenanceAdmin = localStorage.getItem('maintenanceAdminBypass') === 'true';
+  
+  console.log('=== ÉTAT DU MODE MAINTENANCE ===');
+  console.log('maintenanceMode dans les paramètres:', isMaintenanceMode);
+  console.log('Type de maintenanceMode:', typeof isMaintenanceMode);
+  console.log('Route actuelle:', location.pathname);
+  console.log('Utilisateur connecté:', !!user);
+  console.log('Est admin:', isAdmin);
+  console.log('Admin bypass maintenance:', isMaintenanceAdmin);
+  
+  // NOUVELLE LOGIQUE: Si l'admin a le flag maintenanceAdminBypass, on le laisse passer même si le contexte n'est pas encore mis à jour
+  if (isMaintenanceAdmin) {
+    console.log('>>> ADMIN CONNECTÉ VIA MAINTENANCE - BYPASS MODE MAINTENANCE <<<');
+    return <>{children}</>;
+  }
+  
+  // Décision de redirection
+  console.log('=== DÉCISION DE REDIRECTION ===');
+  console.log('Mode maintenance actif:', isMaintenanceMode);
+  console.log('Page actuelle:', location.pathname);
+  console.log('Est sur page maintenance-login:', location.pathname === '/maintenance-login');
+  
+  // Si le mode maintenance est activé ET qu'on n'est pas sur la page de connexion maintenance
+  if (isMaintenanceMode === true && location.pathname !== '/maintenance-login') {
+    console.log('>>> REDIRECTION VERS PAGE MAINTENANCE (TOUS UTILISATEURS) <<<');
+    return <MaintenancePage />;
+  }
+
+  // Si le mode maintenance est désactivé ET qu'on est sur la page maintenance-login, rediriger vers l'accueil
+  if (isMaintenanceMode === false && location.pathname === '/maintenance-login') {
+    console.log('>>> MODE MAINTENANCE DÉSACTIVÉ - REDIRECTION VERS ACCUEIL <<<');
+    window.location.href = '/';
+    return <LoadingFallback />;
+  }
+
+  console.log('>>> ACCÈS AUTORISÉ À LA PAGE DEMANDÉE <<<');
+  return <>{children}</>;
+};
+
+// Composant pour vérifier l'inscription
+const RegistrationChecker = ({ children }: { children: React.ReactNode }) => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  
+  const { data: siteSettings, isLoading } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/api/site-settings`);
+      return response.data;
+    },
+  });
+
+  if (isLoading) {
+    return <LoadingFallback />;
+  }
+
+  const isRegistrationEnabled = siteSettings?.system?.registrationEnabled;
+  
+  if (!isRegistrationEnabled) {
+    return <RegisterBlockPage />;
+  }
+
+  return <>{children}</>;
+};
 
 function AppRoutes() {
   const location = useLocation();
@@ -102,107 +209,208 @@ function AppRoutes() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        {/* Route pour la page de maintenance-login */}
+        <Route path="/maintenance-login" element={<MaintenanceLoginPage />} />
+        
+        {/* Route principale avec vérification de maintenance */}
+        <Route path="/" element={
+          <MaintenanceChecker>
+            <HomePage />
+          </MaintenanceChecker>
+        } />
         
         {/* Routes d'authentification sécurisées */}
-        <Route path={secureRoutes.get('/login')?.substring(1)} element={<LoginPage />} />
+        <Route path={secureRoutes.get('/login')?.substring(1)} element={
+          <MaintenanceChecker>
+            <LoginPage />
+          </MaintenanceChecker>
+        } />
         <Route path="/login" element={<Navigate to={secureRoutes.get('/login') || '/'} replace />} />
         
-        <Route path={secureRoutes.get('/register')?.substring(1)} element={<RegisterPage />} />
+        <Route path={secureRoutes.get('/register')?.substring(1)} element={
+          <MaintenanceChecker>
+            <RegistrationChecker>
+              <RegisterPage />
+            </RegistrationChecker>
+          </MaintenanceChecker>
+        } />
         <Route path="/register" element={<Navigate to={secureRoutes.get('/register') || '/'} replace />} />
         
-        <Route path={secureRoutes.get('/forgot-password')?.substring(1)} element={<ForgotPasswordPage />} />
+        <Route path={secureRoutes.get('/forgot-password')?.substring(1)} element={
+          <MaintenanceChecker>
+            <ForgotPasswordPage />
+          </MaintenanceChecker>
+        } />
         <Route path="/forgot-password" element={<Navigate to={secureRoutes.get('/forgot-password') || '/'} replace />} />
         
-        <Route path="/categorie/:categoryName" element={<CategoryPage />} />
+        <Route path="/categorie/:categoryName" element={
+          <MaintenanceChecker>
+            <CategoryPage />
+          </MaintenanceChecker>
+        } />
         
-        {/* Pages d'information */}
-        <Route path="/livraison" element={<DeliveryPage />} />
-        <Route path="/mentions-legales" element={<ReturnsPage />} />
-        <Route path="/retours" element={<ReturnsPage />} />
+        <Route path="/livraison" element={
+          <MaintenanceChecker>
+            <DeliveryPage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/mentions-legales" element={
+          <MaintenanceChecker>
+            <ReturnsPage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/retours" element={
+          <MaintenanceChecker>
+            <ReturnsPage />
+          </MaintenanceChecker>
+        } />
 
-        <Route path={secureRoutes.get('/tous-les-produits')?.substring(1)} element={<AllProductsPage />} />
+        <Route path={secureRoutes.get('/tous-les-produits')?.substring(1)} element={
+          <MaintenanceChecker>
+            <AllProductsPage />
+          </MaintenanceChecker>
+        } />
         <Route path="/tous-les-produits" element={<Navigate to={secureRoutes.get('/tous-les-produits') || '/'} replace />} />
         
 
-        {/* Routes sécurisées pour les promotions et nouveautés */}
-        <Route path={secureRoutes.get('/promotions')?.substring(1)} element={<Promotions />} />
+        <Route path={secureRoutes.get('/promotions')?.substring(1)} element={
+          <MaintenanceChecker>
+            <Promotions />
+          </MaintenanceChecker>
+        } />
         <Route path="/promotions" element={<Navigate to={secureRoutes.get('/promotions') || '/'} replace />} />
 
-        <Route path={secureRoutes.get('/nouveautes')?.substring(1)} element={<Nouveautes />} />
+        <Route path={secureRoutes.get('/nouveautes')?.substring(1)} element={
+          <MaintenanceChecker>
+            <Nouveautes />
+          </MaintenanceChecker>
+        } />
         <Route path="/nouveautes" element={<Navigate to={secureRoutes.get('/nouveautes') || '/'} replace />} />
 
-         <Route path={secureRoutes.get('/populaires')?.substring(1)} element={<Populaires />} />
+         <Route path={secureRoutes.get('/populaires')?.substring(1)} element={
+          <MaintenanceChecker>
+            <Populaires />
+          </MaintenanceChecker>
+        } />
         <Route path="/populaires" element={<Navigate to={secureRoutes.get('/populaires') || '/'} replace />} />
 
         
-        {/* Route sécurisée pour la page vente flash */}
-        <Route path={secureRoutes.get('/flash-sale/:id')?.substring(1)} element={<FlashSalePage />} />
+        <Route path={secureRoutes.get('/flash-sale/:id')?.substring(1)} element={
+          <MaintenanceChecker>
+            <FlashSalePage />
+          </MaintenanceChecker>
+        } />
         <Route path="/flash-sale/:id" element={<Navigate to={secureRoutes.get('/flash-sale/:id') || '/'} replace />} />
         
-        <Route path="/service-client" element={<CustomerServicePage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/blog" element={<BlogPage />} />
-        <Route path="/carrieres" element={<CarriersPage />} />
-        <Route path="/notre-histoire" element={<HistoryPage />} />
-        <Route path="/conditions-utilisation" element={<TermsPage />} />
-        <Route path="/politique-confidentialite" element={<PrivacyPage />} />
-        <Route path="/politique-cookies" element={<CookiesPage />} />
-        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/service-client" element={
+          <MaintenanceChecker>
+            <CustomerServicePage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/contact" element={
+          <MaintenanceChecker>
+            <ContactPage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/blog" element={
+          <MaintenanceChecker>
+            <BlogPage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/carrieres" element={
+          <MaintenanceChecker>
+            <CarriersPage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/notre-histoire" element={
+          <MaintenanceChecker>
+            <HistoryPage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/conditions-utilisation" element={
+          <MaintenanceChecker>
+            <TermsPage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/politique-confidentialite" element={
+          <MaintenanceChecker>
+            <PrivacyPage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/politique-cookies" element={
+          <MaintenanceChecker>
+            <CookiesPage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/faq" element={
+          <MaintenanceChecker>
+            <FAQPage />
+          </MaintenanceChecker>
+        } />
 
         <Route path="/chat" element={
-          <ProtectedRoute>
-            <ChatPage />
-          </ProtectedRoute>
+          <MaintenanceChecker>
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          </MaintenanceChecker>
         } />
         
-        {/* Routes protégées avec URLs sécurisées */}
         <Route path={secureRoutes.get('/panier')?.substring(1)} element={
-          <SecureRoute>
-            <ProtectedRoute>
-              <CartPage />
-            </ProtectedRoute>
-          </SecureRoute>
+          <MaintenanceChecker>
+            <SecureRoute>
+              <ProtectedRoute>
+                <CartPage />
+              </ProtectedRoute>
+            </SecureRoute>
+          </MaintenanceChecker>
         } />
         <Route path="/panier" element={<Navigate to={secureRoutes.get('/panier') || '/'} replace />} />
         
         <Route path={secureRoutes.get('/favoris')?.substring(1)} element={
-          <SecureRoute>
-            <ProtectedRoute>
-              <FavoritesPage />
-            </ProtectedRoute>
-          </SecureRoute>
+          <MaintenanceChecker>
+            <SecureRoute>
+              <ProtectedRoute>
+                <FavoritesPage />
+              </ProtectedRoute>
+            </SecureRoute>
+          </MaintenanceChecker>
         } />
         <Route path="/favoris" element={<Navigate to={secureRoutes.get('/favoris') || '/'} replace />} />
         
         <Route path={secureRoutes.get('/paiement')?.substring(1)} element={
-          <SecureRoute>
-            <ProtectedRoute>
-              <CheckoutPage />
-            </ProtectedRoute>
-          </SecureRoute>
+          <MaintenanceChecker>
+            <SecureRoute>
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            </SecureRoute>
+          </MaintenanceChecker>
         } />
         <Route path="/paiement" element={<Navigate to={secureRoutes.get('/paiement') || '/'} replace />} />
         
         <Route path={secureRoutes.get('/commandes')?.substring(1)} element={
-          <SecureRoute>
-            <ProtectedRoute>
-              <OrdersPage />
-            </ProtectedRoute>
-          </SecureRoute>
+          <MaintenanceChecker>
+            <SecureRoute>
+              <ProtectedRoute>
+                <OrdersPage />
+              </ProtectedRoute>
+            </SecureRoute>
+          </MaintenanceChecker>
         } />
         <Route path="/commandes" element={<Navigate to={secureRoutes.get('/commandes') || '/'} replace />} />
         
         <Route path={secureRoutes.get('/profil')?.substring(1)} element={
-          <SecureRoute>
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          </SecureRoute>
+          <MaintenanceChecker>
+            <SecureRoute>
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            </SecureRoute>
+          </MaintenanceChecker>
         } />
         <Route path="/profil" element={<Navigate to={secureRoutes.get('/profil') || '/'} replace />} />
         
-        {/* Pages Admin avec URLs sécurisées */}
         <Route path={secureRoutes.get('/admin/produits')?.substring(1)} element={
           <SecureRoute>
             <ProtectedRoute requireAdmin>
@@ -283,7 +491,6 @@ function AppRoutes() {
         } />
         <Route path="/admin/service-client" element={<Navigate to={secureRoutes.get('/admin/service-client') || '/'} replace />} />
         
-        {/* Ajout de la route sécurisée pour la page pub-layout */}
         <Route path={secureRoutes.get('/admin/pub-layout')?.substring(1)} element={
           <SecureRoute>
             <ProtectedRoute requireAdmin>
@@ -293,7 +500,6 @@ function AppRoutes() {
         } />
         <Route path="/admin/pub-layout" element={<Navigate to={secureRoutes.get('/admin/pub-layout') || '/'} replace />} />
         
-        {/* Ajout de la route sécurisée pour la page remboursements */}
         <Route path={secureRoutes.get('/admin/remboursements')?.substring(1)} element={
           <SecureRoute>
             <ProtectedRoute requireAdmin>
@@ -303,7 +509,6 @@ function AppRoutes() {
         } />
         <Route path="/admin/remboursements" element={<Navigate to={secureRoutes.get('/admin/remboursements') || '/'} replace />} />
         
-        {/* Ajout de la route sécurisée pour la page flash-sales admin */}
         <Route path={secureRoutes.get('/admin/flash-sales')?.substring(1)} element={
           <SecureRoute>
             <ProtectedRoute requireAdmin>
@@ -313,22 +518,24 @@ function AppRoutes() {
         } />
         <Route path="/admin/flash-sales" element={<Navigate to={secureRoutes.get('/admin/flash-sales') || '/'} replace />} />
         
-        {/* Route NotFound spécifique */}
         <Route path="/page/notfound" element={<NotFound />} />
         
-        {/* Route sécurisée pour les détails de commande avec ID sécurisé - AVANT les produits */}
         <Route path="/:secureOrderId" element={
-          <SecureRoute>
-            <ProtectedRoute>
-              <OrderPage />
-            </ProtectedRoute>
-          </SecureRoute>
+          <MaintenanceChecker>
+            <SecureRoute>
+              <ProtectedRoute>
+                <OrderPage />
+              </ProtectedRoute>
+            </SecureRoute>
+          </MaintenanceChecker>
         } />
         
-        {/* Route de détail produit avec l'ID sécurisé directement dans le chemin - APRÈS les commandes */}
-        <Route path="/produit/:productId" element={<ProductDetail />} />
+        <Route path="/produit/:productId" element={
+          <MaintenanceChecker>
+            <ProductDetail />
+          </MaintenanceChecker>
+        } />
         
-        {/* Route 404 - tous les liens qui n'existent pas */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

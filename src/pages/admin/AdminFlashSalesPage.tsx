@@ -7,10 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { flashSaleAPI } from '@/services/flashSaleAPI';
 import { productsAPI } from '@/services/productsAPI';
 import { FlashSaleForm } from '@/components/admin/FlashSaleForm';
-import { Plus, Clock, Play, Pause, Trash2, Edit, Flame } from 'lucide-react';
+import { Plus, Clock, Play, Pause, Trash2, Edit, Flame, Timer, TrendingUp, Package, Zap } from 'lucide-react';
 import PageDataLoader from '@/components/layout/PageDataLoader';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import AdminPageTitle from '@/components/admin/AdminPageTitle';
+import DataStatsCard from '@/components/admin/DataStatsCard';
 
 const AdminFlashSalesPage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -123,6 +125,13 @@ const AdminFlashSalesPage: React.FC = () => {
     setEditingFlashSale(null);
   };
 
+  // Calculate statistics
+  const activeFlashSales = flashSales.filter((sale: any) => sale.isActive);
+  const totalProducts = flashSales.reduce((acc: number, sale: any) => acc + (sale.productIds?.length || 0), 0);
+  const averageDiscount = flashSales.length > 0 
+    ? Math.round(flashSales.reduce((acc: number, sale: any) => acc + sale.discount, 0) / flashSales.length)
+    : 0;
+
   if (!dataLoaded) {
     return (
       <AdminLayout>
@@ -141,126 +150,239 @@ const AdminFlashSalesPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestion des Ventes Flash</h1>
-            <p className="text-gray-600 mt-1">Créez et gérez vos ventes flash avec compte à rebours</p>
-          </div>
-          <Button onClick={() => setIsFormOpen(true)} className="bg-red-600 hover:bg-red-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle Vente Flash
-          </Button>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+        <div className="space-y-8 p-6">
+          <AdminPageTitle 
+            title="Gestion des Ventes Flash" 
+            icon={Flame}
+            description="Créez et gérez vos ventes flash avec compte à rebours en temps réel"
+          />
 
-        <div className="grid gap-6">
-          {flashSales.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Flame className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune vente flash</h3>
-                <p className="text-gray-600 mb-4">Créez votre première vente flash pour commencer</p>
-                <Button onClick={() => setIsFormOpen(true)} className="bg-red-600 hover:bg-red-700">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Créer une vente flash
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            flashSales.map((flashSale: any) => (
-              <Card key={flashSale.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <CardTitle className="text-xl">{flashSale.title}</CardTitle>
-                        <Badge variant={flashSale.isActive ? 'default' : 'secondary'}>
-                          {flashSale.isActive ? 'Active' : 'Inactive'}
-                        </Badge>
-                        <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">
-                          -{flashSale.discount}%
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 mb-3">{flashSale.description}</p>
-                      
-                      {/* Affichage des produits sélectionnés */}
-                      <div className="bg-blue-50 p-3 rounded-lg mb-3">
-                        <p className="text-sm font-medium text-blue-800 mb-1">
-                          Produits inclus ({flashSale.productIds?.length || 0}):
-                        </p>
-                        <p className="text-xs text-blue-600">
-                          {getProductNames(flashSale.productIds || [])}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          Temps restant: {getTimeRemaining(flashSale.endDate)}
-                        </div>
-                        <div>
-                          Du {new Date(flashSale.startDate).toLocaleDateString()} au {new Date(flashSale.endDate).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(flashSale)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => flashSale.isActive 
-                          ? deactivateMutation.mutate(flashSale.id)
-                          : activateMutation.mutate(flashSale.id)
-                        }
-                        disabled={activateMutation.isPending || deactivateMutation.isPending}
-                      >
-                        {flashSale.isActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Supprimer la vente flash</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Êtes-vous sûr de vouloir supprimer cette vente flash ? Cette action est irréversible.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteMutation.mutate(flashSale.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Supprimer
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <DataStatsCard
+              title="Total Ventes Flash"
+              value={flashSales.length}
+              icon={Zap}
+              description="Campagnes créées"
+              status="info"
+            />
+            <DataStatsCard
+              title="Ventes Actives"
+              value={activeFlashSales.length}
+              icon={TrendingUp}
+              description="En cours d'exécution"
+              status="success"
+            />
+            <DataStatsCard
+              title="Produits Inclus"
+              value={totalProducts}
+              icon={Package}
+              description="Articles en promotion"
+              status="warning"
+            />
+            <DataStatsCard
+              title="Réduction Moyenne"
+              value={`${averageDiscount}%`}
+              icon={Timer}
+              description="Discount moyen"
+              status="error"
+            />
+          </div>
+
+          {/* Header Actions */}
+          <div className="flex justify-between items-center bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
+            <div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
+                Vos Campagnes Flash
+              </h2>
+              <p className="text-gray-600 mt-1 font-medium">Gérez vos offres promotionnelles limitées dans le temps</p>
+            </div>
+            <Button 
+              onClick={() => setIsFormOpen(true)} 
+              className="bg-gradient-to-r from-red-500 via-pink-500 to-red-600 hover:from-red-600 hover:via-pink-600 hover:to-red-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Nouvelle Vente Flash
+            </Button>
+          </div>
+
+          {/* Flash Sales Grid */}
+          <div className="grid gap-6">
+            {flashSales.length === 0 ? (
+              <Card className="bg-gradient-to-br from-white via-gray-50 to-blue-50 border-2 border-gray-200/60 shadow-2xl hover:shadow-3xl transition-all duration-500">
+                <CardContent className="text-center py-16">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 rounded-full blur-2xl opacity-20"></div>
+                    <Flame className="relative h-20 w-20 text-red-500 mx-auto" />
                   </div>
-                </CardHeader>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
+                    Aucune vente flash
+                  </h3>
+                  <p className="text-gray-600 text-lg mb-6 font-medium">
+                    Créez votre première vente flash pour booster vos ventes
+                  </p>
+                  <Button 
+                    onClick={() => setIsFormOpen(true)} 
+                    className="bg-gradient-to-r from-red-500 via-pink-500 to-red-600 hover:from-red-600 hover:via-pink-600 hover:to-red-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Créer une vente flash
+                  </Button>
+                </CardContent>
               </Card>
-            ))
+            ) : (
+              flashSales.map((flashSale: any) => (
+                <Card 
+                  key={flashSale.id} 
+                  className="group bg-gradient-to-br from-white via-gray-50 to-blue-50 border-2 border-gray-200/60 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  <CardHeader className="relative">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                            <div className="relative p-3 bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl shadow-lg">
+                              <Flame className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                          
+                          <div className="flex-1">
+                            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
+                              {flashSale.title}
+                            </CardTitle>
+                            <div className="flex items-center space-x-3 mt-2">
+                              <Badge 
+                                variant={flashSale.isActive ? 'default' : 'secondary'}
+                                className={`px-3 py-1 rounded-full font-semibold ${
+                                  flashSale.isActive 
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 shadow-lg' 
+                                    : 'bg-gray-100 text-gray-600 border border-gray-200'
+                                }`}
+                              >
+                                {flashSale.isActive ? '🟢 Active' : '⚪ Inactive'}
+                              </Badge>
+                              <Badge className="bg-gradient-to-r from-red-50 to-pink-50 text-red-700 border-2 border-red-200 px-3 py-1 rounded-full font-bold text-lg shadow-lg">
+                                -{flashSale.discount}% OFF
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <p className="text-gray-700 mb-4 text-lg font-medium">{flashSale.description}</p>
+                        
+                        {/* Products Section */}
+                        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 p-4 rounded-xl mb-4 border border-blue-200/60 shadow-inner">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Package className="h-5 w-5 text-blue-600" />
+                            <p className="font-bold text-blue-800 text-lg">
+                              Produits inclus ({flashSale.productIds?.length || 0}):
+                            </p>
+                          </div>
+                          <p className="text-blue-700 font-medium text-sm leading-relaxed">
+                            {getProductNames(flashSale.productIds || [])}
+                          </p>
+                        </div>
+                        
+                        {/* Time Information */}
+                        <div className="flex items-center space-x-6 text-gray-600 bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200/60">
+                          <div className="flex items-center space-x-2">
+                            <Timer className="h-5 w-5 text-orange-500" />
+                            <span className="font-semibold text-gray-800">Temps restant:</span>
+                            <span className="font-bold text-orange-600 text-lg">
+                              {getTimeRemaining(flashSale.endDate)}
+                            </span>
+                          </div>
+                          <div className="text-sm font-medium">
+                            <span className="text-gray-700">Du</span> {' '}
+                            <span className="font-semibold text-gray-800">
+                              {new Date(flashSale.startDate).toLocaleDateString()}
+                            </span> {' '}
+                            <span className="text-gray-700">au</span> {' '}
+                            <span className="font-semibold text-gray-800">
+                              {new Date(flashSale.endDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex flex-col space-y-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(flashSale)}
+                          className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-300 shadow-md hover:shadow-lg"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => flashSale.isActive 
+                            ? deactivateMutation.mutate(flashSale.id)
+                            : activateMutation.mutate(flashSale.id)
+                          }
+                          disabled={activateMutation.isPending || deactivateMutation.isPending}
+                          className={`border-2 transition-all duration-300 shadow-md hover:shadow-lg ${
+                            flashSale.isActive 
+                              ? 'bg-gradient-to-r from-orange-50 to-red-50 border-orange-200 text-orange-700 hover:from-orange-100 hover:to-red-100 hover:border-orange-300'
+                              : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300'
+                          }`}
+                        >
+                          {flashSale.isActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 text-red-700 hover:from-red-100 hover:to-pink-100 hover:border-red-300 transition-all duration-300 shadow-md hover:shadow-lg"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 shadow-2xl">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-xl font-bold text-gray-900">
+                                Supprimer la vente flash
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-700 font-medium">
+                                Êtes-vous sûr de vouloir supprimer cette vente flash ? Cette action est irréversible.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300">
+                                Annuler
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteMutation.mutate(flashSale.id)}
+                                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                              >
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {isFormOpen && (
+            <FlashSaleForm
+              flashSale={editingFlashSale}
+              products={products}
+              onClose={handleFormClose}
+            />
           )}
         </div>
-
-        {isFormOpen && (
-          <FlashSaleForm
-            flashSale={editingFlashSale}
-            products={products}
-            onClose={handleFormClose}
-          />
-        )}
       </div>
     </AdminLayout>
   );
