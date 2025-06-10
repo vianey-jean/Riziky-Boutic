@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Lock, ShoppingBag, LogIn, Wrench } from 'lucide-react';
 import { debounce } from 'lodash';
 import axios from 'axios';
+import { getSecureRoute } from '@/services/secureIds';
 
 const emailSchema = z.object({
   email: z.string().email('Email invalide'),

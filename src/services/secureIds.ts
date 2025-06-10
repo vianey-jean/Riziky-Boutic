@@ -1,3 +1,4 @@
+
 import { nanoid } from 'nanoid';
 
 // Stockage en mémoire des mappings entre IDs sécurisés et IDs réels
@@ -241,7 +242,9 @@ export const initSecureRoutes = () => {
     // Ajout des nouvelles routes
     '/promotions',
     '/nouveautes',
-    '/populaires'
+    '/populaires',
+    // Ajout de la route maintenance-login sécurisée
+    '/maintenance-login'
   ];
   
   let hasNewRoutes = false;
