@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { X, TrendingUp, ArrowRight, Zap, Sparkles, Package, Star, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from '@/contexts/StoreContext';
+import { getSecureId } from '@/services/secureIds';
 
 interface TrendingProductsPromptProps {
   products: Product[];
@@ -165,7 +165,7 @@ const TrendingProductsPrompt: React.FC<TrendingProductsPromptProps> = ({
                 transition={{ delay: index * 0.1 }}
               >
                 <Link 
-                  to={`/produit/${product.id}`}
+                  to={`/produit/${getSecureId(product.id)}`}
                   className="flex items-center p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition-all duration-300 hover:shadow-md group"
                 >
                   <div className="relative">
