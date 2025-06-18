@@ -266,7 +266,7 @@ const AdminFlashSalesPage: React.FC = () => {
                                 {flashSale.isActive ? '🟢 Active' : '⚪ Inactive'}
                               </Badge>
                               <Badge className="bg-gradient-to-r from-red-50 to-pink-50 text-red-700 border-2 border-red-200 px-3 py-1 rounded-full font-bold text-lg shadow-lg">
-                                -{flashSale.discount}% OFF
+                                -{flashSale.discount}% DE PROMOS
                               </Badge>
                             </div>
                           </div>

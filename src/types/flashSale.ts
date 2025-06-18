@@ -9,6 +9,10 @@ export interface FlashSale {
   isActive: boolean;
   productIds: string[];
   createdAt: string;
+  backgroundColor?: string;
+  icon?: string;
+  emoji?: string;
+  order?: number;
 }
 
 export interface FlashSaleFormData {
@@ -18,4 +22,8 @@ export interface FlashSaleFormData {
   startDate: string;
   endDate: string;
   productIds: string[];
+  backgroundColor?: string;
+  icon?: string;
+  emoji?: string;
+  order?: number;
 }

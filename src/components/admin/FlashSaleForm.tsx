@@ -6,17 +6,39 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { flashSaleAPI } from '@/services/flashSaleAPI';
 import { useToast } from '@/hooks/use-toast';
 import { FlashSaleFormData } from '@/types/flashSale';
 import { Product } from '@/types/product';
-import { Search } from 'lucide-react';
+import { Search, Palette, Star, Smile, Hash } from 'lucide-react';
 
 interface FlashSaleFormProps {
   flashSale?: any;
   products: Product[];
   onClose: () => void;
 }
+
+const backgroundColors = [
+  { name: 'Rouge', value: '#dc2626', class: 'bg-red-600' },
+  { name: 'Bleu', value: '#2563eb', class: 'bg-blue-600' },
+  { name: 'Vert', value: '#16a34a', class: 'bg-green-600' },
+  { name: 'Violet', value: '#9333ea', class: 'bg-purple-600' },
+  { name: 'Rose', value: '#db2777', class: 'bg-pink-600' },
+  { name: 'Orange', value: '#ea580c', class: 'bg-orange-600' },
+  { name: 'Indigo', value: '#4f46e5', class: 'bg-indigo-600' },
+  { name: 'Teal', value: '#0d9488', class: 'bg-teal-600' },
+];
+
+const icons = [
+  'Flame', 'Star', 'Heart', 'Zap', 'Gift', 'Crown', 'Sparkles', 'Trophy',
+  'Target', 'Gem', 'Diamond', 'Award', 'Medal', 'Rocket', 'Flash', 'Sun'
+];
+
+const emojis = [
+  '🔥', '⭐', '💎', '⚡', '🎁', '👑', '✨', '🏆',
+  '🎯', '💖', '🌟', '🎉', '💫', '🚀', '💥', '☀️'
+];
 
 export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
   flashSale,
@@ -30,6 +52,10 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
     startDate: '',
     endDate: '',
     productIds: [],
+    backgroundColor: '',
+    icon: '',
+    emoji: '',
+    order: 1,
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,7 +66,6 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
 
   useEffect(() => {
     if (flashSale) {
-      // S'assurer que productIds est un array
       let productIds = [];
       if (Array.isArray(flashSale.productIds)) {
         productIds = flashSale.productIds;
@@ -49,12 +74,16 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
       }
 
       setFormData({
-        title: flashSale.title,
-        description: flashSale.description,
-        discount: flashSale.discount,
-        startDate: flashSale.startDate.slice(0, 16),
-        endDate: flashSale.endDate.slice(0, 16),
+        title: flashSale.title || '',
+        description: flashSale.description || '',
+        discount: flashSale.discount || 0,
+        startDate: flashSale.startDate ? flashSale.startDate.slice(0, 16) : '',
+        endDate: flashSale.endDate ? flashSale.endDate.slice(0, 16) : '',
         productIds: productIds,
+        backgroundColor: flashSale.backgroundColor || '',
+        icon: flashSale.icon || '',
+        emoji: flashSale.emoji || '',
+        order: flashSale.order || 1,
       });
     }
   }, [flashSale]);
@@ -117,7 +146,6 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
       return;
     }
 
-    // S'assurer que les productIds sont bien inclus dans les données envoyées comme array
     const productIdsToSend = Array.isArray(formData.productIds) ? formData.productIds : [];
     
     const dataToSend = {
@@ -126,13 +154,15 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
       discount: Number(formData.discount),
       startDate: formData.startDate,
       endDate: formData.endDate,
-      productIds: productIdsToSend
+      productIds: productIdsToSend,
+      backgroundColor: formData.backgroundColor,
+      icon: formData.icon,
+      emoji: formData.emoji,
+      order: Number(formData.order),
     };
 
     console.log('=== ENVOI DES DONNÉES ===');
     console.log('Données complètes à envoyer:', JSON.stringify(dataToSend, null, 2));
-    console.log('ProductIds sélectionnés:', productIdsToSend);
-    console.log('Nombre de produits:', productIdsToSend.length);
 
     if (flashSale) {
       updateMutation.mutate({ id: flashSale.id, data: dataToSend });
@@ -142,20 +172,13 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
   };
 
   const handleProductToggle = (productId: string) => {
-    console.log('=== TOGGLE PRODUIT ===');
-    console.log('ID du produit cliqué:', productId);
-    
     setFormData(prev => {
       const currentIds = Array.isArray(prev.productIds) ? prev.productIds : [];
-      console.log('IDs actuels:', currentIds);
-      
       let newProductIds;
       if (currentIds.includes(productId)) {
         newProductIds = currentIds.filter(id => id !== productId);
-        console.log('Produit retiré. Nouveaux IDs:', newProductIds);
       } else {
         newProductIds = [...currentIds, productId];
-        console.log('Produit ajouté. Nouveaux IDs:', newProductIds);
       }
       
       return {
@@ -173,7 +196,7 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {flashSale ? 'Modifier la vente flash' : 'Créer une nouvelle vente flash'}
@@ -243,13 +266,90 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
             </div>
           </div>
 
+          {/* Nouvelles sections pour les propriétés visuelles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div>
+              <Label className="flex items-center space-x-2 mb-2">
+                <Palette className="h-4 w-4" />
+                <span>Couleur de fond</span>
+              </Label>
+              <div className="grid grid-cols-4 gap-2">
+                {backgroundColors.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    className={`w-8 h-8 rounded-full border-2 ${color.class} ${
+                      formData.backgroundColor === color.value ? 'border-gray-800' : 'border-gray-300'
+                    }`}
+                    onClick={() => setFormData(prev => ({ ...prev, backgroundColor: color.value }))}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="flex items-center space-x-2 mb-2">
+                <Star className="h-4 w-4" />
+                <span>Icône</span>
+              </Label>
+              <Select value={formData.icon} onValueChange={(value) => setFormData(prev => ({ ...prev, icon: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir une icône" />
+                </SelectTrigger>
+                <SelectContent>
+                  {icons.map((icon) => (
+                    <SelectItem key={icon} value={icon}>
+                      {icon}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="flex items-center space-x-2 mb-2">
+                <Smile className="h-4 w-4" />
+                <span>Emoji</span>
+              </Label>
+              <div className="grid grid-cols-4 gap-1">
+                {emojis.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    className={`p-2 text-lg rounded border ${
+                      formData.emoji === emoji ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+                    }`}
+                    onClick={() => setFormData(prev => ({ ...prev, emoji: emoji }))}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="flex items-center space-x-2 mb-2">
+                <Hash className="h-4 w-4" />
+                <span>Ordre d'affichage</span>
+              </Label>
+              <Input
+                type="number"
+                min="1"
+                value={formData.order}
+                onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 1 }))}
+                placeholder="1"
+              />
+            </div>
+          </div>
+
+          {/* Section produits - keep existing code */}
           <div>
             <Label className="text-base font-medium">Produits inclus dans la vente flash</Label>
             <p className="text-sm text-gray-600 mb-4">
               Sélectionnez les produits qui bénéficieront de la réduction de {formData.discount}%
             </p>
 
-            {/* Barre de recherche */}
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -261,7 +361,6 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
               />
             </div>
 
-            {/* Affichage du message si recherche trop courte */}
             {searchTerm.length > 0 && searchTerm.length < 3 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                 <p className="text-sm text-yellow-800">
@@ -270,7 +369,6 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
               </div>
             )}
 
-            {/* Liste des produits filtrés */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto border rounded-lg p-4">
               {filteredProducts.length === 0 ? (
                 <div className="col-span-full text-center py-8 text-gray-500">
@@ -306,7 +404,6 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
               )}
             </div>
 
-            {/* Résumé des produits sélectionnés */}
             <div className="bg-blue-50 p-3 rounded-lg mt-3">
               <p className="text-sm font-medium text-blue-800">
                 {Array.isArray(formData.productIds) ? formData.productIds.length : 0} produit(s) sélectionné(s)
@@ -315,7 +412,6 @@ export const FlashSaleForm: React.FC<FlashSaleFormProps> = ({
                 <div className="text-xs text-blue-600 mt-1">
                   <p className="font-medium">Produits sélectionnés:</p>
                   <p className="truncate">{getSelectedProductNames()}</p>
-                  <p className="mt-1">IDs: {formData.productIds.join(', ')}</p>
                 </div>
               )}
             </div>

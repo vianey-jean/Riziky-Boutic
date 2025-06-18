@@ -5,10 +5,10 @@ import { Product } from '@/types/product';
 
 export const flashSaleAPI = {
   getActive: () => API.get<FlashSale>('/flash-sales/active'),
+  getActiveAll: () => API.get<FlashSale[]>('/flash-sales/active-all'),
   getAll: () => API.get<FlashSale[]>('/flash-sales'),
   getById: (id: string) => API.get<FlashSale>(`/flash-sales/${id}`),
   getProducts: (id: string) => API.get<Product[]>(`/flash-sales/${id}/products`),
-  // S'assurer que cet endpoint utilise bien l'API configurée et non un accès direct aux fichiers
   getBanniereProducts: () => {
     console.log('🌐 Appel API getBanniereProducts vers:', API.defaults.baseURL + '/flash-sales/banniere-products');
     return API.get<Product[]>('/flash-sales/banniere-products');
