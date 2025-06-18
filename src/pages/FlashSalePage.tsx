@@ -248,17 +248,18 @@ const FlashSalePage: React.FC = () => {
                     <p className="text-sm text-red-900 mb-1 font-bold">
                       VENTE FLASH  : {currentFlashSaleIndex + 1} sur {allFlashSales.length}
                     </p>
-                    <div className="flex space-x-2">
-                      {allFlashSales.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => changeFlashSale(index)} 
-                          className={`w-3 h-3 rounded-full ${
-                            index === currentFlashSaleIndex ? 'bg-blue-500' : 'bg-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
+                 <div className="flex justify-center items-center space-x-2">
+                  {allFlashSales.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => changeFlashSale(index)} 
+                    className={`w-3 h-3 rounded-full ${
+                    index === currentFlashSaleIndex ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}
+                  />
+                ))}
+              </div>
+
                   </div>
                   
                   <button
@@ -288,7 +289,7 @@ const FlashSalePage: React.FC = () => {
                     <h1 className="text-3xl font-bold">{currentFlashSale.title}</h1>
                     <span className="text-2xl">{emoji}</span>
                     <span className="bg-yellow-400 text-black px-4 py-2 rounded-full text-lg font-bold">
-                      -{currentFlashSale.discount}%
+                      -{currentFlashSale.discount}% DE PROMOS
                     </span>
                   </div>
                   

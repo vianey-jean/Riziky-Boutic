@@ -198,13 +198,6 @@ const AdminFlashSalesPage: React.FC = () => {
               </h2>
               <p className="text-gray-600 mt-1 font-medium">Gérez vos offres promotionnelles limitées dans le temps</p>
             </div>
-            <Button 
-              onClick={() => setIsFormOpen(true)} 
-              className="bg-gradient-to-r from-red-500 via-pink-500 to-red-600 hover:from-red-600 hover:via-pink-600 hover:to-red-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Nouvelle Vente Flash
-            </Button>
           </div>
 
           {/* Flash Sales Grid */}
@@ -373,6 +366,22 @@ const AdminFlashSalesPage: React.FC = () => {
                 </Card>
               ))
             )}
+          </div>
+
+          {/* Floating Action Button */}
+          <div className="fixed bottom-8 right-8 z-50">
+            <Button 
+              onClick={() => setIsFormOpen(true)} 
+              className="bg-gradient-to-r from-red-500 via-pink-500 to-red-600 hover:from-red-600 hover:via-pink-600 hover:to-red-700 text-white w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-110 active:scale-95 group relative overflow-hidden"
+              size="icon"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-full transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <Plus className="h-8 w-8 relative z-10" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full animate-pulse"></div>
+            </Button>
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-700 bg-white px-3 py-1 rounded-full shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Nouvelle Vente Flash
+            </div>
           </div>
 
           {isFormOpen && (
