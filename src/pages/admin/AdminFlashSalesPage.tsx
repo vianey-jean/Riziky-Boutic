@@ -112,7 +112,7 @@ const AdminFlashSalesPage: React.FC = () => {
     const selectedProducts = products.filter(product => productIds.includes(product.id));
     if (selectedProducts.length === 0) return 'Produits non trouvés';
     
-    return selectedProducts.map(product => product.name).join(', ');
+    return selectedProducts.map(product => product.name).join('\n');
   };
 
   const handleEdit = (flashSale: any) => {
@@ -275,7 +275,7 @@ const AdminFlashSalesPage: React.FC = () => {
                               Produits inclus ({flashSale.productIds?.length || 0}):
                             </p>
                           </div>
-                          <p className="text-blue-700 font-medium text-sm leading-relaxed">
+                          <p className="whitespace-pre-line text-blue-700 font-medium text-sm leading-relaxed">
                             {getProductNames(flashSale.productIds || [])}
                           </p>
                         </div>
