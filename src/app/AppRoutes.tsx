@@ -1,4 +1,3 @@
-
 import React, { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -159,6 +158,13 @@ const AppRoutes: React.FC = () => {
         } />
         <Route path="/populaires" element={<Navigate to={secureRoutes.get('/populaires') || '/'} replace />} />
 
+        {/* Route sécurisée pour les ventes flash */}
+        <Route path={secureRoutes.get('/flash-sale')?.substring(1)} element={
+          <MaintenanceChecker>
+            <FlashSalePage />
+          </MaintenanceChecker>
+        } />
+        <Route path="/flash-sale" element={<Navigate to={secureRoutes.get('/flash-sale') || '/'} replace />} />
         
         <Route path={secureRoutes.get('/flash-sale/:id')?.substring(1)} element={
           <MaintenanceChecker>
@@ -172,6 +178,7 @@ const AppRoutes: React.FC = () => {
             <CustomerServicePage />
           </MaintenanceChecker>
         } />
+        
         <Route path="/contact" element={
           <MaintenanceChecker>
             <ContactPage />

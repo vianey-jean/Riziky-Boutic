@@ -16,6 +16,32 @@ const SecureRoute: React.FC<SecureRouteProps> = ({ children }) => {
   const [isValidPath, setIsValidPath] = useState<boolean | null>(null);
   
   useEffect(() => {
+    // Routes publiques autorisées (non sécurisées)
+    const publicRoutes = [
+      'flash-sale',
+      'products',
+      'categories',
+      'home',
+      'contact',
+      'about',
+      'login',
+      'register',
+      'cart',
+      'favorites',
+      'profile',
+      'orders',
+      'checkout'
+    ];
+
+    // Vérifier si c'est une route publique
+    const isPublicRoute = publicRoutes.some(route => path.startsWith(route));
+    
+    if (isPublicRoute) {
+      console.log('Route publique autorisée:', path);
+      setIsValidPath(true);
+      return;
+    }
+
     // Vérifier si c'est une route sécurisée connue
     const realPath = getRealRoute(path);
     const realOrderId = getRealId(path);

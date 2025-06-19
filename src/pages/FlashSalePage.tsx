@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import ProductCard from '@/components/products/ProductCard';
 import PageDataLoader from '@/components/layout/PageDataLoader';
@@ -54,6 +53,7 @@ interface FlashSaleData {
 }
 
 const FlashSalePage: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isExpired, setIsExpired] = useState(false);
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
@@ -79,34 +79,37 @@ const FlashSalePage: React.FC = () => {
       // Trier par ordre
       const sortedFlashSales = activeFlashSales.sort((a, b) => (a.order || 999) - (b.order || 999));
       
-      // Définir la première vente flash comme active
-      const firstFlashSale = sortedFlashSales[0];
+      // Récupérer l'index depuis l'URL, sinon utiliser 0
+      const urlIndex = parseInt(searchParams.get('index') || '0', 10);
+      const targetIndex = Math.min(Math.max(urlIndex, 0), sortedFlashSales.length - 1);
+      const targetFlashSale = sortedFlashSales[targetIndex];
       
-      // Récupérer les produits de la première vente flash
-      const productsResponse = await flashSaleAPI.getProducts(firstFlashSale.id);
+      // Récupérer les produits de la vente flash ciblée
+      const productsResponse = await flashSaleAPI.getProducts(targetFlashSale.id);
       const products = productsResponse.data;
 
-      console.log('📦 Produits de la première vente flash récupérés:', products);
+      console.log(`📦 Produits de la vente flash ${targetIndex} récupérés:`, products);
 
       // Traiter les produits pour appliquer la réduction
       const processedProducts = products.map(product => ({
         ...product,
         originalPrice: product.price,
-        price: +(product.price * (1 - firstFlashSale.discount / 100)).toFixed(2),
-        promotion: firstFlashSale.discount,
-        flashSaleDiscount: firstFlashSale.discount,
-        flashSaleTitle: firstFlashSale.title,
-        flashSaleDescription: firstFlashSale.description,
-        flashSaleStartDate: firstFlashSale.startDate,
-        flashSaleEndDate: firstFlashSale.endDate,
+        price: +(product.price * (1 - targetFlashSale.discount / 100)).toFixed(2),
+        promotion: targetFlashSale.discount,
+        flashSaleDiscount: targetFlashSale.discount,
+        flashSaleTitle: targetFlashSale.title,
+        flashSaleDescription: targetFlashSale.description,
+        flashSaleStartDate: targetFlashSale.startDate,
+        flashSaleEndDate: targetFlashSale.endDate,
         originalFlashPrice: product.price,
-        flashSalePrice: +(product.price * (1 - firstFlashSale.discount / 100)).toFixed(2)
+        flashSalePrice: +(product.price * (1 - targetFlashSale.discount / 100)).toFixed(2)
       }));
 
       return { 
         allFlashSales: sortedFlashSales,
-        currentFlashSale: firstFlashSale,
-        products: processedProducts
+        currentFlashSale: targetFlashSale,
+        products: processedProducts,
+        initialIndex: targetIndex
       };
 
     } catch (error) {
@@ -150,12 +153,12 @@ const FlashSalePage: React.FC = () => {
     }
   };
 
-  const handleDataSuccess = (data: { allFlashSales: FlashSaleData[], currentFlashSale: FlashSaleData, products: Product[] }) => {
+  const handleDataSuccess = (data: { allFlashSales: FlashSaleData[], currentFlashSale: FlashSaleData, products: Product[], initialIndex: number }) => {
     console.log('✅ Données chargées avec succès:', data);
     setAllFlashSales(data.allFlashSales);
     setCurrentFlashSale(data.currentFlashSale);
     setFlashSaleProducts(data.products);
-    setCurrentFlashSaleIndex(0);
+    setCurrentFlashSaleIndex(data.initialIndex);
   };
 
   const handleMaxRetriesReached = () => {

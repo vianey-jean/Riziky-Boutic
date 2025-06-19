@@ -9,7 +9,7 @@ import SecureRoute from '@/components/SecureRoute';
 const FlashSaleRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/flash-sale/:id" element={<FlashSalePage />} />
+      <Route path="/flash-sale" element={<FlashSalePage />} />
       <Route 
         path="/admin/flash-sales" 
         element={
