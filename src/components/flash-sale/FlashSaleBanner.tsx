@@ -202,7 +202,7 @@ const FlashSaleBanner: React.FC = () => {
                   <div className="flex flex-col items-center space-y-4">
                     <div className="flex items-center space-x-2 bg-white/20 backdrop-blur px-4 py-2 rounded-full">
                       <Clock className="h-5 w-5" />
-                      <span className="text-sm font-medium">Se termine dans :</span>
+                      <span className="text-sm font-bold">Se termine dans :</span>
                     </div>
 
                     <div className="flex space-x-2">

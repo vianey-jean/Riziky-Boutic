@@ -196,10 +196,11 @@ const Footer = () => {
                 © {currentYear} <span className="bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent font-semibold">Riziky Boutique</span>. 
                 Tous droits réservés.
               </p>
-              <div className="flex items-center space-x-2 text-gray-400 text-sm">
-                <span>Fait avec</span>
+              <div className="flex items-center space-x-2 text-gray-400 text-sm font-bold">
+                <span>Fait avec le</span>
                 <Heart className="h-3 w-3 text-red-400 animate-pulse" />
                 <span>à La Réunion</span>
+                <span>/ RJMV</span>
               </div>
             </div>
           </div>

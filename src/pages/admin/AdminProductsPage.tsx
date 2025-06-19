@@ -512,7 +512,7 @@ const AdminProductsPage = () => {
                     <TableCell>
                       {isPromotionActive(product) ? (
                         <div>
-                          <span className="text-xs line-through text-gray-500">
+                          <span className="text-xs line-through text-red-600 font-bold">
                             {typeof product.originalPrice === 'number' ? product.originalPrice.toFixed(2) : product.price.toFixed(2)} €
                           </span>
                           <span className="block font-semibold">
@@ -520,7 +520,7 @@ const AdminProductsPage = () => {
                           </span>
                         </div>
                       ) : (
-                        <span>{product.price.toFixed(2)} €</span>
+                        <span className="text-xs font-bold">{product.price.toFixed(2)} €</span>
                       )}
                     </TableCell>
                     <TableCell>

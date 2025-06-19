@@ -61,10 +61,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await authAPI.login({ email, password });
       localStorage.setItem('authToken', response.data.token);
       setUser(response.data.user);
-      toast({
-        title: 'Connexion réussie',
-        variant: 'default',
-      });
+     toast({
+  title: 'Connexion réussie',
+  className: 'bg-green-500 text-white', // fond vert + texte blanc
+  variant: 'default',
+});
+
 
       // Navigation via window.location pour éviter les problèmes de hooks
       window.location.href = '/';

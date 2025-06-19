@@ -380,7 +380,7 @@ const AdminCategoriesPage: React.FC = () => {
                     <TableRow key={category.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200">
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900">{category.order}</span>
+                          <span className="font-medium text-gray-900 font-bold">{category.order}</span>
                           <div className="flex flex-col">
                             <Button
                               variant="ghost"

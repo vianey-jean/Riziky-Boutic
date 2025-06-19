@@ -283,7 +283,7 @@ const Navbar = () => {
                 <DropdownMenuContent className="w-72 bg-white/95 dark:bg-gray-800/95 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl backdrop-blur-lg p-2" align="end">
                   <DropdownMenuLabel className="px-4 py-3 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl mb-2">
                     <div className="font-bold text-gray-900 dark:text-white">Mon compte</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <div className="text-sm text-green-600 dark:text-gray-400 mt-1 font-bold">
                       {user?.nom} · {user?.role === 'admin' ? 'Admin' : 'Client'}
                     </div>
                   </DropdownMenuLabel>
