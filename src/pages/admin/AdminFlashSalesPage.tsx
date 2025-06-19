@@ -192,8 +192,8 @@ const AdminFlashSalesPage: React.FC = () => {
 
           {/* Header Actions */}
           <div className="flex justify-between items-center bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
-            <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
+            <div >
+              <h2 className="text-2xl font-bold bg-gradient-to-r  from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
                 Vos Campagnes Flash
               </h2>
               <p className="text-gray-600 mt-1 font-medium">Gérez vos offres promotionnelles limitées dans le temps</p>
@@ -201,172 +201,167 @@ const AdminFlashSalesPage: React.FC = () => {
           </div>
 
           {/* Flash Sales Grid */}
-          <div className="grid gap-6">
-            {flashSales.length === 0 ? (
-              <Card className="bg-gradient-to-br from-white via-gray-50 to-blue-50 border-2 border-gray-200/60 shadow-2xl hover:shadow-3xl transition-all duration-500">
-                <CardContent className="text-center py-16">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 rounded-full blur-2xl opacity-20"></div>
-                    <Flame className="relative h-20 w-20 text-red-500 mx-auto" />
+
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {flashSales.length === 0 ? (
+    <Card className="min-h-[220px] bg-gradient-to-br from-white via-gray-50 to-blue-50 border-2 border-gray-200/60 shadow-2xl hover:shadow-3xl transition-all duration-500">
+      <CardContent className="text-center py-16">
+        <div className="relative mb-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 rounded-full blur-2xl opacity-20"></div>
+          <Flame className="relative h-20 w-20 text-red-500 mx-auto" />
+        </div>
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
+          Aucune vente flash
+        </h3>
+        <p className="text-gray-600 text-lg mb-6 font-medium">
+          Créez votre première vente flash pour booster vos ventes
+        </p>
+        <Button 
+          onClick={() => setIsFormOpen(true)} 
+          className="bg-gradient-to-r from-red-500 via-pink-500 to-red-600 hover:from-red-600 hover:via-pink-600 hover:to-red-700 text-white px-8 py-3 rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          Créer une vente flash
+        </Button>
+      </CardContent>
+    </Card>
+  ) : (
+    flashSales.map((flashSale: any) => (
+      <Card 
+        key={flashSale.id}
+        className="min-h-[220px] bg-gradient-to-br from-white via-gray-50 to-blue-50 border-2 border-gray-200/60 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
+      >
+        <CardHeader className="relative">
+          <div className="flex justify-between items-start gap-4">
+            {/* Infos Vente */}
+            <div className="flex-1">
+              <div className="flex items-center space-x-4 mb-3">
+                <div className="p-3 bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl shadow-md">
+                  <Flame className="h-6 w-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-xl font-bold text-gray-800">
+                    {flashSale.title}
+                  </CardTitle>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Badge 
+                      variant={flashSale.isActive ? 'default' : 'secondary'}
+                      className={`px-2 py-1 rounded-full font-semibold ${
+                        flashSale.isActive 
+                          ? 'bg-green-500 text-white shadow-sm' 
+                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                      }`}
+                    >
+                      {flashSale.isActive ? '🟢 Active' : '⚪ Inactive'}
+                    </Badge>
+                    <Badge className="bg-red-100 text-red-700 border border-red-300 px-2 py-1 rounded-full text-sm">
+                      -{flashSale.discount}% DE PROMO
+                    </Badge>
                   </div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
-                    Aucune vente flash
-                  </h3>
-                  <p className="text-gray-600 text-lg mb-6 font-medium">
-                    Créez votre première vente flash pour booster vos ventes
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-2">{flashSale.description}</p>
+
+              {/* Produits */}
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-3">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Package className="h-4 w-4 text-blue-600" />
+                  <p className="font-semibold text-sm text-blue-800">
+                    Produits ({flashSale.productIds?.length || 0})
                   </p>
-                  <Button 
-                    onClick={() => setIsFormOpen(true)} 
-                    className="bg-gradient-to-r from-red-500 via-pink-500 to-red-600 hover:from-red-600 hover:via-pink-600 hover:to-red-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                </div>
+                <p className="whitespace-pre-line text-sm text-blue-700 font-medium">
+                  {getProductNames(flashSale.productIds || [])}
+                </p>
+              </div>
+
+              {/* Temps */}
+              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-1">
+                  <Timer className="h-4 w-4 text-orange-500" />
+                  <span className="font-medium">Temps restant :</span>
+                  <span className="text-orange-600 font-semibold">
+                    {getTimeRemaining(flashSale.endDate)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Du </span>
+                  <span className="font-medium">{new Date(flashSale.startDate).toLocaleDateString()}</span>
+                  <span className="text-gray-500"> au </span>
+                  <span className="font-medium">{new Date(flashSale.endDate).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Boutons Action */}
+            <div className="flex flex-col gap-2 items-end shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEdit(flashSale)}
+                className="w-8 h-8 p-0 border border-blue-300 hover:bg-blue-100 text-blue-700 rounded-md shadow-sm"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={activateMutation.isPending || deactivateMutation.isPending}
+                onClick={() =>
+                  flashSale.isActive
+                    ? deactivateMutation.mutate(flashSale.id)
+                    : activateMutation.mutate(flashSale.id)
+                }
+                className={`w-8 h-8 p-0 rounded-md shadow-sm border ${
+                  flashSale.isActive
+                    ? 'border-orange-300 text-orange-600 hover:bg-orange-100'
+                    : 'border-green-300 text-green-600 hover:bg-green-100'
+                }`}
+              >
+                {flashSale.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-8 h-8 p-0 rounded-md border border-red-300 text-red-600 hover:bg-red-100 shadow-sm"
                   >
-                    <Plus className="h-5 w-5 mr-2" />
-                    Créer une vente flash
+                    <Trash2 className="w-4 h-4" />
                   </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              flashSales.map((flashSale: any) => (
-                <Card 
-                  key={flashSale.id} 
-                  className="group bg-gradient-to-br from-white via-gray-50 to-blue-50 border-2 border-gray-200/60 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  
-                  <CardHeader className="relative">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                            <div className="relative p-3 bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl shadow-lg">
-                              <Flame className="h-6 w-6 text-white" />
-                            </div>
-                          </div>
-                          
-                          <div className="flex-1">
-                            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
-                              {flashSale.title}
-                            </CardTitle>
-                            <div className="flex items-center space-x-3 mt-2">
-                              <Badge 
-                                variant={flashSale.isActive ? 'default' : 'secondary'}
-                                className={`px-3 py-1 rounded-full font-semibold ${
-                                  flashSale.isActive 
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 shadow-lg' 
-                                    : 'bg-gray-100 text-gray-600 border border-gray-200'
-                                }`}
-                              >
-                                {flashSale.isActive ? '🟢 Active' : '⚪ Inactive'}
-                              </Badge>
-                              <Badge className="bg-gradient-to-r from-red-50 to-pink-50 text-red-700 border-2 border-red-200 px-3 py-1 rounded-full font-bold text-lg shadow-lg">
-                                -{flashSale.discount}% DE PROMOS
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <p className="text-gray-700 mb-4 text-lg font-medium">{flashSale.description}</p>
-                        
-                        {/* Products Section */}
-                        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 p-4 rounded-xl mb-4 border border-blue-200/60 shadow-inner">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <Package className="h-5 w-5 text-blue-600" />
-                            <p className="font-bold text-blue-800 text-lg">
-                              Produits inclus ({flashSale.productIds?.length || 0}):
-                            </p>
-                          </div>
-                          <p className="whitespace-pre-line text-blue-700 font-medium text-sm leading-relaxed">
-                            {getProductNames(flashSale.productIds || [])}
-                          </p>
-                        </div>
-                        
-                        {/* Time Information */}
-                        <div className="flex items-center space-x-6 text-gray-600 bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200/60">
-                          <div className="flex items-center space-x-2">
-                            <Timer className="h-5 w-5 text-orange-500" />
-                            <span className="font-semibold text-gray-800">Temps restant:</span>
-                            <span className="font-bold text-orange-600 text-lg">
-                              {getTimeRemaining(flashSale.endDate)}
-                            </span>
-                          </div>
-                          <div className="text-sm font-medium">
-                            <span className="text-gray-700">Du</span> {' '}
-                            <span className="font-semibold text-gray-800">
-                              {new Date(flashSale.startDate).toLocaleDateString()}
-                            </span> {' '}
-                            <span className="text-gray-700">au</span> {' '}
-                            <span className="font-semibold text-gray-800">
-                              {new Date(flashSale.endDate).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex flex-col space-y-2 ml-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(flashSale)}
-                          className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 transition-all duration-300 shadow-md hover:shadow-lg"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => flashSale.isActive 
-                            ? deactivateMutation.mutate(flashSale.id)
-                            : activateMutation.mutate(flashSale.id)
-                          }
-                          disabled={activateMutation.isPending || deactivateMutation.isPending}
-                          className={`border-2 transition-all duration-300 shadow-md hover:shadow-lg ${
-                            flashSale.isActive 
-                              ? 'bg-gradient-to-r from-orange-50 to-red-50 border-orange-200 text-orange-700 hover:from-orange-100 hover:to-red-100 hover:border-orange-300'
-                              : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300'
-                          }`}
-                        >
-                          {flashSale.isActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 text-red-700 hover:from-red-100 hover:to-pink-100 hover:border-red-300 transition-all duration-300 shadow-md hover:shadow-lg"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 shadow-2xl">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="text-xl font-bold text-gray-900">
-                                Supprimer la vente flash
-                              </AlertDialogTitle>
-                              <AlertDialogDescription className="text-gray-700 font-medium">
-                                Êtes-vous sûr de vouloir supprimer cette vente flash ? Cette action est irréversible.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300">
-                                Annuler
-                              </AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => deleteMutation.mutate(flashSale.id)}
-                                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                              >
-                                Supprimer
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))
-            )}
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-white border border-gray-200 rounded-lg shadow-xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-lg font-bold">
+                      Supprimer cette vente ?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Cette action est irréversible.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-gray-100 hover:bg-gray-200 text-gray-700">
+                      Annuler
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteMutation.mutate(flashSale.id)}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Supprimer
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
+        </CardHeader>
+      </Card>
+    ))
+  )}
+</div>
+
 
           {/* Floating Action Button */}
           <div className="fixed bottom-8 right-8 z-50">
