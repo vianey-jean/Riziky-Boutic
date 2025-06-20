@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -235,7 +236,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 variant="outline"
                 size="icon"
                 onClick={() => {
-                  const url = window.location.origin + `/${getSecureProductId(product.id, 'product')}`;
+                  const url = window.location.origin + `/${getSecureProductId(product.id)}`;
                   navigator.clipboard.writeText(url);
                   toast.success("Lien copié!");
                 }}
@@ -247,7 +248,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
             <div className="mt-6 text-center">
               <Button variant="link" asChild>
-                <Link to={`/${getSecureProductId(product.id, 'product')}`}>
+                <Link to={`/${getSecureProductId(product.id)}`}>
                   <Eye className="mr-2 h-4 w-4" />
                   Voir la page produit
                 </Link>

@@ -113,21 +113,26 @@ const AppRoutes: React.FC = () => {
           </MaintenanceChecker>
         } />
         
-        <Route path="/livraison" element={
+        {/* Routes sécurisées pour les pages publiques */}
+        <Route path={secureRoutes.get('/livraison')?.substring(1)} element={
           <MaintenanceChecker>
             <DeliveryPage />
           </MaintenanceChecker>
         } />
+        <Route path="/livraison" element={<Navigate to={secureRoutes.get('/livraison') || '/'} replace />} />
+        
         <Route path="/mentions-legales" element={
           <MaintenanceChecker>
             <ReturnsPage />
           </MaintenanceChecker>
         } />
-        <Route path="/retours" element={
+        
+        <Route path={secureRoutes.get('/retours')?.substring(1)} element={
           <MaintenanceChecker>
             <ReturnsPage />
           </MaintenanceChecker>
         } />
+        <Route path="/retours" element={<Navigate to={secureRoutes.get('/retours') || '/'} replace />} />
 
         <Route path={secureRoutes.get('/tous-les-produits')?.substring(1)} element={
           <MaintenanceChecker>
@@ -173,60 +178,77 @@ const AppRoutes: React.FC = () => {
         } />
         <Route path="/flash-sale/:id" element={<Navigate to={secureRoutes.get('/flash-sale/:id') || '/'} replace />} />
         
-        <Route path="/service-client" element={
+        {/* Routes sécurisées pour les pages de service */}
+        <Route path={secureRoutes.get('/service-client')?.substring(1)} element={
           <MaintenanceChecker>
             <CustomerServicePage />
           </MaintenanceChecker>
         } />
+        <Route path="/service-client" element={<Navigate to={secureRoutes.get('/service-client') || '/'} replace />} />
         
-        <Route path="/contact" element={
+        <Route path={secureRoutes.get('/contact')?.substring(1)} element={
           <MaintenanceChecker>
             <ContactPage />
           </MaintenanceChecker>
         } />
+        <Route path="/contact" element={<Navigate to={secureRoutes.get('/contact') || '/'} replace />} />
+        
         <Route path="/blog" element={
           <MaintenanceChecker>
             <BlogPage />
           </MaintenanceChecker>
         } />
-        <Route path="/carrieres" element={
+        
+        <Route path={secureRoutes.get('/carrieres')?.substring(1)} element={
           <MaintenanceChecker>
             <CarriersPage />
           </MaintenanceChecker>
         } />
-        <Route path="/notre-histoire" element={
+        <Route path="/carrieres" element={<Navigate to={secureRoutes.get('/carrieres') || '/'} replace />} />
+        
+        <Route path={secureRoutes.get('/notre-histoire')?.substring(1)} element={
           <MaintenanceChecker>
             <HistoryPage />
           </MaintenanceChecker>
         } />
-        <Route path="/conditions-utilisation" element={
+        <Route path="/notre-histoire" element={<Navigate to={secureRoutes.get('/notre-histoire') || '/'} replace />} />
+        
+        <Route path={secureRoutes.get('/conditions-utilisation')?.substring(1)} element={
           <MaintenanceChecker>
             <TermsPage />
           </MaintenanceChecker>
         } />
-        <Route path="/politique-confidentialite" element={
+        <Route path="/conditions-utilisation" element={<Navigate to={secureRoutes.get('/conditions-utilisation') || '/'} replace />} />
+        
+        <Route path={secureRoutes.get('/politique-confidentialite')?.substring(1)} element={
           <MaintenanceChecker>
             <PrivacyPage />
           </MaintenanceChecker>
         } />
-        <Route path="/politique-cookies" element={
+        <Route path="/politique-confidentialite" element={<Navigate to={secureRoutes.get('/politique-confidentialite') || '/'} replace />} />
+        
+        <Route path={secureRoutes.get('/politique-cookies')?.substring(1)} element={
           <MaintenanceChecker>
             <CookiesPage />
           </MaintenanceChecker>
         } />
-        <Route path="/faq" element={
+        <Route path="/politique-cookies" element={<Navigate to={secureRoutes.get('/politique-cookies') || '/'} replace />} />
+        
+        <Route path={secureRoutes.get('/faq')?.substring(1)} element={
           <MaintenanceChecker>
             <FAQPage />
           </MaintenanceChecker>
         } />
+        <Route path="/faq" element={<Navigate to={secureRoutes.get('/faq') || '/'} replace />} />
 
-        <Route path="/chat" element={
+        <Route path={secureRoutes.get('/chat')?.substring(1)} element={
           <MaintenanceChecker>
             <ProtectedRoute>
               <ChatPage />
             </ProtectedRoute>
           </MaintenanceChecker>
         } />
+        <Route path="/chat" element={<Navigate to={secureRoutes.get('/chat') || '/'} replace />} />
         
         <Route path={secureRoutes.get('/panier')?.substring(1)} element={
           <MaintenanceChecker>
