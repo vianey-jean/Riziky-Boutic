@@ -49,7 +49,7 @@ const ReturnsProcess = () => {
           <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mr-4">
             <ArrowRight className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Procédure de retour</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Procédure de retour :</h2>
         </div>
         
         <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg">
@@ -87,7 +87,7 @@ const ReturnsProcess = () => {
                 <Shield className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">Email</p>
+                <p className="font-medium text-gray-900 dark:text-white">Email :</p>
                 <p className="text-blue-600 dark:text-blue-400">retours@Riziky-Boutic.fr</p>
               </div>
             </div>
@@ -96,8 +96,8 @@ const ReturnsProcess = () => {
                 <Shield className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">Téléphone</p>
-                <p className="text-green-600 dark:text-green-400">01 23 45 67 89</p>
+                <p className="font-medium text-gray-900 dark:text-white">Téléphone :</p>
+                <p className="text-green-600 dark:text-green-400">06 92 84 23 70</p>
               </div>
             </div>
           </div>

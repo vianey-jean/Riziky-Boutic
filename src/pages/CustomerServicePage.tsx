@@ -76,7 +76,7 @@ const CustomerServicePage = () => {
                 <h2 className="text-2xl font-bold mb-3 text-blue-800">Téléphone</h2>
                 <p className="text-gray-600 mb-4 text-lg">Lun-Ven 9h-18h</p>
                 <div className="bg-blue-100 px-4 py-2 rounded-xl">
-                  <p className="font-bold text-blue-800">01 23 45 67 89</p>
+                  <p className="font-bold text-blue-800">06 92 84 23 70</p>
                 </div>
               </Card>
               
@@ -124,7 +124,7 @@ const CustomerServicePage = () => {
                       Quels sont les délais de livraison ?
                     </AccordionTrigger>
                     <AccordionContent className="text-gray-700 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg mt-2">
-                      Nos délais de livraison standard sont de 2 à 4 jours ouvrables pour la France métropolitaine. 
+                      Nos délais de livraison standard sont de  4 - 7 jours ouvrables pour la France métropolitaine. 
                       Pour plus d'informations, veuillez consulter notre <Link to="/livraison" className="text-green-600 hover:text-green-700 underline font-medium">page de livraison</Link>.
                     </AccordionContent>
                   </AccordionItem>

@@ -295,8 +295,9 @@ const ContactPage = () => {
                       </div>
                     </div>
                     <div className="ml-16">
-                      <p className="text-gray-700 font-medium">123 Rue du Commerce</p>
-                      <p className="text-gray-700 font-medium">75015 Paris, France</p>
+                      <p className="text-gray-700 font-medium">10 Allée des Beryls Bleus</p>
+                      <p className="text-gray-700 font-medium">Bellepierre</p>
+                      <p className="text-gray-700 font-medium">97400 Saint-Denis, Réunion</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -313,7 +314,7 @@ const ContactPage = () => {
                       </div>
                     </div>
                     <div className="ml-16">
-                      <p className="text-gray-700 font-medium">+33 (0)1 23 45 67 89</p>
+                      <p className="text-gray-700 font-medium">+262 (0)6 92 84 23 70</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -325,7 +326,7 @@ const ContactPage = () => {
                         <Mail className="h-8 w-8 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-green-800">Email</h3>
+                        <h3 className="text-xl font-bold text-green-800">Email :</h3>
                         <p className="text-gray-600">Écrivez-nous</p>
                       </div>
                     </div>
@@ -342,7 +343,7 @@ const ContactPage = () => {
                         <Clock className="h-8 w-8 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-purple-800">Heures d'ouverture</h3>
+                        <h3 className="text-xl font-bold text-purple-800">Heures d'ouverture :</h3>
                         <p className="text-gray-600">Quand nous contacter</p>
                       </div>
                     </div>

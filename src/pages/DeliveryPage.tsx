@@ -85,16 +85,16 @@ const DeliveryPage = () => {
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
                   <div className="flex items-center mb-4">
                     <CheckCircle className="h-6 w-6 text-green-600 mr-2" />
-                    <h3 className="font-bold text-lg text-green-800 dark:text-green-400">Livraison standard</h3>
+                    <h3 className="font-bold text-lg text-green-800 dark:text-green-400">Livraison standard :</h3>
                   </div>
                   <div className="space-y-2 text-neutral-600 dark:text-neutral-400">
                     <p className="flex items-center">
                       <Clock className="h-4 w-4 mr-2 text-green-600" />
                       4-5 jours ouvrables
                     </p>
-                    <p>3,99 € pour les commandes inférieures à 50 €</p>
+                    <p>Secteur du Sud est Payant et dépend du secteur</p>
                     <p className="font-semibold text-green-700 dark:text-green-400">
-                      GRATUIT pour les commandes supérieures à 50 €
+                      GRATUIT pour le secteur entre Sainte Suzanne vers Saint-Paul 
                     </p>
                   </div>
                 </div>
@@ -109,7 +109,7 @@ const DeliveryPage = () => {
                       <Clock className="h-4 w-4 mr-2 text-orange-600" />
                       1-2 jours ouvrables
                     </p>
-                    <p className="font-semibold text-orange-700 dark:text-orange-400">7,99 €</p>
+                    <p className="font-semibold text-orange-700 dark:text-orange-400">L frais dépend du Secteur</p>
                   </div>
                 </div>
                 
@@ -121,7 +121,7 @@ const DeliveryPage = () => {
                   <div className="space-y-2 text-neutral-600 dark:text-neutral-400">
                     <p>Pour les commandes passées avant 11h00</p>
                     <p>Disponible uniquement dans certaines villes</p>
-                    <p className="font-semibold text-purple-700 dark:text-purple-400">14,99 €</p>
+                    <p className="font-semibold text-purple-700 dark:text-purple-400">Dépend du secteur</p>
                   </div>
                 </div>
               </div>
@@ -153,25 +153,25 @@ const DeliveryPage = () => {
                     <ul className="space-y-2 text-neutral-600 dark:text-neutral-400">
                       <li className="flex items-center">
                         <CheckCircle className="h-4 w-4 text-blue-600 mr-2" />
-                        Standard : 2-4 jours ouvrables
+                        Standard : 5 -7  jours ouvrables
                       </li>
                       <li className="flex items-center">
                         <CheckCircle className="h-4 w-4 text-blue-600 mr-2" />
-                        Express : 1-2 jours ouvrables
+                        Express : 2 - 4 jours ouvrables
                       </li>
                     </ul>
                   </div>
                   
                   <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 rounded-xl p-6 border border-emerald-200 dark:border-emerald-800">
-                    <h3 className="font-bold text-lg mb-4 text-emerald-800 dark:text-emerald-400">DOM-TOM et Corse</h3>
+                    <h3 className="font-bold text-lg mb-4 text-emerald-800 dark:text-emerald-400">DOM-TOM </h3>
                     <ul className="space-y-2 text-neutral-600 dark:text-neutral-400">
                       <li className="flex items-center">
                         <CheckCircle className="h-4 w-4 text-emerald-600 mr-2" />
-                        Standard : 5-10 jours ouvrables
+                        Standard : Dépend du secteur
                       </li>
                       <li className="flex items-center">
                         <CheckCircle className="h-4 w-4 text-emerald-600 mr-2" />
-                        Express : 3-5 jours ouvrables
+                        Express : 5 - 7 jours ouvrables
                       </li>
                     </ul>
                   </div>
@@ -202,7 +202,7 @@ const DeliveryPage = () => {
                     <p className="text-neutral-700 dark:text-neutral-300">
                       Pour toute question concernant votre livraison, n'hésitez pas à contacter notre 
                       service client à <span className="font-semibold text-green-700 dark:text-green-400">livraison@Riziky-Boutic.fr</span> ou par téléphone
-                      au <span className="font-semibold text-green-700 dark:text-green-400">01 23 45 67 89</span> (du lundi au vendredi de 9h à 18h).
+                      au <span className="font-semibold text-green-700 dark:text-green-400">06 92 84 23 70</span> (du lundi au vendredi de 9h à 18h).
                     </p>
                   </div>
                 </div>

@@ -23,7 +23,7 @@ const ReturnsPage = () => {
                 <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mr-4">
                   <CreditCard className="h-6 w-6 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Remboursements</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Remboursements :</h2>
               </div>
               
               <p className="text-gray-600 dark:text-gray-300 mb-6 text-lg leading-relaxed">
@@ -37,7 +37,7 @@ const ReturnsPage = () => {
                     <Shield className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">Remboursement partiel</h3>
+                    <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">Remboursement partiel :</h3>
                     <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                       Dans certains cas, un remboursement partiel peut être accordé (par exemple, si l'article présente des signes d'utilisation
                       ou si certains articles d'un lot retourné manquent).

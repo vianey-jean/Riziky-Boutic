@@ -228,7 +228,7 @@ const FAQPage = () => {
                 </div>
                 <h3 className="font-semibold mb-1">Téléphone</h3>
                 <p className="text-gray-600 text-sm mb-2">Lun-Ven, 9h-18h</p>
-                <p className="text-red-800">01 23 45 67 89</p>
+                <p className="text-red-800">06 92 84 23 70</p>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
