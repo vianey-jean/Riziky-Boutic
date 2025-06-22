@@ -110,7 +110,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         </div>
       </div>
       
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-medium" disabled={loading}>
         Enregistrer les modifications
       </Button>
     </form>

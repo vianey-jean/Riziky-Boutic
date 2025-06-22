@@ -290,8 +290,8 @@ const ContactPage = () => {
                         <MapPin className="h-8 w-8 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-red-800">Adresse</h3>
-                        <p className="text-gray-600">Notre siège social</p>
+                        <h3 className="text-xl font-bold text-red-800">Adresse :</h3>
+                        <p className="text-gray-600">Notre siège social :</p>
                       </div>
                     </div>
                     <div className="ml-16">
@@ -309,7 +309,7 @@ const ContactPage = () => {
                         <Phone className="h-8 w-8 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-blue-800">Téléphone</h3>
+                        <h3 className="text-xl font-bold text-blue-800">Téléphone :</h3>
                         <p className="text-gray-600">Appelez-nous directement</p>
                       </div>
                     </div>
@@ -360,10 +360,18 @@ const ContactPage = () => {
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white text-center shadow-2xl">
                 <h3 className="text-2xl font-bold mb-4">Besoin d'une réponse immédiate ?</h3>
                 <p className="text-blue-100 mb-6">Notre équipe support est disponible pour vous aider en temps réel</p>
-                <Button className="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-8 py-3 rounded-xl transition-all duration-300 hover:scale-105">
-                  <Phone className="h-5 w-5 mr-2" />
-                  Appelez-nous maintenant
-                </Button>
+                  <a
+                    href="https://wa.me/+262692842370" // Numéro de téléphone au format international, sans le "+"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block"
+                  >
+                    <Button className="bg-white text-green-600 hover:bg-green-50 font-semibold px-8 py-3 rounded-xl transition-all duration-300 hover:scale-105 flex items-center">
+                      <Phone className="h-5 w-5 mr-2" />
+                      Contactez-nous sur WhatsApp
+                    </Button>
+                  </a>
+
               </div>
             </div>
           </div>
