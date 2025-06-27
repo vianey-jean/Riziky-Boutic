@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, setRedirectAfterLogin } = useAuth();
 
   const fetchFavorites = async () => {
     if (!isAuthenticated || !user) {
@@ -44,6 +44,8 @@ export const useFavorites = () => {
 
   const toggleFavorite = async (product: Product) => {
     if (!isAuthenticated || !user) {
+      // Stocker la page favoris pour redirection après connexion
+      setRedirectAfterLogin('/favoris');
       toast.error('Vous devez être connecté pour ajouter un produit au favoris', {
         style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
         duration: 4000,

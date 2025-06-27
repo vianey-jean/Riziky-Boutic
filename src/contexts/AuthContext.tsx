@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { authAPI, User } from '../services/api';
 import { UpdateProfileData } from '@/types/auth';
@@ -15,6 +16,7 @@ interface AuthContextType {
   resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
   updateProfile: (data: UpdateProfileData) => Promise<void>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  setRedirectAfterLogin: (path: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,6 +57,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     verifyToken();
   }, []);
 
+  const setRedirectAfterLogin = (path: string) => {
+    localStorage.setItem('redirectAfterLogin', path);
+  };
+
   const login = async (email: string, password: string): Promise<void> => {
     try {
       console.log("Tentative de connexion avec:", { email });
@@ -67,9 +73,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   variant: 'default',
 });
 
-
-      // Navigation via window.location pour éviter les problèmes de hooks
-      window.location.href = '/';
+      // Vérifier s'il y a une redirection à faire
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      if (redirectPath) {
+        localStorage.removeItem('redirectAfterLogin');
+        window.location.href = redirectPath;
+      } else {
+        // Navigation via window.location pour éviter les problèmes de hooks
+        window.location.href = '/';
+      }
     } catch (error: any) {
       console.error("Erreur de connexion:", error);
       
@@ -86,6 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('maintenanceAdminBypass'); // Supprimer le marqueur admin
+    localStorage.removeItem('redirectAfterLogin'); // Nettoyer la redirection
     setUser(null);
     toast({
       title: 'Vous êtes déconnecté',
@@ -106,8 +119,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         variant: 'default',
       });
 
-      // Navigation via window.location pour éviter les problèmes de hooks
-      window.location.href = '/';
+      // Vérifier s'il y a une redirection à faire
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      if (redirectPath) {
+        localStorage.removeItem('redirectAfterLogin');
+        window.location.href = redirectPath;
+      } else {
+        // Navigation via window.location pour éviter les problèmes de hooks
+        window.location.href = '/';
+      }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Erreur lors de l\'inscription';
       toast({
@@ -224,6 +244,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     resetPassword,
     updateProfile,
     updatePassword,
+    setRedirectAfterLogin,
   };
 
   return (

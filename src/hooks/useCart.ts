@@ -9,7 +9,7 @@ export const useCart = () => {
   const [cart, setCart] = useState<StoreCartItem[]>([]);
   const [selectedCartItems, setSelectedCartItems] = useState<StoreCartItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, setRedirectAfterLogin } = useAuth();
 
   const fetchCart = async () => {
     if (!isAuthenticated || !user) {
@@ -68,6 +68,7 @@ export const useCart = () => {
 
   const addToCart = async (product: Product, quantity: number = 1) => {
     if (!isAuthenticated || !user) {
+      setRedirectAfterLogin('/panier');
       toast.error('Vous devez être connecté pour ajouter un produit au panier', {
         style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
         duration: 4000,
