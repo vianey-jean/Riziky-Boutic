@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, Truck, Package, ShoppingBag, Trash2, RefreshCw, Eye, Star, Calendar, MapPin, CreditCard, Clock } from 'lucide-react';
+import { Check, Truck, Package, ShoppingBag, Trash2, RefreshCw, Eye, Star, Calendar, MapPin, CreditCard, Clock, Tag, Percent } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '@/contexts/StoreContext';
 import { Separator } from '@/components/ui/separator';
@@ -270,7 +270,7 @@ const OrdersPage = () => {
                       </CardHeader>
                       
                       <CardContent className="p-8">
-                        {/* Produits avec design amélioré */}
+                        {/* Produits */}
                         <div className="space-y-6 mb-8">
                           {order.items.slice(0, 3).map((item, itemIndex) => (
                             <motion.div 
@@ -333,6 +333,65 @@ const OrdersPage = () => {
                               </div>
                             </motion.div>
                           )}
+                        </div>
+
+                        {/* Détails financiers de la commande */}
+                        <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-6 mb-8 border border-blue-100">
+                          <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center">
+                            <CreditCard className="h-5 w-5 mr-3 text-blue-600" />
+                            Détails de la commande
+                          </h3>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-700 font-medium">Sous-total produits:</span>
+                                <span className="font-bold text-gray-900">{(order.subtotalProduits || order.originalAmount || 0).toFixed(2)} €</span>
+                              </div>
+                              
+                              {order.codePromoUsed && typeof order.codePromoUsed === 'object' && (
+                                <div className="flex justify-between items-center text-green-600">
+                                  <span className="flex items-center font-medium">
+                                    <Tag className="h-4 w-4 mr-2" />
+                                    Code promo ({order.codePromoUsed.pourcentage}%):
+                                  </span>
+                                  <span className="font-bold">-{(order.discount || 0).toFixed(2)} €</span>
+                                </div>
+                              )}
+                              
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-700 font-medium">Sous-total après promo:</span>
+                                <span className="font-bold text-gray-900">{(order.subtotalApresPromo || order.subtotalProduits || order.originalAmount || 0).toFixed(2)} €</span>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center">
+                                <span className="flex items-center text-gray-700 font-medium">
+                                  <Truck className="h-4 w-4 mr-2" />
+                                  Frais de livraison:
+                                </span>
+                                <span className="font-bold text-gray-900">{(order.deliveryPrice || 0).toFixed(2)} €</span>
+                              </div>
+                              
+                              <div className="flex justify-between items-center">
+                                <span className="flex items-center text-gray-700 font-medium">
+                                  <Percent className="h-4 w-4 mr-2" />
+                                  TVA ({((order.taxRate || 0.20) * 100).toFixed(0)}%):
+                                </span>
+                                <span className="font-bold text-gray-900">{(order.taxAmount || 0).toFixed(2)} €</span>
+                              </div>
+                              
+                              <Separator className="my-2" />
+                              
+                              <div className="flex justify-between items-center text-lg">
+                                <span className="font-bold text-gray-900">Total TTC:</span>
+                                <span className="font-bold text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                                  {order.totalAmount.toFixed(2)} €
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Suivi de commande avec design amélioré */}

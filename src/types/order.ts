@@ -21,6 +21,13 @@ export interface OrderItem {
   originalPrice?: number;
 }
 
+export interface CodePromoUsed {
+  code: string;
+  productId: string;
+  pourcentage: number;
+  discountAmount: number;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -30,8 +37,17 @@ export interface Order {
   totalAmount: number;
   shippingAddress: ShippingAddress;
   paymentMethod: string;
-  codePromoUsed?: string | null;
+  codePromoUsed?: CodePromoUsed | string | null;
   status: 'confirmée' | 'en préparation' | 'en livraison' | 'livrée';
   createdAt: string;
   updatedAt: string;
+  
+  // Propriétés financières détaillées
+  subtotalProduits?: number;
+  originalAmount?: number;
+  discount?: number;
+  subtotalApresPromo?: number;
+  taxRate?: number;
+  taxAmount?: number;
+  deliveryPrice?: number;
 }
