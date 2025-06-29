@@ -102,53 +102,75 @@ const SavedCardsList: React.FC<SavedCardsListProps> = ({ onCardSelect, selectedC
                   : 'hover:bg-gray-50'
               }`}>
                 <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <RadioGroupItem value={card.id} id={card.id} />
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-2xl">{getCardIcon(card.cardType)}</span>
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-mono text-lg">{card.maskedNumber}</span>
+                  {/* Badge par défaut */}
                             {card.isDefault && (
-                              <Badge variant="secondary" className="bg-green-100 text-green-700">
-                                <Star className="h-3 w-3 mr-1" />
-                                Par défaut
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600">{card.cardName}</p>
-                          <p className="text-sm text-gray-500">Expire: {card.expiryDate}</p>
+                              <div className="flex">
+                  <Badge variant="secondary" className="bg-green-100 text-green-700 flex items-center ml-auto">
+                    <Star className="h-3 w-3 mr-1" />
+                    Par défaut
+                  </Badge>
+                </div>
+
+              )}
+                <div className="flex flex-wrap items-start gap-3">
+                  {/* Radio bouton */}
+                  <RadioGroupItem value={card.id} id={card.id} />
+
+                  {/* Contenu principal avec icône et infos */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-3">
+                      
+                      {/* Icône de la carte */}
+                      <span className="text-2xl">{getCardIcon(card.cardType)}</span>
+
+                      {/* Infos carte */}
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          
+                          {/* Numéro masqué */}
+                          <span className="font-mono text-lg break-all">{card.maskedNumber}</span>
+                          
+                        
                         </div>
+
+                        {/* Nom de la carte */}
+                        <p className="text-sm text-gray-600 break-words">{card.cardName}</p>
+
+                        {/* Date d'expiration */}
+                        <p className="text-sm text-gray-500">Expire : {card.expiryDate}</p>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
-                      {!card.isDefault && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleSetDefault(card.id);
-                          }}
-                        >
-                          <Star className="h-4 w-4" />
-                        </Button>
-                      )}
+                  </div>
+
+                  {/* Boutons actions */}
+                  <div className="flex items-center gap-2 mt-2 sm:mt-0 sm:ml-auto">
+                    {!card.isDefault && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleDeleteCard(card.id);
+                          handleSetDefault(card.id);
                         }}
-                        className="text-red-600 hover:text-red-700"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Star className="h-4 w-4" />
                       </Button>
-                    </div>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDeleteCard(card.id);
+                      }}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                </CardContent>
+                </div>
+              </CardContent>
+
               </Card>
             </Label>
           </div>
