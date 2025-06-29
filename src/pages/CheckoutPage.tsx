@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from '@/components/ui/sonner';
-import CreditCardForm from '@/components/checkout/CreditCardForm';
+import PaymentMethodSelector from '@/components/checkout/PaymentMethodSelector';
 import { ShippingAddress, codePromosAPI } from '@/services/api';
 import { Link } from 'react-router-dom';
 import { Percent, ShoppingCart, CheckCircle, Truck, CreditCard, Shield, MapPin, Phone, Mail } from 'lucide-react';
@@ -423,7 +423,7 @@ const CheckoutPage = () => {
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">Paiement sécurisé</h2>
                   <p className="text-gray-600">Vos données sont protégées par cryptage SSL</p>
                 </div>
-                <CreditCardForm onSuccess={handlePaymentSuccess} />
+                <PaymentMethodSelector onPaymentSuccess={handlePaymentSuccess} />
                 <Button 
                   variant="outline" 
                   className="mt-6 w-full border-gray-300 hover:border-gray-400"

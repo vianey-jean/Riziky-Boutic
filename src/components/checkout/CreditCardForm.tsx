@@ -1,20 +1,23 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/sonner';
 import LoadingSpinner from '@/components/ui/loading-spinner';
+import { cardsAPI } from '@/services/cards';
 
 interface CreditCardFormProps {
   onSuccess: () => void;
+  onSaveCard?: (cardData: any) => void;
 }
 
-const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
+const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess, onSaveCard }) => {
   const [cardNumber, setCardNumber] = useState('');
   const [cardName, setCardName] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
+  const [saveCard, setSaveCard] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
     cardNumber: '',
@@ -24,21 +27,15 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
   });
 
   const formatCardNumber = (value: string) => {
-    // Remove non-digit characters
     const digits = value.replace(/\D/g, '');
-    // Limit to 16 digits
     const limitedDigits = digits.slice(0, 16);
-    // Add spaces every 4 digits
     const formatted = limitedDigits.replace(/(\d{4})(?=\d)/g, '$1 ');
     return formatted;
   };
 
   const formatExpiryDate = (value: string) => {
-    // Remove non-digit characters
     const digits = value.replace(/\D/g, '');
-    // Limit to 4 digits
     const limitedDigits = digits.slice(0, 4);
-    // Add slash after first 2 digits
     if (limitedDigits.length > 2) {
       return `${limitedDigits.slice(0, 2)}/${limitedDigits.slice(2)}`;
     }
@@ -69,8 +66,6 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
   const validateCardNumber = (number: string) => {
     const digits = number.replace(/\s/g, '');
     if (digits.length !== 16) return false;
-    
-    // For testing purposes, accept any 16 digit number
     return /^\d{16}$/.test(digits);
   };
   
@@ -129,7 +124,7 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
     return valid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -138,19 +133,32 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
     
     setLoading(true);
     
-    // Pour test seulement - simuler un paiement réussi après 1.5 secondes
-    setTimeout(() => {
-      setLoading(false);
-      toast.success("Paiement accepté");
-      
-      // Call onSuccess to proceed with order creation
-      if (onSuccess && typeof onSuccess === 'function') {
-        console.log("Calling onSuccess after payment");
-        onSuccess();
-      } else {
-        console.error("onSuccess callback is not properly defined");
+    try {
+      // Sauvegarder la carte si demandé
+      if (saveCard) {
+        await cardsAPI.addCard({
+          cardNumber,
+          cardName,
+          expiryDate,
+          cvv
+        });
+        toast.success("Carte sauvegardée avec succès");
       }
-    }, 1500);
+
+      // Simuler le paiement
+      setTimeout(() => {
+        setLoading(false);
+        toast.success("Paiement accepté");
+        
+        if (onSuccess && typeof onSuccess === 'function') {
+          onSuccess();
+        }
+      }, 1500);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de la carte:', error);
+      setLoading(false);
+      toast.error("Erreur lors de la sauvegarde de la carte");
+    }
   };
 
   return (
@@ -207,6 +215,17 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess }) => {
           />
           {errors.cvv && <p className="text-red-500 text-sm mt-1">{errors.cvv}</p>}
         </div>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Checkbox 
+          id="saveCard" 
+          checked={saveCard} 
+          onCheckedChange={(checked) => setSaveCard(checked === true)}
+        />
+        <Label htmlFor="saveCard" className="text-sm">
+          Enregistrer cette carte pour les prochains paiements
+        </Label>
       </div>
       
       <Button 
