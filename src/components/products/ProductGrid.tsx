@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
-import { Product } from '@/contexts/StoreContext';
+import { Product, useStore } from '@/contexts/StoreContext';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, LayoutList, Filter, Heart, ShoppingCart, Sparkles, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -32,12 +31,14 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   const [visibleProducts, setVisibleProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
-  
+
+  const { favorites, toggleFavorite, addToCart } = useStore();
+
   useEffect(() => {
     setCurrentPage(1);
     setVisibleProducts(products.slice(0, productsPerPage));
   }, [products]);
-  
+
   const loadMoreProducts = () => {
     const nextPage = currentPage + 1;
     const nextProducts = products.slice(0, nextPage * productsPerPage);
@@ -46,17 +47,19 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   };
 
   const hasMoreProducts = visibleProducts.length < products.length;
-  
+
+  const isFavorite = (product: Product) => {
+    return favorites.some(fav => fav.id === product.id);
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+      transition: { staggerChildren: 0.1 }
     }
   };
-  
+
   const childVariants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
@@ -65,6 +68,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   return (
     <section className="product-section bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen py-8">
       <div className="container mx-auto px-4">
+        
         {(title || description) && (
           <div className="flex flex-col items-center mb-12 text-center">
             {title && (
@@ -82,8 +86,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({
             )}
           </div>
         )}
-        
+
         <div className="flex justify-between items-center mb-8 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg border border-gray-200 dark:border-gray-700">
+          
           <div className="flex items-center gap-4">
             <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1 shadow-inner">
               <Button 
@@ -113,7 +118,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                 <LayoutList className="h-5 w-5" />
               </Button>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-green-500" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -135,7 +140,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                 </Button>
               </Link>
             )}
-            
+
             {showFilters && (
               <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
                 <SheetTrigger asChild>
@@ -162,21 +167,17 @@ const ProductGrid: React.FC<ProductGridProps> = ({
             )}
           </div>
         </div>
-        
+
         {isLoading ? (
           <div className="flex justify-center py-20">
-            <LoadingSpinner 
-              size="lg" 
-              variant="elegant" 
-              text="Chargement des produits..."
-            />
+            <LoadingSpinner size="lg" variant="elegant" text="Chargement des produits..." />
           </div>
         ) : (
           <>
             {layout === 'grid' ? (
               <motion.div 
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" 
-                role="list" 
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+                role="list"
                 aria-label="Liste de produits"
                 variants={containerVariants}
                 initial="hidden"
@@ -190,8 +191,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({
               </motion.div>
             ) : (
               <motion.div 
-                className="flex flex-col gap-6" 
-                role="list" 
+                className="flex flex-col gap-6"
+                role="list"
                 aria-label="Liste de produits"
                 variants={containerVariants}
                 initial="hidden"
@@ -199,22 +200,21 @@ const ProductGrid: React.FC<ProductGridProps> = ({
               >
                 {visibleProducts.map(product => (
                   <motion.div 
-                    key={product.id} 
-                    role="listitem" 
+                    key={product.id}
+                    role="listitem"
                     className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl hover:border-red-300 dark:hover:border-red-700 hover:shadow-xl transition-all duration-300 overflow-hidden"
                     variants={childVariants}
                   >
                     <div className="flex flex-col md:flex-row">
+                      
+                      {/* Image */}
                       <div className="md:w-1/3 p-6">
                         <div className="relative group">
                           <img 
-                            src={product.image ? `${import.meta.env.VITE_API_BASE_URL}${product.image}` : '/placeholder.svg'} 
+                            src={product.image ? `${import.meta.env.VITE_API_BASE_URL}${product.image}` : '/placeholder.svg'}
                             alt={product.name}
                             className="w-full h-64 object-contain rounded-xl bg-gray-50 dark:bg-gray-700 group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/placeholder.svg';
-                            }}
+                            onError={(e) => (e.currentTarget.src = '/placeholder.svg')}
                           />
                           {product.promotion && (
                             <div className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
@@ -223,6 +223,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                           )}
                         </div>
                       </div>
+
+                      {/* Infos produit */}
                       <div className="md:w-2/3 p-6 flex flex-col justify-between">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 hover:text-red-600 transition-colors cursor-pointer">
@@ -232,14 +234,13 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                             {product.description}
                           </p>
                         </div>
+
                         <div className="flex justify-between items-end">
                           <div className="flex flex-col">
                             {product.promotion ? (
                               <div className="flex items-center gap-3">
                                 <p className="text-lg text-gray-500 line-through">
-                                  {typeof product.originalPrice === 'number'
-                                    ? product.originalPrice.toFixed(2)
-                                    : product.price.toFixed(2)} €
+                                  {typeof product.originalPrice === 'number' ? product.originalPrice.toFixed(2) : product.price.toFixed(2)} €
                                 </p>
                                 <p className="font-bold text-2xl bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
                                   {product.price.toFixed(2)} €
@@ -256,26 +257,21 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                               </p>
                             )}
                           </div>
+
                           <div className="flex gap-3">
                             <Button 
                               variant="outline" 
                               size="sm"
-                              className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl transition-all duration-300"
-                              onClick={() => {
-                                const { toggleFavorite } = require('@/contexts/StoreContext').useStore();
-                                toggleFavorite(product);
-                              }}
+                              className={`border ${isFavorite(product) ? 'border-red-300 text-red-600 bg-red-50' : 'border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300'} rounded-xl transition-all duration-300`}
+                              onClick={() => toggleFavorite(product)}
                             >
-                              <Heart className="h-4 w-4 mr-2" />
+                              <Heart className={`h-4 w-4 mr-2 ${isFavorite(product) ? 'text-red-600 fill-red-600' : 'text-gray-400'}`} />
                               Favoris
                             </Button>
                             <Button 
                               size="sm"
                               className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                              onClick={() => {
-                                const { addToCart } = require('@/contexts/StoreContext').useStore();
-                                addToCart(product);
-                              }}
+                              onClick={() => addToCart(product)}
                               disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
                             >
                               <ShoppingCart className="h-4 w-4 mr-2" />
@@ -289,8 +285,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                 ))}
               </motion.div>
             )}
-            
-            {/* Bouton "Charger plus" */}
+
             {hasMoreProducts && (
               <div className="flex justify-center mt-12">
                 <Button 
@@ -305,7 +300,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
             )}
           </>
         )}
-        
+
         {!isLoading && products.length === 0 && (
           <div className="text-center py-20 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 rounded-2xl shadow-inner border border-gray-200 dark:border-gray-600">
             <div className="max-w-md mx-auto">
