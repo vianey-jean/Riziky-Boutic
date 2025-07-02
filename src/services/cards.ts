@@ -21,6 +21,9 @@ export interface CardData {
 }
 
 class CardsAPI {
+  createPaymentIntent(p0: { cardId: string; }): { clientSecret: any; } | PromiseLike<{ clientSecret: any; }> {
+    throw new Error('Method not implemented.');
+  }
   private getAuthHeaders() {
     const token = localStorage.getItem('authToken'); // Utiliser 'authToken' au lieu de 'token'
     return {

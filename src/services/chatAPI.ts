@@ -19,8 +19,8 @@ export const adminChatAPI = {
 };
 
 export const clientChatAPI = {
-  setOnline: () => API.post('/client-chat/online'),
-  setOffline: () => API.post('/client-chat/offline'),
+  setOnline: () => API.post('/client-chat/online').catch(() => {}),
+  setOffline: () => API.post('/client-chat/offline').catch(() => {}),
   getStatus: (userId: string) => API.get(`/client-chat/status/${userId}`),
   getServiceAdmins: () => API.get('/client-chat/service-admins'),
   getServiceChat: () => API.get('/client-chat/service'),
