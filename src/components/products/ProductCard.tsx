@@ -279,7 +279,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     </Button>
                   </HoverCardTrigger>
                   <HoverCardContent className="w-auto p-2">
-                    <p className="text-sm">{isWishlisted ? "Retirer des favoris" : "Ajouter aux favoris"}</p>
+                    <p className="text-sm text-green-900 font-bold">{isWishlisted ? "Retirer des favoris" : "Ajouter aux favoris"}</p>
                   </HoverCardContent>
                 </HoverCard>
                 
@@ -313,7 +313,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   </Button>
                 </HoverCardTrigger>
                 <HoverCardContent className="w-auto p-2">
-                  <p className="text-sm text-red-800 font-bold">Ajouter dans le panier</p>
+                  <p className="text-sm text-red-800 font-bold">Ajouter dans Panier</p>
                 </HoverCardContent>
               </HoverCard>
             </motion.div>
