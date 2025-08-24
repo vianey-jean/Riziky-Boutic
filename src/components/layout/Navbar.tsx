@@ -16,6 +16,7 @@ import { debounce } from 'lodash';
 import { useIsMobile } from '@/hooks/use-mobile';
 import logo from "@/assets/logo.png"; 
 import CategoriesDropdown from './CategoriesDropdown';
+import UserAvatar from '@/components/user/UserAvatar';
 
 // Fonction améliorée pour normaliser les chaînes de caractères (supprime les accents et met en minuscule)
 const normalizeString = (str: string) => {
@@ -276,8 +277,8 @@ const Navbar = () => {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="nav-icon rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 dark:from-rose-900/20 dark:to-pink-900/20 dark:hover:from-rose-900/40 dark:hover:to-pink-900/40 h-12 w-12 transition-all duration-300 hover:scale-110 hover:shadow-lg border border-rose-200/50 dark:border-rose-700/50 group">
-                    <User className="h-5 w-5 text-rose-600 dark:text-rose-400 transition-transform group-hover:scale-110" />
+                  <Button variant="ghost" size="icon" className="nav-icon rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 dark:from-rose-900/20 dark:to-pink-900/20 dark:hover:from-rose-900/40 dark:hover:to-pink-900/40 h-12 w-12 transition-all duration-300 hover:scale-110 hover:shadow-lg border border-rose-200/50 dark:border-rose-700/50 group p-1">
+                    <UserAvatar user={user!} size="md" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-72 bg-white/95 dark:bg-gray-800/95 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl backdrop-blur-lg p-2" align="end">
@@ -391,7 +392,9 @@ const Navbar = () => {
                             <li>
                               <SheetClose asChild>
                                 <Link to="/profil" className="flex items-center text-sm hover:text-primary">
-                                  <User className="mr-2 h-6 w-6" />
+                                  <div className="mr-2">
+                                    <UserAvatar user={user!} size="sm" />
+                                  </div>
                                   <span>Profil</span>
                                 </Link>
                               </SheetClose>

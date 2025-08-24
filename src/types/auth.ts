@@ -18,6 +18,7 @@ export interface User {
   telephone?: string;
   genre?: 'homme' | 'femme' | 'autre';
   passwordUnique?: string;
+  profileImage?: string;
 }
 
 export interface LoginData {
@@ -50,4 +51,5 @@ export interface UpdateProfileData {
   pays?: string;
   telephone?: string;
   genre?: 'homme' | 'femme' | 'autre';
+  profileImage?: string;
 }

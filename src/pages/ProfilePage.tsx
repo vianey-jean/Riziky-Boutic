@@ -15,6 +15,8 @@ import { useNavigate } from "react-router-dom";
 import PersonalInfoForm from "@/components/profile/PersonalInfoForm";
 import PasswordForm from "@/components/profile/PasswordForm";
 import PreferencesForm from "@/components/profile/PreferencesForm";
+import ProfilePhotoUpload from "@/components/profile/ProfilePhotoUpload";
+import UserAvatar from "@/components/user/UserAvatar";
 import { toast } from "@/components/ui/sonner";
 import { useStore } from "@/contexts/StoreContext";
 import { authAPI } from "@/services/api";
@@ -70,6 +72,11 @@ const ProfilePage = () => {
     toast.error(
       "Impossible de charger vos informations après plusieurs tentatives."
     );
+  };
+
+  const handlePhotoUpdated = () => {
+    // Recharger les données utilisateur pour mettre à jour l'affichage
+    window.location.reload();
   };
 
   /** 🔹 Handlers de formulaire */
@@ -160,8 +167,13 @@ const ProfilePage = () => {
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
                 <div className="space-y-4 mb-6 lg:mb-0">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
-                      <User className="h-10 w-10 text-white" />
+                    <div className="relative bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
+                      {user ? (
+                        <UserAvatar user={user} size="xl" showBorder />
+                      ) : (
+                        <User className="h-16 w-16 text-white" />
+                      )}
+                      {user && <ProfilePhotoUpload onPhotoUpdated={handlePhotoUpdated} />}
                     </div>
                     <div>
                       <h1 className="text-4xl font-bold mb-2">Mon Compte</h1>
