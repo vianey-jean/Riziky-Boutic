@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, User, Bot, Minus, Smile } from 'lucide-react';
@@ -14,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { toast } from 'sonner';
+import UserAvatar from '@/components/user/UserAvatar';
 
 interface Message {
   id: string;
@@ -51,6 +51,36 @@ const ClientServiceChatWidget: React.FC = () => {
     },
     enabled: !!user,
     refetchInterval: 3000,
+  });
+
+  // Récupérer les informations de l'admin service client
+  const { data: serviceClientInfo } = useQuery({
+    queryKey: ['serviceClientInfo'],
+    queryFn: async () => {
+      try {
+        const response = await clientChatAPI.getServiceAdmins();
+        const serviceAdmin = response.data?.find((admin: any) => admin.email === "service.client@example.com");
+        return serviceAdmin || {
+          id: 'service-client',
+          nom: 'Service',
+          prenom: 'Client',
+          email: 'service.client@example.com',
+          profileImage: null,
+          genre: 'autre'
+        };
+      } catch (error) {
+        console.error('Erreur lors du chargement des infos service client:', error);
+        return {
+          id: 'service-client',
+          nom: 'Service',
+          prenom: 'Client',
+          email: 'service.client@example.com',
+          profileImage: null,
+          genre: 'autre'
+        };
+      }
+    },
+    enabled: !!user,
   });
 
   // Mutation pour envoyer un message
@@ -246,23 +276,32 @@ const ClientServiceChatWidget: React.FC = () => {
                       ) : conversation?.messages?.map((msg: Message) => (
                         <div
                           key={msg.id}
-                          className={`flex ${msg.senderId === user.id ? 'justify-end' : 'justify-start'}`}
+                          className={`flex items-start space-x-2 ${msg.senderId === user.id ? 'flex-row-reverse space-x-reverse' : ''}`}
                         >
-                          <div className="flex items-start space-x-2 max-w-[80%]">
-                            {msg.senderId !== user.id && (
-                              <Avatar className="w-6 h-6">
-                                <AvatarFallback className="bg-blue-100">
-                                  <Bot className="h-3 w-3 text-blue-600" />
-                                </AvatarFallback>
-                              </Avatar>
+                          {/* Avatar de l'utilisateur */}
+                          <div className="flex-shrink-0">
+                            {msg.senderId === user?.id ? (
+                              <UserAvatar user={user} size="sm" />
+                            ) : (
+                              serviceClientInfo ? (
+                                <UserAvatar user={serviceClientInfo} size="sm" />
+                              ) : (
+                                <Avatar className="w-6 h-6">
+                                  <AvatarFallback className="bg-blue-100">
+                                    <Bot className="h-3 w-3 text-blue-600" />
+                                  </AvatarFallback>
+                                </Avatar>
+                              )
                             )}
-                            
+                          </div>
+                          
+                          <div className="max-w-[80%]">
                             <div
                               className={`p-3 rounded-lg text-sm ${
                                 msg.isSystemMessage
                                   ? 'bg-gray-200 text-gray-700'
                                   : msg.senderId === user.id
-                                  ? 'bg-blue-600 text-white ml-auto'
+                                  ? 'bg-blue-600 text-white'
                                   : 'bg-gray-100 text-gray-800'
                               }`}
                             >
@@ -274,14 +313,6 @@ const ClientServiceChatWidget: React.FC = () => {
                                 {formatTime(msg.timestamp)}
                               </p>
                             </div>
-                            
-                            {msg.senderId === user.id && (
-                              <Avatar className="w-6 h-6">
-                                <AvatarFallback className="bg-gray-200">
-                                  <User className="h-3 w-3 text-gray-600" />
-                                </AvatarFallback>
-                              </Avatar>
-                            )}
                           </div>
                         </div>
                       ))}

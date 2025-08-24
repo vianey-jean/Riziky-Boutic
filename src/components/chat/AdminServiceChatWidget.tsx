@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, User, Bot, Minus, Smile } from 'lucide-react';
@@ -16,6 +15,7 @@ import { useLocation } from 'react-router-dom';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { toast } from 'sonner';
+import UserAvatar from '@/components/user/UserAvatar';
 
 interface Message {
   id: string;
@@ -301,23 +301,30 @@ const AdminServiceChatWidget: React.FC = () => {
                       {activeConversation?.messages?.map((msg: Message) => (
                         <div
                           key={msg.id}
-                          className={`flex ${msg.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
+                          className={`flex items-start space-x-2 ${msg.senderId === user?.id ? 'flex-row-reverse space-x-reverse' : ''}`}
                         >
-                          <div className="flex items-start space-x-2 max-w-[80%]">
-                            {msg.senderId !== user?.id && (
+                          {/* Avatar de l'utilisateur */}
+                          <div className="flex-shrink-0">
+                            {msg.senderId === user?.id ? (
+                              <UserAvatar user={user} size="sm" />
+                            ) : activeConversation?.clientInfo ? (
+                              <UserAvatar user={activeConversation.clientInfo} size="sm" />
+                            ) : (
                               <Avatar className="w-6 h-6">
                                 <AvatarFallback className="bg-blue-100">
                                   <User className="h-3 w-3 text-blue-600" />
                                 </AvatarFallback>
                               </Avatar>
                             )}
-                            
+                          </div>
+                          
+                          <div className="max-w-[80%]">
                             <div
                               className={`p-3 rounded-lg text-sm ${
                                 msg.isSystemMessage
                                   ? 'bg-gray-200 text-gray-700'
                                   : msg.senderId === user?.id
-                                  ? 'bg-red-600 text-white ml-auto'
+                                  ? 'bg-red-600 text-white'
                                   : 'bg-gray-100 text-gray-800'
                               }`}
                             >
@@ -329,14 +336,6 @@ const AdminServiceChatWidget: React.FC = () => {
                                 {formatTime(msg.timestamp)}
                               </p>
                             </div>
-                            
-                            {msg.senderId === user?.id && (
-                              <Avatar className="w-6 h-6">
-                                <AvatarFallback className="bg-gray-200">
-                                  <Bot className="h-3 w-3 text-gray-600" />
-                                </AvatarFallback>
-                              </Avatar>
-                            )}
                           </div>
                         </div>
                       ))}

@@ -273,6 +273,17 @@ const AdminChatContent = () => {
     setEditText((prev) => prev + emoji.native);
   };
 
+  // Fonction pour obtenir l'utilisateur qui a envoyé un message
+  const getSenderUser = (senderId: string) => {
+    if (senderId === currentUser?.id) {
+      return currentUser;
+    }
+    if (senderId === selectedAdmin?.id) {
+      return selectedAdmin;
+    }
+    return null;
+  };
+
   // Display the call interface when in a call
   if (callState.isInCall) {
     return <CallInterface />;
@@ -409,6 +420,7 @@ const AdminChatContent = () => {
                         onEditTextChange={setEditText}
                         onEmojiSelect={handleEditEmojiSelect}
                         isPending={editMessageMutation.isPending}
+                        senderUser={getSenderUser(message.senderId)}
                       />
                     ))}
                     <div ref={messagesEndRef} />
