@@ -50,12 +50,10 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({ onPhotoUpdated 
 
     setUploading(true);
     try {
-      let photoUrl = '';
-
       if (selectedFile) {
+        // Upload nouvelle photo
         console.log('📤 Upload nouvelle photo pour utilisateur:', user.id);
         
-        // Upload nouvelle photo
         const formData = new FormData();
         formData.append('profileImage', selectedFile);
         
@@ -77,22 +75,44 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({ onPhotoUpdated 
 
         const result = await response.json();
         console.log('✅ Upload réussi:', result);
-        photoUrl = result.profileImage;
+        
+        // Mettre à jour le profil utilisateur avec la nouvelle photo
+        await authAPI.updateProfile(user.id, { profileImage: result.profileImage });
+        
       } else if (selectedExisting) {
-        // Utiliser photo existante
-        photoUrl = selectedExisting;
+        // Définir une photo existante comme active
+        console.log('🔄 Définition photo existante comme active:', selectedExisting);
+        
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile-images/${user.id}/set-active`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({ profileImagePath: selectedExisting })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Erreur response:', errorText);
+          throw new Error(`Erreur serveur: ${response.status} - ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ Photo active mise à jour:', result);
+        
+        // Mettre à jour le profil utilisateur
+        await authAPI.updateProfile(user.id, { profileImage: selectedExisting });
       }
 
-      if (photoUrl) {
-        await authAPI.updateProfile(user.id, { profileImage: photoUrl });
-        toast.success('Photo de profil mise à jour avec succès');
-        onPhotoUpdated?.();
-        setIsOpen(false);
-        setShowConfirmation(false);
-        setSelectedFile(null);
-        setPreviewUrl('');
-        setSelectedExisting('');
-      }
+      toast.success('Photo de profil mise à jour avec succès');
+      onPhotoUpdated?.();
+      setIsOpen(false);
+      setShowConfirmation(false);
+      setSelectedFile(null);
+      setPreviewUrl('');
+      setSelectedExisting('');
+      
     } catch (error) {
       console.error('❌ Erreur upload:', error);
       toast.error(`Erreur lors de la mise à jour de la photo de profil: ${error.message}`);
@@ -112,6 +132,7 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({ onPhotoUpdated 
       if (response.ok) {
         const photos = await response.json();
         setExistingPhotos(photos);
+        console.log('📸 Photos existantes chargées:', photos.length);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des photos:', error);
@@ -149,7 +170,7 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({ onPhotoUpdated 
                 className="w-full"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Télécharger une nouvelle photo
+                Ajouter une nouvelle photo
               </Button>
               <input
                 ref={fileInputRef}
@@ -174,8 +195,10 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({ onPhotoUpdated 
             {/* Photos existantes */}
             {existingPhotos.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium mb-2">Photos existantes</h4>
-                <div className="grid grid-cols-3 gap-2">
+                <h4 className="text-sm font-medium mb-2">
+                  Vos photos existantes ({existingPhotos.length})
+                </h4>
+                <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                   {existingPhotos.map((photo, index) => (
                     <button
                       key={index}
@@ -205,7 +228,10 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({ onPhotoUpdated 
               disabled={!selectedFile && !selectedExisting || uploading}
               className="w-full"
             >
-              {uploading ? 'Enregistrement...' : 'Confirmer le changement'}
+              {uploading ? 'Enregistrement...' : 
+               selectedFile ? 'Ajouter cette nouvelle photo' : 
+               selectedExisting ? 'Utiliser cette photo' : 
+               'Sélectionnez une photo'}
             </Button>
           </div>
         </DialogContent>
@@ -216,7 +242,9 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({ onPhotoUpdated 
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmer le changement</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir changer votre photo de profil ?
+              {selectedFile 
+                ? 'Voulez-vous ajouter cette nouvelle photo comme photo de profil ?' 
+                : 'Voulez-vous utiliser cette photo existante comme photo de profil ?'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
