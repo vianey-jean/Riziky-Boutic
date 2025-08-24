@@ -292,7 +292,9 @@ const Navbar = () => {
                   <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 transition-all duration-200">
                     <Link to="/profil" className="flex items-center px-4 py-3">
                       <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
-                        <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                         <div className="mr-2">
+                                    <UserAvatar user={user!} size="sm" />
+                                  </div>
                       </div>
                       <span className="font-medium">Profil</span>
                     </Link>
