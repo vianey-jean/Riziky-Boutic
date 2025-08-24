@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Heart, Clock, Star, Eye, Share2, Zap } from 'lucide-react';
+import { ShoppingCart, Heart, Clock, Star, Eye, Share2, Zap, Plus } from 'lucide-react';
 import { Product, useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSecureId } from '@/services/secureIds';
@@ -302,14 +302,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 </Button>
               </div>
               
-              <Button
-                onClick={handleQuickAdd}
-                disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
-                className="rounded-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 px-4"
-              >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Ajouter
-              </Button>
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <Button
+                    onClick={handleQuickAdd}
+                    disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
+                    className="rounded-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 w-12 h-12 p-0"
+                  >
+                    <Plus className="h-6 w-6" />
+                  </Button>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-auto p-2">
+                  <p className="text-sm text-red-800 font-bold">Ajouter dans le panier</p>
+                </HoverCardContent>
+              </HoverCard>
             </motion.div>
 
             {/* Image indicators */}
