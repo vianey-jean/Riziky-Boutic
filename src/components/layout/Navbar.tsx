@@ -210,7 +210,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center group" aria-label="Page d'accueil">
             <div className="relative">
-              <img src={logo} alt="Riziky Boutique" className="h-14 w-auto transition-transform duration-300 group-hover:scale-105" />
+              <img src={logo} alt="Riziky Boutique" className="h-20 w-auto transition-transform duration-300 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
             </div>
           </Link>
