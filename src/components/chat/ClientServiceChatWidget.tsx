@@ -9,11 +9,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientChatAPI } from '@/services/chatAPI';
+import { chatFilesAPI } from '@/services/chatFilesAPI';
 import { useAuth } from '@/contexts/AuthContext';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { toast } from 'sonner';
 import UserAvatar from '@/components/user/UserAvatar';
+import FileUploadButton from '@/components/chat/FileUploadButton';
+import VoiceRecorder from '@/components/chat/VoiceRecorder';
+import FileAttachment from '@/components/chat/FileAttachment';
 
 interface Message {
   id: string;
@@ -23,6 +27,14 @@ interface Message {
   read: boolean;
   isSystemMessage?: boolean;
   isAdminReply?: boolean;
+  fileAttachment?: {
+    filename: string;
+    originalName: string;
+    mimetype: string;
+    size: number;
+    path: string;
+    url: string;
+  };
 }
 
 const ClientServiceChatWidget: React.FC = () => {
@@ -98,6 +110,22 @@ const ClientServiceChatWidget: React.FC = () => {
     }
   });
 
+  // Mutation pour upload de fichier
+  const uploadFileMutation = useMutation({
+    mutationFn: async ({ file, messageText }: { file: File; messageText?: string }) => {
+      const conversationId = `client-${user?.id}-service`;
+      return chatFilesAPI.uploadServiceFile(conversationId, file, messageText);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['serviceConversation'] });
+      toast.success('Fichier envoyé avec succès');
+    },
+    onError: (error) => {
+      console.error('Erreur lors de l\'upload du fichier:', error);
+      toast.error('Erreur lors de l\'envoi du fichier');
+    }
+  });
+
   // Mutation pour marquer les messages comme lus
   const markAsReadMutation = useMutation({
     mutationFn: async ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
@@ -135,7 +163,7 @@ const ClientServiceChatWidget: React.FC = () => {
     }
   }, []);
 
-  // Ouvrir automatiquement le widget quand il y a de nouveaux messages (seulement si pas fermé manuellement)
+  // Ouvrir automatiquement le widget quand il y a de nouveaux messages
   useEffect(() => {
     const isClosed = localStorage.getItem(WIDGET_CLOSED_KEY) === 'true';
     
@@ -173,19 +201,28 @@ const ClientServiceChatWidget: React.FC = () => {
     sendMessageMutation.mutate(message);
   };
 
+  const handleFileSelect = (file: File) => {
+    uploadFileMutation.mutate({ file });
+  };
+
+  const handleVoiceRecording = (audioBlob: Blob) => {
+    const audioFile = new File([audioBlob], `voice-message-${Date.now()}.wav`, {
+      type: 'audio/wav'
+    });
+    uploadFileMutation.mutate({ file: audioFile, messageText: 'Message vocal' });
+  };
+
   const handleEmojiSelect = (emoji: any) => {
     setMessage((prev) => prev + emoji.native);
   };
 
   const handleCloseWidget = () => {
     setIsOpen(false);
-    // Persister l'état fermé
     localStorage.setItem(WIDGET_CLOSED_KEY, 'true');
   };
 
   const handleOpenWidget = () => {
     setIsOpen(true);
-    // Enlever l'état fermé
     localStorage.removeItem(WIDGET_CLOSED_KEY);
   };
 
@@ -213,7 +250,6 @@ const ClientServiceChatWidget: React.FC = () => {
             <MessageCircle className="h-6 w-6" />
           </Button>
           
-          {/* Badge de notification - n'afficher que s'il y a des messages non lus */}
           {unreadCount > 0 && (
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
@@ -313,6 +349,13 @@ const ClientServiceChatWidget: React.FC = () => {
                                 {formatTime(msg.timestamp)}
                               </p>
                             </div>
+                            
+                            {/* Affichage des fichiers attachés */}
+                            {msg.fileAttachment && (
+                              <div className="mt-2">
+                                <FileAttachment attachment={msg.fileAttachment} />
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -322,6 +365,21 @@ const ClientServiceChatWidget: React.FC = () => {
 
                   {/* Zone de saisie */}
                   <div className="p-4 border-t">
+                    <div className="flex space-x-2 mb-2">
+                      {/* Boutons d'upload et micro */}
+                      <FileUploadButton
+                        onFileSelect={handleFileSelect}
+                        accept="*/*"
+                        maxSize={50}
+                        disabled={uploadFileMutation.isPending}
+                      />
+                      
+                      <VoiceRecorder
+                        onRecordingComplete={handleVoiceRecording}
+                        disabled={uploadFileMutation.isPending}
+                      />
+                    </div>
+                    
                     <div className="flex space-x-2">
                       <div className="relative flex-1">
                         <Input

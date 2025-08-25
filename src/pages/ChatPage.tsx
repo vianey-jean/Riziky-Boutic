@@ -1,416 +1,345 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import Layout from '@/components/layout/Layout';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Paperclip, X, User, Bot, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Send, User, Edit, Trash2, Smile, MessageCircle, Headphones, Clock, CheckCircle } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Card } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { clientChatAPI, Message } from '@/services/api';
-import { toast } from '@/components/ui/sonner';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator 
-} from '@/components/ui/dropdown-menu';
+import { clientChatAPI } from '@/services/chatAPI';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import UserAvatar from '@/components/user/UserAvatar';
+import FileUploadButton from '@/components/chat/FileUploadButton';
+import FilePreview from '@/components/chat/FilePreview';
+import { chatFilesAPI } from '@/services/chatFilesAPI';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Link } from 'react-router-dom';
 
-const ChatPage = () => {
+interface Message {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: string;
+  read: boolean;
+  isSystemMessage?: boolean;
+  isAdminReply?: boolean;
+  fileAttachment?: {
+    filename: string;
+    originalName: string;
+    mimetype: string;
+    size: number;
+    path: string;
+    url: string;
+  };
+}
+
+interface Conversation {
+  id: string;
+  messages: Message[];
+  participants: string[];
+  type: string;
+  clientInfo?: any;
+}
+
+const ChatPage: React.FC = () => {
   const { user } = useAuth();
-  const [messageText, setMessageText] = useState('');
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editText, setEditText] = useState('');
+  const [message, setMessage] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
 
-  // Récupérer la conversation avec le service client
-  const { data: conversation, isLoading: isLoadingConversation } = useQuery({
-    queryKey: ['serviceChat'],
+  const toggleEmojiPicker = () => {
+    setIsEmojiPickerOpen(!isEmojiPickerOpen);
+  };
+
+  const { data: conversation, isLoading, error } = useQuery<Conversation>({
+    queryKey: ['clientConversation'],
     queryFn: async () => {
-      try {
-        const response = await clientChatAPI.getServiceChat();
-        return response.data || { messages: [] };
-      } catch (error) {
-        console.error("Erreur lors du chargement du chat:", error);
-        toast.error("Erreur lors du chargement du chat. Veuillez réessayer.");
-        return { messages: [] };
-      }
+      if (!user) throw new Error('Utilisateur non authentifié');
+      const response = await clientChatAPI.getServiceChat();
+      return response.data;
     },
-    enabled: !!user,
-    refetchInterval: 5000 // Rafraîchir toutes les 5 secondes
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    refetchInterval: 3000,
   });
 
   // Mutation pour envoyer un message
   const sendMessageMutation = useMutation({
-    mutationFn: async (message: string) => {
-      return clientChatAPI.sendServiceMessage(message);
+    mutationFn: async (messageText: string) => {
+      if (!user) throw new Error('Utilisateur non authentifié');
+      if (!conversation?.id) throw new Error('Conversation ID manquante');
+      return clientChatAPI.sendServiceMessage(messageText);
     },
     onSuccess: () => {
-      setMessageText('');
-      queryClient.invalidateQueries({ queryKey: ['serviceChat'] });
+      setMessage('');
+      queryClient.invalidateQueries({ queryKey: ['clientConversation'] });
     },
     onError: (error) => {
-      console.error("Erreur lors de l'envoi du message:", error);
-      toast.error("L'envoi du message a échoué. Veuillez réessayer.");
+      console.error('Erreur lors de l\'envoi du message:', error);
+      toast.error('Erreur lors de l\'envoi du message');
     }
   });
 
-  // Mutation pour modifier un message
-  const editMessageMutation = useMutation({
-    mutationFn: async ({ messageId, content, conversationId }: { messageId: string; content: string; conversationId: string }) => {
-      return clientChatAPI.editMessage(messageId, content, conversationId);
+  // Mutation pour l'upload de fichiers
+  const uploadFileMutation = useMutation({
+    mutationFn: async ({ file, messageText }: { file: File; messageText?: string }) => {
+      if (!user) throw new Error('Utilisateur non authentifié');
+      if (!conversation?.id) throw new Error('Conversation ID manquante');
+      return chatFilesAPI.uploadServiceFile(conversation.id, file, messageText);
     },
     onSuccess: () => {
-      setEditingMessageId(null);
-      setEditText('');
-      queryClient.invalidateQueries({ queryKey: ['serviceChat'] });
+      queryClient.invalidateQueries({ queryKey: ['clientConversation'] });
+      toast.success('Fichier envoyé avec succès');
     },
     onError: (error) => {
-      console.error("Erreur lors de la modification du message:", error);
-      toast.error("La modification du message a échoué.");
+      console.error('Erreur lors de l\'upload du fichier:', error);
+      toast.error('Erreur lors de l\'envoi du fichier');
     }
   });
 
-  // Mutation pour supprimer un message
-  const deleteMessageMutation = useMutation({
+  // Mutation pour supprimer un fichier
+  const deleteFileMutation = useMutation({
     mutationFn: async ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
-      return clientChatAPI.deleteMessage(messageId, conversationId);
+      return chatFilesAPI.deleteFile(messageId, conversationId, 'service');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['serviceChat'] });
-      toast.success("Message supprimé avec succès");
+      queryClient.invalidateQueries({ queryKey: ['clientConversation'] });
+      toast.success('Fichier supprimé avec succès');
     },
     onError: (error) => {
-      console.error("Erreur lors de la suppression du message:", error);
-      toast.error("La suppression du message a échoué.");
+      console.error('Erreur lors de la suppression du fichier:', error);
+      toast.error('Erreur lors de la suppression du fichier');
     }
   });
 
-  // Marquer l'utilisateur comme en ligne au montage et hors ligne au démontage
-  useEffect(() => {
-    if (user) {
-      clientChatAPI.setOnline();
+  // Mutation pour marquer les messages comme lus
+  const markAsReadMutation = useMutation({
+    mutationFn: async ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
+      return clientChatAPI.markAsRead(messageId, conversationId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientConversation'] });
     }
-    
-    return () => {
-      if (user) {
-        clientChatAPI.setOffline();
-      }
-    };
-  }, [user]);
+  });
 
-  // Défiler vers le bas quand de nouveaux messages arrivent
+  // Effet pour marquer les messages comme lus lors de l'ouverture du chat
+  useEffect(() => {
+    if (isOpen && conversation?.messages) {
+      const unreadMessages = conversation.messages.filter(msg => !msg.read && msg.senderId !== user?.id && !msg.isSystemMessage);
+      unreadMessages.forEach(msg => {
+        if (conversation.id) {
+          markAsReadMutation.mutate({ messageId: msg.id, conversationId: conversation.id });
+        }
+      });
+    }
+  }, [isOpen, conversation, user, markAsReadMutation]);
+
+  // Effet pour scroller vers le bas lors de la réception de nouveaux messages
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [conversation?.messages]);
 
+  // Gestionnaire d'envoi de message
   const handleSendMessage = () => {
-    if (!messageText.trim()) return;
-    sendMessageMutation.mutate(messageText);
+    if (!message.trim()) return;
+    sendMessageMutation.mutate(message);
   };
 
-  const handleEditMessage = (messageId: string) => {
-    if (!editText.trim() || !conversation) return;
+  // Gestionnaire de sélection de fichier
+  const handleFileSelect = (file: File) => {
+    uploadFileMutation.mutate({ file, messageText: `Fichier partagé par ${user?.nom}` });
+  };
+
+  // Gestionnaire de suppression de fichier
+  const handleFileDelete = (messageId: string) => {
+    if (!conversation?.id) return;
     
-    const conversationId = `client-${user?.id}-service`;
-    editMessageMutation.mutate({ 
-      messageId, 
-      content: editText,
-      conversationId
+    deleteFileMutation.mutate({
+      messageId,
+      conversationId: conversation.id
     });
   };
 
-  const startEditMessage = (message: Message) => {
-    setEditingMessageId(message.id);
-    setEditText(message.content);
-  };
-
-  const handleDeleteMessage = (messageId: string) => {
-    if (!conversation || !confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) return;
-    
-    const conversationId = `client-${user?.id}-service`;
-    deleteMessageMutation.mutate({ messageId, conversationId });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
+  // Gestionnaire de sélection d'emoji
   const handleEmojiSelect = (emoji: any) => {
-    setMessageText((prev) => prev + emoji.native);
+    setMessage((prev) => prev + emoji.native);
   };
 
-  const handleEditEmojiSelect = (emoji: any) => {
-    setEditText((prev) => prev + emoji.native);
+  // Formater la date et l'heure
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diff / (1000 * 3600 * 24));
+
+    if (diffDays === 0) {
+      return format(date, 'HH:mm', { locale: fr });
+    } else if (diffDays === 1) {
+      return `Hier à ${format(date, 'HH:mm', { locale: fr })}`;
+    } else if (diffDays < 7) {
+      return format(date, 'EEEE à HH:mm', { locale: fr });
+    } else {
+      return format(date, 'dd/MM/yyyy à HH:mm', { locale: fr });
+    }
   };
 
-  if (!user) {
-    return (
-      <Layout>
-        <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center py-12">
-          <div className="max-w-md mx-auto text-center bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
-            <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <MessageCircle className="h-10 w-10 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Service Client</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
-              Connectez-vous pour accéder à notre service client en ligne et bénéficier d'une assistance personnalisée.
-            </p>
-            <Button asChild className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 w-full">
-              <Link to="/login">Se connecter</Link>
-            </Button>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  const activeConversation = conversation;
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          {/* En-tête */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent mb-4">
-              Service Client
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
-              Notre équipe est là pour vous aider
-            </p>
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+      {/* En-tête */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+        <div className="container mx-auto flex items-center justify-between">
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Service Client
+          </h1>
+          <Button variant="outline" size="sm" onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? 'Fermer' : 'Ouvrir'} le Chat
+          </Button>
+        </div>
+      </div>
+
+      {/* Corps principal */}
+      <div className="container mx-auto flex-1 p-4">
+        {error && (
+          <div className="text-red-500">
+            Erreur lors du chargement de la conversation.
           </div>
-          
-          {/* Chat Container */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
-            {/* Chat Header */}
-            <div className="bg-gradient-to-r from-red-600 to-pink-600 p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    <Headphones className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">Support Riziky Boutique</h2>
-                    <div className="flex items-center space-x-2 text-sm opacity-90">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span>En ligne</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right text-sm opacity-90">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4" />
-                    <span>Lun-Ven 9h-18h</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Messages */}
-            <div className="h-96 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900 space-y-4">
-              {isLoadingConversation ? (
-                <div className="flex justify-center items-center h-full">
-                  <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-red-200 border-t-red-600 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Chargement de la conversation...</p>
-                  </div>
-                </div>
-              ) : conversation?.messages.length === 0 ? (
-                <div className="text-center h-full flex items-center justify-center">
-                  <div className="max-w-sm">
-                    <div className="w-16 h-16 bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/20 dark:to-pink-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MessageCircle className="h-8 w-8 text-red-600" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Commencez la conversation
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Posez-nous vos questions, nous sommes là pour vous aider !
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {conversation?.messages.map(message => (
-                    <div 
-                      key={message.id} 
-                      className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {editingMessageId === message.id ? (
-                        <div className="w-full max-w-[80%] bg-white dark:bg-gray-700 p-4 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-600">
-                          <div className="flex space-x-2">
-                            <Input 
-                              value={editText}
-                              onChange={(e) => setEditText(e.target.value)}
-                              className="flex-1 rounded-xl"
-                            />
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="outline" size="icon" className="rounded-xl">
-                                  <Smile className="h-4 w-4" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-full p-0" side="top">
-                                <Picker 
-                                  data={data} 
-                                  onEmojiSelect={handleEditEmojiSelect}
-                                  theme="light"
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <Button 
-                              onClick={() => handleEditMessage(message.id)} 
-                              className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl"
-                              disabled={editMessageMutation.isPending}
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              onClick={() => setEditingMessageId(null)} 
-                              className="rounded-xl"
-                            >
-                              ✕
-                            </Button>
-                          </div>
-                        </div>
+        )}
+
+        {isLoading && (
+          <div className="text-gray-500 dark:text-gray-400">
+            Chargement de la conversation...
+          </div>
+        )}
+
+        {activeConversation && isOpen ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col h-full"
+          >
+            {/* Zone d'affichage des messages */}
+            <ScrollArea className="flex-1 mb-4">
+              <div className="space-y-3">
+                {activeConversation.messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex items-start space-x-2 ${msg.senderId === user?.id ? 'flex-row-reverse space-x-reverse' : ''}`}
+                  >
+                    {/* Avatar de l'expéditeur */}
+                    <div className="flex-shrink-0">
+                      {msg.senderId === user?.id ? (
+                        <UserAvatar user={user} size="sm" />
                       ) : (
-                        <div 
-                          className={`max-w-[80%] rounded-2xl px-6 py-4 relative group shadow-lg border ${
-                            message.isSystemMessage 
-                              ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600' :
-                            message.senderId === user.id 
-                              ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white border-red-200' 
-                              : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-200'
+                        <Avatar className="w-6 h-6">
+                          <AvatarFallback className="bg-blue-100">
+                            <Bot className="h-3 w-3 text-blue-600" />
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+
+                    <div className="max-w-[80%]">
+                      {/* Bulle de message */}
+                      <div
+                        className={`p-3 rounded-lg text-sm ${msg.isSystemMessage
+                          ? 'bg-gray-200 text-gray-700'
+                          : msg.senderId === user?.id
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
                           }`}
-                        >
-                          {message.senderId === user.id && !message.isSystemMessage && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 h-8 w-8 text-white bg-black/20 hover:bg-black/40 rounded-full transition-all duration-200"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent className="rounded-xl">
-                                <DropdownMenuItem onClick={() => startEditMessage(message)}>
-                                  <Edit className="mr-2 h-4 w-4" /> Modifier
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  onClick={() => handleDeleteMessage(message.id)}
-                                  className="text-red-600"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" /> Supprimer
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                          <p className="mb-2 leading-relaxed">{message.content}</p>
-                          <div className="flex items-center justify-between text-xs opacity-80">
-                            <span>{formatTime(message.timestamp)}</span>
-                            {message.isEdited && (
-                              <span className="italic">modifié</span>
-                            )}
-                          </div>
+                      >
+                        {msg.content}
+                        {/* Horodatage du message */}
+                        <p className={`text-xs mt-1 ${msg.isSystemMessage
+                          ? 'text-gray-500'
+                          : msg.senderId === user?.id
+                            ? 'text-blue-100'
+                            : 'text-gray-500 dark:text-gray-400'
+                          }`}>
+                          {formatDate(msg.timestamp)}
+                        </p>
+                      </div>
+
+                      {/* Affichage des fichiers attachés avec possibilité de suppression pour l'expéditeur */}
+                      {msg.fileAttachment && (
+                        <div className="mt-2">
+                          <FilePreview 
+                            attachment={msg.fileAttachment}
+                            canDelete={msg.senderId === user?.id}
+                            onDelete={() => handleFileDelete(msg.id)}
+                          />
                         </div>
                       )}
                     </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
-            </div>
-            
-            {/* Input Area */}
-            <div className="p-6 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-              <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex space-x-3">
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+
+            {/* Zone de saisie */}
+            <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+              <div className="flex items-center space-x-2">
+                <FileUploadButton
+                  onFileSelect={handleFileSelect}
+                  accept="*/*"
+                  maxSize={50}
+                  disabled={uploadFileMutation.isPending}
+                />
                 <div className="relative flex-1">
-                  <Textarea
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    placeholder="Tapez votre message..."
-                    className="resize-none pr-12 rounded-xl border-gray-300 dark:border-gray-600 focus:border-red-500 focus:ring-red-500"
-                    rows={3}
-                    onKeyPress={(e) => {
+                  <Input
+                    placeholder="Votre message..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         handleSendMessage();
                       }
                     }}
+                    className="pr-10"
                   />
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute right-2 bottom-2 text-gray-400 hover:text-red-500 rounded-lg"
-                      >
-                        <Smile className="h-5 w-5" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" side="top">
-                      <Picker 
-                        data={data} 
-                        onEmojiSelect={handleEmojiSelect}
-                        theme="light"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleEmojiPicker}
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
+                  >
+                    <Smile className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button 
-                  type="submit" 
-                  className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white self-end h-12 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                <Button
+                  onClick={handleSendMessage}
                   disabled={sendMessageMutation.isPending}
                 >
-                  <Send className="h-5 w-5" />
+                  <Send className="h-4 w-4" />
                 </Button>
-              </form>
+              </div>
+              {isEmojiPickerOpen && (
+                <div className="absolute bottom-20 right-0">
+                  <Picker data={data} onEmojiSelect={handleEmojiSelect} theme="light" />
+                </div>
+              )}
             </div>
+          </motion.div>
+        ) : (
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            {activeConversation ? 'Chat fermé.' : 'Aucune conversation active.'}
           </div>
-          
-          {/* FAQ Section */}
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">
-              Questions fréquentes
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                'Comment suivre ma livraison?',
-                'Comment retourner un produit?',
-                'Quels modes de paiement acceptez-vous?',
-                'Avez-vous des réductions régulières?'
-              ].map((question, index) => (
-                <Button 
-                  key={index}
-                  variant="outline" 
-                  onClick={() => setMessageText(question)}
-                  className="w-full justify-start p-4 h-auto text-left border-gray-200 dark:border-gray-600 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all duration-300 hover:scale-105"
-                >
-                  <MessageCircle className="h-5 w-5 mr-3 text-red-600" />
-                  <span className="font-medium">{question}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
-    </Layout>
+    </div>
   );
 };
 

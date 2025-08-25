@@ -1,17 +1,21 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Send, Smile, Mic, Paperclip } from 'lucide-react';
+import { Send, Smile } from 'lucide-react';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
+import FileUploadButton from '@/components/chat/FileUploadButton';
+import VoiceRecorder from '@/components/chat/VoiceRecorder';
 
 interface MessageInputProps {
   value: string;
   onChange: (value: string) => void;
   onSend: () => void;
   onEmojiSelect: (emoji: any) => void;
+  onFileSelect?: (file: File) => void;
+  onVoiceRecording?: (audioBlob: Blob) => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -21,6 +25,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
   onChange,
   onSend,
   onEmojiSelect,
+  onFileSelect,
+  onVoiceRecording,
   disabled = false,
   placeholder = "Écrivez votre message..."
 }) => {
@@ -29,27 +35,48 @@ const MessageInput: React.FC<MessageInputProps> = ({
     onSend();
   };
 
+  const handleFileSelect = (file: File) => {
+    if (onFileSelect) {
+      onFileSelect(file);
+    }
+  };
+
+  const handleVoiceRecording = (audioBlob: Blob) => {
+    if (onVoiceRecording) {
+      onVoiceRecording(audioBlob);
+    }
+  };
+
   return (
     <div className="p-4 border-t bg-gradient-to-r from-gray-50 to-gray-100">
       <form onSubmit={handleSubmit} className="flex items-center space-x-3">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="shrink-0 border-gray-300 hover:bg-gray-200"
-        >
-          <Paperclip className="h-4 w-4 text-gray-600" />
-        </Button>
+        {/* Bouton d'upload de fichier */}
+        {onFileSelect && (
+          <FileUploadButton
+            onFileSelect={handleFileSelect}
+            accept="*/*"
+            maxSize={50}
+            disabled={disabled}
+          />
+        )}
+        
+        {/* Enregistreur vocal */}
+        {onVoiceRecording && (
+          <VoiceRecorder
+            onRecordingComplete={handleVoiceRecording}
+            disabled={disabled}
+          />
+        )}
         
         <div className="relative flex-1">
           <Input
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className="pr-20 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-full"
+            className="pr-12 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-full"
             disabled={disabled}
           />
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
             <Popover>
               <PopoverTrigger asChild>
                 <Button 
@@ -69,14 +96,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 />
               </PopoverContent>
             </Popover>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 hover:bg-gray-200"
-            >
-              <Mic className="h-4 w-4 text-gray-600" />
-            </Button>
           </div>
         </div>
         

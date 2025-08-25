@@ -36,5 +36,51 @@ export const clientChatAPI = {
     API.put(`/client-chat/messages/${messageId}/read`, { conversationId })
 };
 
+// Services pour les fichiers chat
+export const chatFilesAPI = {
+  // Upload fichier dans chat admin
+  uploadAdminFile: (conversationId: string, file: File, messageText?: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (messageText) {
+      formData.append('messageText', messageText);
+    }
+    
+    return API.post(`/chat-files/admin/${conversationId}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Upload fichier dans chat service client
+  uploadServiceFile: (conversationId: string, file: File, messageText?: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (messageText) {
+      formData.append('messageText', messageText);
+    }
+    
+    return API.post(`/chat-files/service/${conversationId}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Télécharger un fichier
+  downloadFile: (type: 'files' | 'audio' | 'video', filename: string) => {
+    return API.get(`/chat-files/download/${type}/${filename}`, {
+      responseType: 'blob',
+    });
+  },
+
+  // Obtenir l'URL d'un fichier pour prévisualisation
+  getFileUrl: (fileUrl: string) => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    return `${baseUrl}${fileUrl}`;
+  }
+};
+
 // Export des types pour une meilleure réutilisabilité
-export type { Message, ServiceConversation } from '@/types/chat';
+export type { Message, ServiceConversation, FileAttachment } from '@/types/chat';

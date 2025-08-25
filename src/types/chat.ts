@@ -1,6 +1,15 @@
 
 import { User } from './auth';
 
+export interface FileAttachment {
+  filename: string;
+  originalName: string;
+  mimetype: string;
+  size: number;
+  path: string;
+  url: string;
+}
+
 export interface Message {
   id: string;
   senderId: string;
@@ -11,6 +20,7 @@ export interface Message {
   isEdited?: boolean;
   isAdminReply?: boolean;
   isSystemMessage?: boolean;
+  fileAttachment?: FileAttachment;
 }
 
 export interface Conversation {
