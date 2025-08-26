@@ -38,6 +38,9 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteAction, setDeleteAction] = useState<'remove' | 'decrease'>('remove');
+  
+  // Vérifier si le produit est en rupture de stock
+  const isOutOfStock = item.product.stock !== undefined && item.product.stock <= 0;
 
   const handleRemoveClick = () => {
     setDeleteAction('remove');
@@ -67,10 +70,11 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
       <div className="flex flex-col sm:flex-row border-b pb-5">
         <div className="flex items-center mb-4 sm:mb-0">
           <Checkbox 
-            checked={isSelected}
+            checked={isSelected && !isOutOfStock}
             onCheckedChange={(checked) => onSelectItem(item.product.id, checked === true)}
             className="mr-3"
             id={`select-${item.product.id}`}
+            disabled={isOutOfStock}
           />
           <div className="sm:w-24 h-24">
             <img 
@@ -107,8 +111,13 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
                 ) : item.product.stock > 0 ? (
                   <span className="text-amber-600">Plus que {item.product.stock} en stock</span>
                 ) : (
-                  <span className="text-red-600">Rupture de stock</span>
+                  <span className="text-red-600 font-medium">❌ Rupture de stock</span>
                 )}
+              </p>
+            )}
+            {isOutOfStock && (
+              <p className="text-xs text-red-600 mt-1 font-medium">
+                Ce produit ne peut pas être commandé actuellement
               </p>
             )}
           </div>
@@ -120,6 +129,7 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
                 size="icon" 
                 className="h-8 w-8 rounded-r-none"
                 onClick={handleDecreaseQuantity}
+                disabled={isOutOfStock}
               >
                 <Minus className="h-3 w-3" />
               </Button>
@@ -128,16 +138,17 @@ const CartItemCard: React.FC<CartItemCardProps> = ({
                 value={item.quantity}
                 onChange={(e) => {
                   const val = parseInt(e.target.value);
-                  if (!isNaN(val)) onQuantityChange(item.product.id, val);
+                  if (!isNaN(val) && !isOutOfStock) onQuantityChange(item.product.id, val);
                 }}
                 className="h-8 w-12 rounded-none text-center p-0"
+                disabled={isOutOfStock}
               />
               <Button 
                 variant="outline" 
                 size="icon" 
                 className="h-8 w-8 rounded-l-none"
                 onClick={() => onQuantityChange(item.product.id, item.quantity + 1)}
-                disabled={item.product.stock !== undefined && item.quantity >= item.product.stock}
+                disabled={isOutOfStock || (item.product.stock !== undefined && item.quantity >= item.product.stock)}
               >
                 <Plus className="h-3 w-3" />
               </Button>
