@@ -22,8 +22,11 @@ const CartSummary: React.FC<CartSummaryProps> = ({
 }) => {
   const { cart } = useStore();
   
-  // Filtrer les produits sélectionnés
-  const selectedCartItems = cart ? cart.filter(item => selectedItems[item.product.id]) : [];
+  // Filtrer les produits sélectionnés ET en stock seulement
+  const selectedCartItems = cart ? cart.filter(item => 
+    selectedItems[item.product.id] && 
+    !(item.product.stock !== undefined && item.product.stock <= 0)
+  ) : [];
   
   const subtotal = selectedCartItems.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   const itemCount = selectedCartItems.reduce((count, item) => count + item.quantity, 0);

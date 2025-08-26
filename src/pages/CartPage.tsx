@@ -27,7 +27,8 @@ const CartPage = () => {
   useEffect(() => {
     if (cart && cart.length > 0) {
       const initialSelection = cart.reduce((acc, item) => {
-        acc[item.product.id] = true;
+        // Sélectionner automatiquement seulement les produits en stock
+        acc[item.product.id] = !(item.product.stock !== undefined && item.product.stock <= 0);
         return acc;
       }, {} as Record<string, boolean>);
       setSelectedItems(initialSelection);
@@ -68,7 +69,11 @@ const CartPage = () => {
   };
 
   const handleCheckout = () => {
-    const selectedProducts = cart.filter(item => selectedItems[item.product.id]);
+    // Filtrer les produits sélectionnés ET en stock seulement
+    const selectedProducts = cart.filter(item => 
+      selectedItems[item.product.id] && 
+      !(item.product.stock !== undefined && item.product.stock <= 0)
+    );
     setSelectedCartItems(selectedProducts);
     navigate('/paiement');
   };
