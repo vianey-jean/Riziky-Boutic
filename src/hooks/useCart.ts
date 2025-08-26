@@ -4,6 +4,7 @@ import { Product } from '@/types/product';
 import { cartAPI, productsAPI } from '@/services/api';
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { io } from 'socket.io-client';
 
 export const useCart = () => {
   const [cart, setCart] = useState<StoreCartItem[]>([]);
@@ -56,6 +57,40 @@ export const useCart = () => {
   useEffect(() => {
     if (isAuthenticated && user) {
       fetchCart();
+      
+      // Connexion Socket.IO pour synchronisation en temps réel
+      const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:10000');
+      
+      // Authentifier l'utilisateur auprès du socket
+      socket.emit('authenticate', user);
+      
+      // Écouter les mises à jour de stock
+      socket.on('stock-updated', (data: { productId: string; stock: number }) => {
+        setCart(prevCart => 
+          prevCart.map(item => {
+            if (item.product.id === data.productId) {
+              const updatedProduct = { ...item.product, stock: data.stock };
+              
+              // Si le produit est en rupture de stock, afficher un toast
+              if (data.stock <= 0) {
+                toast.warning(`${item.product.name} est maintenant en rupture de stock`, {
+                  style: { backgroundColor: '#F59E0B', color: 'white', fontWeight: 'bold' },
+                  duration: 5000,
+                  position: 'top-center',
+                });
+              }
+              
+              return { ...item, product: updatedProduct };
+            }
+            return item;
+          })
+        );
+      });
+      
+      // Nettoyer la connexion lors du démontage du composant
+      return () => {
+        socket.disconnect();
+      };
     } else {
       setCart([]);
       setLoading(false);
