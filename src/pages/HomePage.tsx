@@ -6,6 +6,7 @@ import ProductCatalogGrid from '@/components/products/ProductGrid';
 import CustomerTestimonialSection from '@/components/reviews/TestimonialSection';
 import PageDataLoader from '@/components/layout/PageDataLoader';
 import HomeHeader from '@/components/home/HomeHeader';
+import LuxuryHeroSection from '@/components/home/LuxuryHeroSection';
 import FeaturedProductsCarousel from '@/components/home/FeaturedProductsCarousel';
 import PromotionalProductsGrid from '@/components/home/PromotionalProductsGrid';
 import FlashSaleBanner from '@/components/flash-sale/FlashSaleBanner';
@@ -50,6 +51,7 @@ const HomePage = () => {
 
   return (
     <Layout>
+        
       <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
         <PageDataLoader
           fetchFunction={loadEcommerceProductData}
@@ -63,10 +65,11 @@ const HomePage = () => {
           <div className="relative overflow-hidden bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 dark:from-red-500/5 dark:via-rose-500/5 dark:to-pink-500/5">
             <div className="absolute inset-0 bg-grid-neutral-100/50 dark:bg-grid-neutral-800/50" />
             <div className="container mx-auto px-4 py-6 relative">
-              <HomeHeader />
+              <LuxuryHeroSection />
+              {/* <HomeHeader /> */}
               
               {/* Section de bienvenue avec animation */}
-              <div className="text-center max-w-4xl mx-auto mb-8 h-[100px]">
+              {/* <div className="text-center max-w-4xl mx-auto mb-8 h-[100px]">
                 <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 bg-clip-text text-transparent mb-3 animate-fade-in">
                   Découvrez l'Excellence
                 </h1>
@@ -89,7 +92,7 @@ const HomePage = () => {
                     <span>Livraison Offerte</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
