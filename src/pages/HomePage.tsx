@@ -61,40 +61,15 @@ const HomePage = () => {
           loadingSubmessage="Préparation de votre expérience shopping premium..."
           errorMessage="Erreur de chargement des produits"
         >
-          {/* Hero Section moderne */}
-          <div className="relative overflow-hidden bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 dark:from-red-500/5 dark:via-rose-500/5 dark:to-pink-500/5">
-            <div className="absolute inset-0 bg-grid-neutral-100/50 dark:bg-grid-neutral-800/50" />
-            <div className="container mx-auto px-4 py-6 relative">
-              <LuxuryHeroSection />
-              {/* <HomeHeader /> */}
-              
-              {/* Section de bienvenue avec animation */}
-              {/* <div className="text-center max-w-4xl mx-auto mb-8 h-[100px]">
-                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 bg-clip-text text-transparent mb-3 animate-fade-in">
-                  Découvrez l'Excellence
-                </h1>
-
-                <p className="text-md md:text-lg text-neutral-600 dark:text-neutral-300 mb-4 leading-relaxed animate-fade-in">
-                  Votre destination beauté pour des produits de qualité premium qui subliment votre style naturel.
-                </p>
-
-                <div className="flex items-center justify-center space-x-6 text-sm text-neutral-500 dark:text-neutral-400">
-                  <div className="flex items-center space-x-1 animate-fade-in">
-                    <Star className="h-4 w-4 text-yellow-500" />
-                    <span>Qualité Premium</span>
-                  </div>
-                  <div className="flex items-center space-x-1 animate-fade-in">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    <span>Tendances 2025</span>
-                  </div>
-                  <div className="flex items-center space-x-1 animate-fade-in">
-                    <ShoppingBag className="h-4 w-4 text-blue-500" />
-                    <span>Livraison Offerte</span>
-                  </div>
-                </div>
-              </div> */}
+          {/* Hero Section moderne - Caché quand il y a une recherche */}
+          {!searchParams.get('q') && (
+            <div className="relative overflow-hidden bg-gradient-to-r from-red-500/10 via-rose-500/10 to-pink-500/10 dark:from-red-500/5 dark:via-rose-500/5 dark:to-pink-500/5">
+              <div className="absolute inset-0 bg-grid-neutral-100/50 dark:bg-grid-neutral-800/50" />
+              <div className="container mx-auto px-4 py-6 relative">
+                <LuxuryHeroSection />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="container mx-auto px-4 py-8">
             {searchParams.get('q') && (
