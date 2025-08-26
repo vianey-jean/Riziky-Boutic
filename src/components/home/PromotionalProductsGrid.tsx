@@ -50,6 +50,12 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
       return;
     }
     
+    // Vérifier si le produit est en stock
+    if (product.stock !== undefined && product.stock <= 0) {
+      toast.error("Ce produit n'est plus en stock");
+      return;
+    }
+    
     addToCart(product);
     toast.success("Produit ajouté au panier");
   };
@@ -97,6 +103,7 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
               const timeRemaining = product.promotionEnd ? calculatePromotionTimeRemaining(product.promotionEnd) : null;
               const isUrgent = timeRemaining && timeRemaining !== "Expirée" && 
                                (timeRemaining.includes('h') && parseInt(timeRemaining) < 24);
+              const isOutOfStock = (product.stock !== undefined && product.stock <= 0);
 
               return (
                 <Card key={product.id} className="group overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br from-white to-red-50 dark:from-neutral-800 dark:to-red-900/20 relative">
@@ -141,10 +148,11 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
                             <Heart className={`h-5 w-5 ${isFavorite(product.id) ? 'text-red-500 fill-red-500' : 'text-red-500'}`} />
                           </button>
                           <button 
-                            className="bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:scale-110 transition-transform"
-                            onClick={(e) => handleAddToCart(e, product)}
+                            className={`bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:scale-110 transition-transform ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={(e) => isOutOfStock ? e.preventDefault() : handleAddToCart(e, product)}
+                            disabled={isOutOfStock}
                           >
-                            <ShoppingCart className="h-5 w-5 text-blue-500" />
+                            <ShoppingCart className={`h-5 w-5 ${isOutOfStock ? 'text-gray-400' : 'text-blue-500'}`} />
                           </button>
                         </div>
                       </div>
@@ -203,14 +211,20 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
                         </div>
                       </div>
 
-                      {/* Add to cart button */}
-                      <button 
-                        className="w-full mt-6 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2 shadow-lg"
-                        onClick={(e) => handleAddToCart(e, product)}
-                      >
-                        <ShoppingCart className="h-5 w-5" />
-                        <span>Profiter de l'offre</span>
-                      </button>
+                      {/* Add to cart button or out of stock message */}
+                      {isOutOfStock ? (
+                        <div className="w-full mt-6 bg-gray-400 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center space-x-2 cursor-not-allowed">
+                          <span>❌ Rupture de stock</span>
+                        </div>
+                      ) : (
+                        <button 
+                          className="w-full mt-6 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2 shadow-lg"
+                          onClick={(e) => handleAddToCart(e, product)}
+                        >
+                          <ShoppingCart className="h-5 w-5" />
+                          <span>Profiter de l'offre</span>
+                        </button>
+                      )}
                     </div>
                   </CardContent>
 
