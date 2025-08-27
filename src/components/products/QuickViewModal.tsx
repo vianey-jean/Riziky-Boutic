@@ -248,7 +248,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
             <div className="mt-6 text-center">
               <Button variant="link" asChild>
-                <Link to={`/${getSecureProductId(product.id)}`}>
+                <Link to={`/produit/${getSecureProductId(product.id)}`}>
                   <Eye className="mr-2 h-4 w-4" />
                   Voir la page produit
                 </Link>
