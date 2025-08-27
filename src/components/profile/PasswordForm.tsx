@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -61,6 +60,8 @@ const PasswordForm = ({ loading: externalLoading, onPasswordChange }: PasswordFo
   const [currentPasswordValid, setCurrentPasswordValid] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
+  const [hasShownSuccessNotification, setHasShownSuccessNotification] = useState(false);
+  const [hasShownErrorNotification, setHasShownErrorNotification] = useState(false);
 
   const actualLoading = externalLoading || isLoading;
 
@@ -109,9 +110,15 @@ const PasswordForm = ({ loading: externalLoading, onPasswordChange }: PasswordFo
       
       if (response.data.valid) {
         setCurrentPasswordValid(true);
-        toast.success('Mot de passe actuel correct', {
-          style: { backgroundColor: 'green', color: 'white' },
-        });
+        setHasShownErrorNotification(false); // Réinitialiser le flag d'erreur
+        
+        // Afficher la notification une seule fois
+        if (!hasShownSuccessNotification) {
+          toast.success('Mot de passe actuel correct', {
+            style: { backgroundColor: 'green', color: 'white' },
+          });
+          setHasShownSuccessNotification(true);
+        }
       } else {
         handleIncorrectPassword();
       }
@@ -122,14 +129,19 @@ const PasswordForm = ({ loading: externalLoading, onPasswordChange }: PasswordFo
 
   const handleIncorrectPassword = () => {
     setCurrentPasswordValid(false);
+    setHasShownSuccessNotification(false);
     setFailedAttempts(prev => prev + 1);
     
     // Réinitialiser le champ mot de passe actuel
     form.setValue('currentPassword', '');
     
-    toast.error('Mot de passe erroné', {
-      style: { backgroundColor: 'red', color: 'white' },
-    });
+    // Afficher la notification d'erreur une seule fois
+    if (!hasShownErrorNotification) {
+      toast.error('Mot de passe erroné', {
+        style: { backgroundColor: 'red', color: 'white' },
+      });
+      setHasShownErrorNotification(true);
+    }
 
     // Déconnecter après 3 tentatives échouées
     if (failedAttempts >= 2) {
@@ -181,6 +193,8 @@ const PasswordForm = ({ loading: externalLoading, onPasswordChange }: PasswordFo
       // Réinitialiser le formulaire et les états
       form.reset();
       setCurrentPasswordValid(false);
+      setHasShownSuccessNotification(false);
+      setHasShownErrorNotification(false);
       setFailedAttempts(0);
       
       toast.success('Mot de passe mis à jour avec succès. Redirection vers la page de connexion...', {
