@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -42,12 +43,6 @@ const passwordSchema = z.object({
       'Le mot de passe doit contenir au moins un caractère spécial'
     ),
   confirmPassword: z.string().min(1, 'Confirmation du mot de passe requise'),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
-  path: ['confirmPassword'],
-}).refine((data) => data.newPassword !== data.currentPassword, {
-  message: 'Le nouveau mot de passe doit être différent de l\'ancien',
-  path: ['newPassword'],
 });
 
 type PasswordFormValues = z.infer<typeof passwordSchema>;
@@ -58,11 +53,14 @@ type PasswordFormProps = {
 };
 
 const PasswordForm = ({ loading: externalLoading, onPasswordChange }: PasswordFormProps = {}) => {
-  const { user, updatePassword } = useAuth();
+  const { user, logout } = useAuth();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPasswordValid, setCurrentPasswordValid] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [isButtonEnabled, setIsButtonEnabled] = useState(false);
 
   const actualLoading = externalLoading || isLoading;
 
@@ -75,39 +73,125 @@ const PasswordForm = ({ loading: externalLoading, onPasswordChange }: PasswordFo
     },
   });
 
+  const watchedValues = form.watch();
+
+  // Vérifier si le bouton doit être activé
+  useEffect(() => {
+    const { currentPassword, newPassword, confirmPassword } = watchedValues;
+    
+    const isValid = 
+      currentPasswordValid &&
+      newPassword.length >= 8 &&
+      /[A-Z]/.test(newPassword) &&
+      /[a-z]/.test(newPassword) &&
+      /[0-9]/.test(newPassword) &&
+      /[^A-Za-z0-9]/.test(newPassword) &&
+      newPassword === confirmPassword &&
+      newPassword !== currentPassword;
+
+    setIsButtonEnabled(isValid);
+  }, [watchedValues, currentPasswordValid]);
+
+  // Vérifier le mot de passe actuel quand on commence à taper le nouveau
+  useEffect(() => {
+    const { currentPassword, newPassword } = watchedValues;
+    
+    if (currentPassword && newPassword.length > 0 && !currentPasswordValid) {
+      verifyCurrentPassword(currentPassword);
+    }
+  }, [watchedValues.newPassword]);
+
+  const verifyCurrentPassword = async (password: string) => {
+    if (!user || !password) return;
+
+    try {
+      const response = await authAPI.verifyPassword(user.id, password);
+      
+      if (response.data.valid) {
+        setCurrentPasswordValid(true);
+        toast.success('Mot de passe actuel correct', {
+          style: { backgroundColor: 'green', color: 'white' },
+        });
+      } else {
+        handleIncorrectPassword();
+      }
+    } catch (error) {
+      handleIncorrectPassword();
+    }
+  };
+
+  const handleIncorrectPassword = () => {
+    setCurrentPasswordValid(false);
+    setFailedAttempts(prev => prev + 1);
+    
+    // Réinitialiser le champ mot de passe actuel
+    form.setValue('currentPassword', '');
+    
+    toast.error('Mot de passe erroné', {
+      style: { backgroundColor: 'red', color: 'white' },
+    });
+
+    // Déconnecter après 3 tentatives échouées
+    if (failedAttempts >= 2) {
+      toast.error('Trop de tentatives échouées. Déconnexion...', {
+        style: { backgroundColor: 'red', color: 'white' },
+      });
+      setTimeout(() => {
+        logout();
+      }, 2000);
+    }
+  };
+
+  // Vérifier si le nouveau mot de passe est identique au mot de passe actuel
+  useEffect(() => {
+    const { currentPassword, newPassword } = watchedValues;
+    
+    if (currentPasswordValid && newPassword && newPassword === currentPassword) {
+      toast.error('Le nouveau mot de passe est pareil au mot de passe actuel', {
+        style: { backgroundColor: 'red', color: 'white' },
+      });
+      return;
+    }
+  }, [watchedValues.newPassword, currentPasswordValid]);
+
   const onSubmit = async (data: PasswordFormValues) => {
     if (!user) {
       toast.error('Vous devez être connecté');
       return;
     }
+
+    // Vérifier si les mots de passe correspondent au moment de la validation
+    if (data.newPassword !== data.confirmPassword) {
+      toast.error('Le nouveau mot de passe et confirmation ne sont pas pareils. Veuillez bien vérifier le nouveau mot de passe.', {
+        style: { backgroundColor: 'red', color: 'white' },
+      });
+      return;
+    }
     
     setIsLoading(true);
     try {
-      // Vérifier d'abord si le mot de passe actuel est correct
-      const verifyResponse = await authAPI.verifyPassword(user.id, data.currentPassword);
-      
-      if (!verifyResponse.data.valid) {
-        toast.error('Mot de passe actuel incorrect', {
-          style: { backgroundColor: 'red', color: 'white' },
-        });
-        setIsLoading(false);
-        return;
-      }
-      
       // Si une fonction de mise à jour personnalisée est fournie, l'utiliser
       if (onPasswordChange) {
         await onPasswordChange(data.currentPassword, data.newPassword);
       } else {
-        // Sinon, utiliser la fonction par défaut du contexte
-        await updatePassword(data.currentPassword, data.newPassword);
+        // Sinon, utiliser l'API directement
+        await authAPI.updatePassword(user.id, data.currentPassword, data.newPassword);
       }
       
-      // Réinitialiser le formulaire
+      // Réinitialiser le formulaire et les états
       form.reset();
+      setCurrentPasswordValid(false);
+      setFailedAttempts(0);
       
-      toast.success('Mot de passe mis à jour avec succès', {
+      toast.success('Mot de passe mis à jour avec succès. Redirection vers la page de connexion...', {
         style: { backgroundColor: 'green', color: 'white' },
       });
+
+      // Déconnecter l'utilisateur et rediriger vers la page de connexion
+      setTimeout(() => {
+        logout();
+      }, 2000);
+      
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour du mot de passe:', error);
       toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du mot de passe', {
@@ -276,7 +360,7 @@ const PasswordForm = ({ loading: externalLoading, onPasswordChange }: PasswordFo
                 <Button 
                   type="submit" 
                   className="w-full h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]" 
-                  disabled={actualLoading}
+                  disabled={actualLoading || !isButtonEnabled}
                 >
                   {actualLoading ? (
                     <div className="flex items-center gap-2">
