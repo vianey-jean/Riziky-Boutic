@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
 import AdminPageTitle from '@/components/admin/AdminPageTitle';
 import DataStatsCard from '@/components/admin/DataStatsCard';
@@ -145,7 +145,13 @@ const AdminProductsPage = () => {
   };
 
   const handleSwitchChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, isSold: checked }));
+    setFormData(prev => ({ 
+      ...prev, 
+      isSold: checked,
+      // Si le produit n'est plus en stock, mettre la quantité à 0
+      // Si le produit est en stock et la quantité était 0, la mettre à 1
+      stock: checked ? (prev.stock === 0 ? 1 : prev.stock) : 0
+    }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -746,10 +752,11 @@ const AdminProductsPage = () => {
                   id="stock"
                   name="stock"
                   type="number"
-                  min="0"
+                  min={formData.isSold ? "1" : "0"}
                   value={formData.stock}
                   onChange={handleChange}
                   className="col-span-3"
+                  disabled={!formData.isSold}
                 />
               </div>
               
