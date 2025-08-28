@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { reviewsAPI, Review, ReviewFormData } from '@/services/api';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+import { Plus, MessageSquare } from 'lucide-react';
+import { reviewsAPI } from '@/services/reviewsAPI';
+import { Review } from '@/types/review';
 import ReviewsList from './ReviewsList';
 import ReviewForm from './ReviewForm';
-import StarRating from './StarRating';
-import { AlertTriangle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/components/ui/sonner';
 
 interface ProductReviewsProps {
   productId: string;
@@ -15,170 +16,99 @@ interface ProductReviewsProps {
 
 const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { isAuthenticated } = useAuth();
-  
+
   const fetchReviews = async () => {
-    setLoading(true);
-    setError(null);
-    
     try {
-      console.log('Fetching reviews for product:', productId);
+      setLoading(true);
       const response = await reviewsAPI.getProductReviews(productId);
-      console.log('Reviews response:', response.data);
       setReviews(response.data);
     } catch (error) {
       console.error('Erreur lors du chargement des commentaires:', error);
-      setError('Impossible de charger les commentaires');
+      toast.error('Erreur lors du chargement des commentaires');
     } finally {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchReviews();
   }, [productId]);
-  
-  const handleAddReview = async (reviewData: ReviewFormData) => {
+
+  const handleSubmitReview = async (formData: FormData) => {
     try {
-      await reviewsAPI.addReview(reviewData);
-      fetchReviews(); // Recharger les commentaires
-      setShowForm(false); // Masquer le formulaire
+      const response = await reviewsAPI.addReview(formData);
+      setReviews(prev => [response.data, ...prev]);
+      setShowForm(false);
+      toast.success('Votre avis a été ajouté avec succès !');
     } catch (error) {
-      console.error('Erreur lors de l\'ajout du commentaire:', error);
-      throw error; // Remonter l'erreur pour l'afficher dans le formulaire
+      console.error('Error submitting review:', error);
+      throw error; // Laisser le ReviewForm gérer l'erreur
     }
   };
-  
-  // Calcul des moyennes des notes
-  const calculateAverages = () => {
-    if (!reviews || reviews.length === 0) return { productAvg: 0, deliveryAvg: 0, totalAvg: 0 };
-    
-    const productTotal = reviews.reduce((sum, review) => sum + review.productRating, 0);
-    const deliveryTotal = reviews.reduce((sum, review) => sum + review.deliveryRating, 0);
-    
-    const productAvg = productTotal / reviews.length;
-    const deliveryAvg = deliveryTotal / reviews.length;
-    const totalAvg = (productAvg + deliveryAvg) / 2;
-    
-    return {
-      productAvg,
-      deliveryAvg,
-      totalAvg
-    };
-  };
-  
-  // Compter le nombre total de photos dans tous les commentaires
-  const countTotalPhotos = () => {
-    return reviews.reduce((count, review) => {
-      return count + (review.photos?.length || 0);
-    }, 0);
-  };
-  
-  const { productAvg, deliveryAvg, totalAvg } = calculateAverages();
-  const totalPhotoCount = countTotalPhotos();
-  
+
+  const averageRating = reviews.length > 0 
+    ? reviews.reduce((sum, review) => sum + ((review.productRating + review.deliveryRating) / 2), 0) / reviews.length 
+    : 0;
+
   if (loading) {
-    return <div className="py-4 text-center">Chargement des commentaires...</div>;
-  }
-  
-  if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Erreur</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">Chargement des commentaires...</div>
+        </CardContent>
+      </Card>
     );
   }
-  
+
   return (
-    <div className="my-8">
-      {/* <h2 className="text-2xl font-semibold mb-6">Avis clients</h2> */}
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-muted/30 p-4 rounded-lg text-center">
-          <div className="text-4xl font-bold mb-2">{totalAvg.toFixed(1)}</div>
-          <div className="flex justify-center mb-1">
-            <StarRating rating={totalAvg} />
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center">
+            <MessageSquare className="mr-2 h-5 w-5" />
+            Avis clients ({reviews.length})
+            {reviews.length > 0 && (
+              <span className="ml-2 text-sm text-muted-foreground">
+                (Note moyenne: {averageRating.toFixed(1)}/5)
+              </span>
+            )}
           </div>
-          <div className="text-sm text-muted-foreground">
-            {reviews.length} avis {totalPhotoCount > 0 ? `· ${totalPhotoCount} photos` : ''}
-          </div>
-        </div>
-        
-        <div className="bg-muted/30 p-4 rounded-lg">
-          <h3 className="font-medium mb-2">Produit</h3>
-          <div className="flex justify-center">
-            <div className="flex items-center">
-              <StarRating rating={productAvg} />
-              <span className="ml-2 font-semibold">{productAvg.toFixed(1)}</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-muted/30 p-4 rounded-lg">
-          <h3 className="font-medium mb-2">Livraison</h3>
-          <div className="flex justify-center">
-            <div className="flex items-center">
-              <StarRating rating={deliveryAvg} />
-              <span className="ml-2 font-semibold">{deliveryAvg.toFixed(1)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {isAuthenticated && !showForm && (
-        <div className="mb-8">
-          <Button 
-            variant="outline" 
-            onClick={() => setShowForm(true)}
-            className="w-full md:w-auto text-red-800"
-          >
-            Donnez votre avis
-          </Button>
-        </div>
-      )}
-      
-      {isAuthenticated && showForm && (
-        <div className="mb-8">
-          <ReviewForm 
-            productId={productId} 
-            onSubmit={(formData: any) => handleAddReview({
-              productId,
-              productRating: formData.productRating,
-              deliveryRating: formData.deliveryRating,
-              comment: formData.comment,
-              photos: formData.photos
-            } as ReviewFormData)} 
-          />
-          <div className="mt-2 text-right">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+          {isAuthenticated && !showForm && (
+            <Button
+              onClick={() => setShowForm(true)}
+              size="sm"
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Laisser un avis
+            </Button>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {showForm && (
+          <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+            <h3 className="font-medium mb-4">Laisser un commentaire</h3>
+            <ReviewForm
+              productId={productId}
+              onSubmit={handleSubmitReview}
+            />
+            <Button
+              variant="outline"
               onClick={() => setShowForm(false)}
+              className="mt-2"
             >
               Annuler
             </Button>
           </div>
-        </div>
-      )}
-      
-      {!isAuthenticated && (
-        <Alert className="mb-8">
-          <AlertTitle>Connectez-vous pour laisser un avis</AlertTitle>
-          <AlertDescription>
-            Vous devez être connecté pour pouvoir partager votre expérience avec ce produit.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <Separator className="mb-6" />
-      
-      <ReviewsList reviews={reviews} />
-    </div>
+        )}
+        
+        <ReviewsList reviews={reviews} />
+      </CardContent>
+    </Card>
   );
 };
 
