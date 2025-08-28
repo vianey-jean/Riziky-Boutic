@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -22,14 +23,9 @@ const ProductDetail = () => {
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const PLACEHOLDER_IMAGE = '/placeholder.svg';
   
-  console.log('ProductDetail - Secure ID:', secureProductId);
-  
-  // Récupérer l'ID réel à partir de l'ID sécurisé
+  // ID réel
   const productId = secureProductId ? getRealId(secureProductId) : undefined;
   
-  console.log('ProductDetail - Real ID:', productId);
-  
-  // Définir tous les useState au début du composant
   const [product, setProduct] = useState(products.find(p => p.id === productId));
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [remainingTime, setRemainingTime] = useState<string>("");
@@ -38,11 +34,9 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   
-  // Valider l'ID sécurisé et rediriger si invalide
+  // Vérification de l’ID sécurisé
   useEffect(() => {
     setIsLoading(true);
-    
-    // Vérifier si l'ID existe
     if (!secureProductId) {
       setIsValidId(false);
       toast.error("Produit non trouvé");
@@ -50,34 +44,28 @@ const ProductDetail = () => {
       return;
     }
     
-    // Vérifier si c'est un ID produit valide
     const isValid = isValidSecureId(secureProductId);
     const entityType = getEntityType(secureProductId);
-    
-    console.log('ProductDetail - Validation:', { isValid, entityType, productId });
     
     if (!isValid) {
       setIsValidId(false);
       toast.error("Ce lien n'est plus valide");
       navigate('/page/notfound', { replace: true });
     } else {
-      // Trouver le produit correspondant à l'ID réel
       const foundProduct = products.find(p => p.id === productId);
       if (foundProduct) {
         setProduct(foundProduct);
         setIsValidId(true);
       } else {
-        console.log('ProductDetail - Produit non trouvé:', productId);
         setIsValidId(false);
         toast.error("Produit introuvable");
         navigate('/page/notfound', { replace: true });
       }
     }
-    
     setIsLoading(false);
   }, [secureProductId, productId, products, navigate]);
 
-  // Timer pour les promotions
+  // Timer promotion
   useEffect(() => {
     if (product && product.promotion && product.promotionEnd) {
       const updateRemainingTime = () => {
@@ -104,8 +92,27 @@ const ProductDetail = () => {
       
       updateRemainingTime();
       const interval = setInterval(updateRemainingTime, 1000);
-      
       return () => clearInterval(interval);
+    }
+  }, [product]);
+
+  // 🔥 Défilement automatique des images toutes les 2s
+  useEffect(() => {
+    if (!product) return;
+    const productImages =
+      product.images && product.images.length > 0
+        ? product.images
+        : product.image
+          ? [product.image]
+          : [];
+
+    if (productImages.length > 1) {
+      const interval = setInterval(() => {
+        setSelectedImageIndex(prev =>
+          (prev + 1) % productImages.length
+        );
+      }, 2000);
+      return () => clearInterval(interval); // Nettoyage quand on quitte la page
     }
   }, [product]);
 
@@ -131,18 +138,15 @@ const ProductDetail = () => {
       }
       setAddedToCart(true);
       toast.success(`${quantity} ${quantity > 1 ? 'exemplaires' : 'exemplaire'} ajouté${quantity > 1 ? 's' : ''} au panier`);
-      
-      setTimeout(() => {
-        setAddedToCart(false);
-      }, 2000);
+      setTimeout(() => setAddedToCart(false), 2000);
     }
   };
   
-  // Si le produit est en cours de chargement, afficher un indicateur
   if (isLoading) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-10">
+          {/* Skeleton de chargement */}
           <div className="flex flex-col lg:flex-row gap-10">
             <div className="flex-1">
               <Skeleton className="w-full h-[400px] rounded-xl mb-4" />
@@ -168,7 +172,6 @@ const ProductDetail = () => {
     );
   }
 
-  // Si le produit n'est pas trouvé ou l'ID invalide, afficher un message
   if (!isValidId || !product) {
     return (
       <Layout>
@@ -200,22 +203,15 @@ const ProductDetail = () => {
         ? [product.image]
         : [];
         
-  // Fonction pour construire l'URL de l'image de manière sécurisée
   const getImageUrl = (imagePath: string) => {
     if (!imagePath) return PLACEHOLDER_IMAGE;
-    
-    // Si l'image commence déjà par http, c'est une URL complète
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-    
-    // Sinon, on ajoute le BASE_URL
+    if (imagePath.startsWith('http')) return imagePath;
     return `${AUTH_BASE_URL}${imagePath}`;
   };
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-10">
+        <div className="container mx-auto px-4 py-10">
         {/* Bouton retour */}
         <Button 
           variant="ghost" 

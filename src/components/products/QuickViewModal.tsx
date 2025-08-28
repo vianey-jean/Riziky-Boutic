@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ShoppingCart, X, Star, Share2, Eye } from 'lucide-react';
+import { Heart, ShoppingCart, X, Share2, Eye } from 'lucide-react';
 import { Product } from '@/types/product';
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,15 +26,29 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
   if (!product) return null;
 
-  const productImages = product.images && product.images.length > 0 
-    ? product.images 
-    : product.image ? [product.image] : [];
+  const productImages =
+    product.images && product.images.length > 0
+      ? product.images
+      : product.image
+      ? [product.image]
+      : [];
 
   const getImageUrl = (imagePath: string) => {
     if (!imagePath) return '/placeholder.svg';
     if (imagePath.startsWith('http')) return imagePath;
     return `${API_BASE_URL}${imagePath}`;
   };
+
+  // 🔥 Défilement automatique des images toutes les 2s tant que le modal est ouvert
+  useEffect(() => {
+    if (!isOpen || productImages.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setSelectedImageIndex((prev) => (prev + 1) % productImages.length);
+    }, 2000);
+
+    return () => clearInterval(interval); // Nettoyage quand on ferme le modal
+  }, [isOpen, productImages.length]);
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
@@ -46,7 +59,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
-    toast.success(`${quantity} ${quantity > 1 ? 'exemplaires ajoutés' : 'exemplaire ajouté'} au panier`);
+    toast.success(
+      `${quantity} ${quantity > 1 ? 'exemplaires ajoutés' : 'exemplaire ajouté'} au panier`
+    );
   };
 
   const handleToggleFavorite = () => {
@@ -58,8 +73,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     toast.success(isFavorite(product.id) ? "Retiré des favoris" : "Ajouté aux favoris");
   };
 
-  const isPromotionActive = product.promotion && 
-    product.promotionEnd && 
+  const isPromotionActive =
+    product.promotion &&
+    product.promotionEnd &&
     new Date(product.promotionEnd) > new Date();
 
   const isInStock = product.isSold && (product.stock === undefined || product.stock > 0);
@@ -82,7 +98,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             >
               <X className="h-4 w-4" />
             </button>
-            
+
             <div className="relative mb-4">
               <AnimatePresence mode="wait">
                 <motion.img
@@ -100,7 +116,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                   }}
                 />
               </AnimatePresence>
-              
+
               {isPromotionActive && (
                 <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">
                   -{product.promotion}%
@@ -140,9 +156,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 <Badge variant="outline" className="text-xs">
                   {product.category}
                 </Badge>
-                {product.dateAjout && new Date().getTime() - new Date(product.dateAjout).getTime() < 7 * 24 * 60 * 60 * 1000 && (
-                  <Badge className="bg-blue-600 text-white text-xs">Nouveau</Badge>
-                )}
+                {product.dateAjout &&
+                  new Date().getTime() - new Date(product.dateAjout).getTime() <
+                    7 * 24 * 60 * 60 * 1000 && (
+                    <Badge className="bg-blue-600 text-white text-xs">Nouveau</Badge>
+                  )}
               </div>
               <DialogTitle className="text-2xl font-bold">{product.name}</DialogTitle>
             </DialogHeader>
@@ -165,9 +183,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 </p>
               </div>
             ) : (
-              <p className="text-2xl font-bold mb-4">
-                {product.price.toFixed(2)} €
-              </p>
+              <p className="text-2xl font-bold mb-4">{product.price.toFixed(2)} €</p>
             )}
 
             <div className="mb-4 max-h-24 overflow-y-auto text-sm text-gray-700">
@@ -177,14 +193,17 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             <div className="mb-6">
               <div className="flex items-center space-x-2">
                 <p className="font-medium text-sm">Disponibilité:</p>
-                <span className={isInStock ? 'text-green-600 text-sm' : 'text-red-600 text-sm'}>
+                <span
+                  className={isInStock ? 'text-green-600 text-sm' : 'text-red-600 text-sm'}
+                >
                   {isInStock ? 'En stock' : 'Rupture de stock'}
                 </span>
               </div>
 
               {product.stock !== undefined && (
                 <p className="text-sm text-gray-600">
-                  {product.stock} unité{product.stock !== 1 ? 's' : ''} disponible{product.stock !== 1 ? 's' : ''}
+                  {product.stock} unité{product.stock !== 1 ? 's' : ''} disponible
+                  {product.stock !== 1 ? 's' : ''}
                 </p>
               )}
             </div>
@@ -212,15 +231,15 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             </div>
 
             <div className="flex space-x-3">
-              <Button 
-                onClick={handleAddToCart} 
+              <Button
+                onClick={handleAddToCart}
                 disabled={!isInStock}
                 className="flex-1 bg-red-600 hover:bg-red-700"
               >
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 Ajouter au panier
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="icon"
@@ -228,17 +247,19 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 className="rounded-full"
               >
                 <Heart
-                  className={`h-4 w-4 ${isFavorite(product.id) ? 'fill-red-500 text-red-500' : ''}`}
+                  className={`h-4 w-4 ${
+                    isFavorite(product.id) ? 'fill-red-500 text-red-500' : ''
+                  }`}
                 />
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => {
                   const url = window.location.origin + `/${getSecureProductId(product.id)}`;
                   navigator.clipboard.writeText(url);
-                  toast.success("Lien copié!");
+                  toast.success('Lien copié!');
                 }}
                 className="rounded-full"
               >
