@@ -96,7 +96,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
   
   return (
     <div className="my-8">
-      <h2 className="text-2xl font-semibold mb-6">Avis clients</h2>
+      {/* <h2 className="text-2xl font-semibold mb-6">Avis clients</h2> */}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-muted/30 p-4 rounded-lg text-center">
