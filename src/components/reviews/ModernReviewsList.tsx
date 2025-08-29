@@ -5,13 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Star, MessageCircle, Edit2, Trash2, Calendar, Image, Heart } from 'lucide-react';
+import { Star, MessageCircle, Edit2, Trash2, Calendar, Image, Heart, Sparkles } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { reviewsAPI } from '@/services/reviewsAPI';
 import { toast } from '@/components/ui/sonner';
 import ModernReviewForm from './ModernReviewForm';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ModernReviewsListProps {
   reviews: Review[];
@@ -93,8 +94,8 @@ const ModernReviewsList: React.FC<ModernReviewsListProps> = ({ reviews, onReview
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
-          className={`h-4 w-4 ${
-            star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+          className={`h-4 w-4 transition-all duration-200 ${
+            star <= rating ? 'fill-yellow-400 text-yellow-400 drop-shadow-sm' : 'text-gray-300'
           }`}
         />
       ))}
@@ -108,18 +109,34 @@ const ModernReviewsList: React.FC<ModernReviewsListProps> = ({ reviews, onReview
     const photosToShow = isExpanded ? photos : photos.slice(0, 2);
     
     return (
-      <div className="mt-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {photosToShow.map((photo, index) => (
-            <div key={index} className="relative group">
-              <img
-                src={`${AUTH_BASE_URL}${photo}`}
-                alt={`Photo ${index + 1}`}
-                className="w-full h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:opacity-90 transition-opacity"
-                onClick={() => window.open(`${AUTH_BASE_URL}${photo}`, '_blank')}
-              />
-            </div>
-          ))}
+      <motion.div 
+        className="mt-6"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <AnimatePresence>
+            {photosToShow.map((photo, index) => (
+              <motion.div 
+                key={index} 
+                className="relative group"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                  <img
+                    src={`${AUTH_BASE_URL}${photo}`}
+                    alt={`Photo ${index + 1}`}
+                    className="w-full h-28 object-cover cursor-pointer hover:scale-110 transition-transform duration-300"
+                    onClick={() => window.open(`${AUTH_BASE_URL}${photo}`, '_blank')}
+                  />
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
         
         {photos.length > 2 && (
@@ -127,13 +144,13 @@ const ModernReviewsList: React.FC<ModernReviewsListProps> = ({ reviews, onReview
             variant="ghost"
             size="sm"
             onClick={() => togglePhotos(reviewId)}
-            className="mt-2 text-red-600 hover:text-red-700"
+            className="mt-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium"
           >
-            <Image className="h-4 w-4 mr-1" />
+            <Image className="h-4 w-4 mr-2" />
             {isExpanded ? 'Voir moins' : `Voir ${photos.length - 2} photo${photos.length - 2 > 1 ? 's' : ''} de plus`}
           </Button>
         )}
-      </div>
+      </motion.div>
     );
   };
 
@@ -153,162 +170,230 @@ const ModernReviewsList: React.FC<ModernReviewsListProps> = ({ reviews, onReview
     const repliesCount = review.replies?.length || 0;
     
     return (
-      <Card key={review.id} className={`${isReply ? 'ml-8 mt-3 bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900'} border border-gray-200 dark:border-gray-700`}>
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-red-100 text-red-600 font-semibold">
-                  {review.userName.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{review.userName}</h4>
-                <div className="flex items-center space-x-2 text-sm text-gray-500">
-                  <Calendar className="h-3 w-3" />
-                  <span>{formatDistanceToNow(new Date(review.createdAt), { addSuffix: true, locale: fr })}</span>
+      <motion.div
+        key={review.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className={`${
+          isReply 
+            ? 'ml-8 mt-4 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900' 
+            : 'bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800'
+        } border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm`}>
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center space-x-4">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Avatar className="h-12 w-12 shadow-lg border-2 border-white dark:border-gray-700">
+                    <AvatarFallback className="bg-gradient-to-br from-red-100 to-red-200 text-red-700 font-bold text-lg">
+                      {review.userName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </motion.div>
+                <div>
+                  <h4 className="font-bold text-gray-900 dark:text-gray-100 text-lg">{review.userName}</h4>
+                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    <Calendar className="h-3 w-3" />
+                    <span>{formatDistanceToNow(new Date(review.createdAt), { addSuffix: true, locale: fr })}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {(canEdit || canDelete) && (
-              <div className="flex space-x-1">
-                {canEdit && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEditingReview(review.id)}
-                    className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                )}
-                {canDelete && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDeletingReview(review.id)}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Produit</p>
-              {renderStars(review.productRating)}
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Livraison</p>
-              {renderStars(review.deliveryRating)}
-            </div>
-          </div>
-
-          {review.comment && (
-            <p className="text-gray-700 dark:text-gray-300 mb-3 leading-relaxed">
-              {review.comment}
-            </p>
-          )}
-
-          {renderPhotos(review.photos || [], review.id)}
-
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleToggleLike(review.id)}
-                className={`text-gray-500 hover:text-red-600 ${hasLiked ? 'text-red-600' : ''}`}
-              >
-                <Heart className={`h-4 w-4 mr-1 ${hasLiked ? 'fill-red-600' : ''}`} />
-                <span className="text-red-600 font-medium">{likesCount}</span>
-              </Button>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setReplyingTo(review.id)}
-                className="text-gray-500 hover:text-red-600"
+              {(canEdit || canDelete) && (
+                <div className="flex space-x-2">
+                  {canEdit && (
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingReview(review.id)}
+                        className="h-9 w-9 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-xl"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  )}
+                  {canDelete && (
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeletingReview(review.id)}
+                        className="h-9 w-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 mb-4 p-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-inner">
+              <div>
+                <p className="text-xs text-gray-500 mb-2 font-medium flex items-center">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Produit
+                </p>
+                {renderStars(review.productRating)}
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-2 font-medium flex items-center">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Livraison
+                </p>
+                {renderStars(review.deliveryRating)}
+              </div>
+            </div>
+
+            {review.comment && (
+              <motion.p 
+                className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed text-base"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <MessageCircle className="h-4 w-4 mr-1" />
-                Répondre
-              </Button>
-            </div>
-            
+                {review.comment}
+              </motion.p>
+            )}
+
+            {renderPhotos(review.photos || [], review.id)}
+
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex items-center space-x-6">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleToggleLike(review.id)}
+                    className={`text-gray-500 hover:text-red-600 transition-all duration-200 ${hasLiked ? 'text-red-600' : ''} rounded-xl`}
+                  >
+                    <Heart className={`h-4 w-4 mr-2 transition-all duration-200 ${hasLiked ? 'fill-red-600' : ''}`} />
+                    <span className="text-red-600 font-bold">{likesCount}</span>
+                  </Button>
+                </motion.div>
+                
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReplyingTo(review.id)}
+                    className="text-gray-500 hover:text-red-600 transition-all duration-200 rounded-xl"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Répondre
+                  </Button>
+                </motion.div>
+              </div>
+              
               {repliesCount > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  <span className="text-red-600 font-bold">{repliesCount}&nbsp;
-                 Réponse{repliesCount > 1 ? "s" : ""}</span>
-              </Badge>
-           )}
-
-          </div>
-
-          {replyingTo === review.id && (
-            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <ModernReviewForm
-                productId={review.productId}
-                parentId={review.id}
-                isReply={true}
-                onSubmit={handleReply}
-                onCancel={() => setReplyingTo(null)}
-              />
+                <Badge variant="secondary" className="text-xs bg-gradient-to-r from-red-100 to-red-50 dark:from-red-900/30 dark:to-red-800/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                  {repliesCount} Réponse{repliesCount > 1 ? "s" : ""}
+                </Badge>
+              )}
             </div>
-          )}
 
-          {editingReview === review.id && (
-            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <ModernReviewForm
-                productId={review.productId}
-                onSubmit={handleEdit}
-                onCancel={() => setEditingReview(null)}
-                initialData={getEditInitialData(review)}
-                isEdit={true}
-              />
-            </div>
-          )}
+            <AnimatePresence>
+              {replyingTo === review.id && (
+                <motion.div 
+                  className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ModernReviewForm
+                    productId={review.productId}
+                    parentId={review.id}
+                    isReply={true}
+                    onSubmit={handleReply}
+                    onCancel={() => setReplyingTo(null)}
+                  />
+                </motion.div>
+              )}
 
-          {review.replies && review.replies.length > 0 && (
-            <div className="mt-4">
-              {review.replies.map(reply => renderReview(reply, true))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              {editingReview === review.id && (
+                <motion.div 
+                  className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ModernReviewForm
+                    productId={review.productId}
+                    onSubmit={handleEdit}
+                    onCancel={() => setEditingReview(null)}
+                    initialData={getEditInitialData(review)}
+                    isEdit={true}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {review.replies && review.replies.length > 0 && (
+              <motion.div 
+                className="mt-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                {review.replies.map(reply => renderReview(reply, true))}
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   };
 
   if (reviews.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="mx-auto w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-          <MessageCircle className="h-12 w-12 text-gray-400" />
+      <motion.div 
+        className="text-center py-16"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="mx-auto w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-full flex items-center justify-center mb-6 shadow-xl">
+          <MessageCircle className="h-16 w-16 text-gray-400" />
         </div>
-        <p className="text-gray-500 text-lg">Aucun commentaire pour ce produit.</p>
-        <p className="text-gray-400 text-sm mt-1">Soyez le premier à laisser un avis !</p>
-      </div>
+        <h3 className="text-2xl font-bold text-gray-600 dark:text-gray-400 mb-2">Aucun commentaire</h3>
+        <p className="text-gray-500 text-lg">Soyez le premier à laisser un avis sur ce produit !</p>
+      </motion.div>
     );
   };
 
   return (
-    <div className="space-y-4">
-      {reviews.filter(review => !review.parentId).map(review => renderReview(review))}
+    <div className="space-y-6">
+      <AnimatePresence>
+        {reviews.filter(review => !review.parentId).map((review, index) => (
+          <motion.div
+            key={review.id}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+          >
+            {renderReview(review)}
+          </motion.div>
+        ))}
+      </AnimatePresence>
       
       <AlertDialog open={!!deletingReview} onOpenChange={() => setDeletingReview(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer le commentaire</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-xl font-bold">Supprimer le commentaire</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
               Êtes-vous sûr de vouloir supprimer ce commentaire ? Cette action est irréversible.
               Toutes les réponses à ce commentaire seront également supprimées.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (deletingReview) {
@@ -316,7 +401,7 @@ const ModernReviewsList: React.FC<ModernReviewsListProps> = ({ reviews, onReview
                   setDeletingReview(null);
                 }
               }}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 rounded-xl"
             >
               Supprimer
             </AlertDialogAction>
