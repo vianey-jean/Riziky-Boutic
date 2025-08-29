@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -34,7 +33,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   
-  // Vérification de l’ID sécurisé
+  // Vérification de l'ID sécurisé
   useEffect(() => {
     setIsLoading(true);
     if (!secureProductId) {
@@ -466,10 +465,19 @@ const ProductDetail = () => {
           </div>
         </div>
         
-        {/* Section des commentaires */}
-        <div className="mt-16">
+        {/* Section des commentaires avec design moderne */}
+        <div className="mt-20">
           <div className="border-b border-neutral-200 dark:border-neutral-800 mb-8">
-            <h2 className="text-2xl font-bold mb-6">Avis clients</h2>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="h-1 w-12 bg-red-600 rounded-full"></div>
+              <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+                Avis & Commentaires
+              </h2>
+              <div className="h-1 w-12 bg-red-600 rounded-full"></div>
+            </div>
+            <p className="text-neutral-600 dark:text-neutral-400 pb-6">
+              Découvrez ce que nos clients pensent de ce produit et partagez votre propre expérience.
+            </p>
           </div>
           {productId && (
             <ProductReviews productId={productId} />

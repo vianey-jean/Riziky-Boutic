@@ -12,5 +12,21 @@ export const reviewsAPI = {
       }
     });
   },
+  updateReview: (reviewId: string, formData: FormData) => {
+    return API.put<Review>(`/reviews/${reviewId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
   deleteReview: (reviewId: string) => API.delete(`/reviews/${reviewId}`),
+  addReply: (parentId: string, formData: FormData) => {
+    return API.post<Review>(`/reviews/${parentId}/reply`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+  toggleLike: (reviewId: string) => API.post(`/reviews/${reviewId}/like`),
+  getLikes: (reviewId: string) => API.get(`/reviews/${reviewId}/likes`)
 };

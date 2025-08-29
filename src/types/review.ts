@@ -10,6 +10,10 @@ export interface Review {
   photos?: string[];
   createdAt: string;
   updatedAt: string;
+  parentId?: string; // For replies to other reviews
+  replies?: Review[]; // Nested replies
+  likes?: string[]; // Array of user IDs who liked this review
+  likesCount?: number; // Count of likes
 }
 
 export interface ReviewFormData {
@@ -18,4 +22,5 @@ export interface ReviewFormData {
   deliveryRating: number;
   comment: string;
   photos?: File[];
+  parentId?: string; // For reply functionality
 }
