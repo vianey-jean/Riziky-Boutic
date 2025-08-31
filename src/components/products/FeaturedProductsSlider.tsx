@@ -1,10 +1,11 @@
-
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/contexts/StoreContext';
 import ProductCard from './ProductCard';
 import { motion } from 'framer-motion';
+import { getSecureCategoryId } from '@/services/secureCategories';
 
 interface FeaturedProductsSliderProps {
   products: Product[];
@@ -48,6 +49,17 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
     setCurrentIndex(prev => Math.max(prev - 1, 0));
   };
 
+  // Extraire le nom de la catégorie depuis seeAllLink pour générer l'ID sécurisé
+  const getCategoryFromLink = (link: string): string => {
+    if (!link) return '';
+    // Extraire le nom de la catégorie depuis le lien (ex: "/categorie/Perruques" -> "Perruques")
+    const parts = link.split('/');
+    return parts[parts.length - 1] || '';
+  };
+
+  const categoryName = getCategoryFromLink(seeAllLink);
+  const secureCategoryLink = categoryName ? `/categorie/${getSecureCategoryId(categoryName)}` : '';
+
   return (
     <div className="my-12 py-8 px-4 bg-gradient-to-r from-white via-gray-50 to-white dark:from-neutral-900 dark:via-black dark:to-neutral-900 rounded-xl shadow-sm">
       <div className="container mx-auto">
@@ -57,9 +69,9 @@ const FeaturedProductsSlider: React.FC<FeaturedProductsSliderProps> = ({
             {description && <p className="mt-2 text-gray-600 dark:text-gray-400">{description}</p>}
           </div>
           
-          {seeAllLink && (
+          {seeAllLink && secureCategoryLink && (
             <Button asChild variant="outline" className="self-end md:self-auto">
-              <a href={seeAllLink}>Voir tout</a>
+              <Link to={secureCategoryLink}>Voir tout</Link>
             </Button>
           )}
         </div>
