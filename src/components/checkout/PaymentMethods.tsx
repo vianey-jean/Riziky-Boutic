@@ -65,6 +65,13 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
             </Label>
           </div>
            */}
+           <div className={`flex items-center space-x-2 rounded-md border p-3 }`}>
+            <Label htmlFor="A venir" className="flex-grow cursor-pointer">
+              <div className="flex items-center">
+                <span>Paiement par carte bancaire est à Venir</span>
+              </div>
+            </Label>
+          </div>
           
         </div>
       </RadioGroup>
