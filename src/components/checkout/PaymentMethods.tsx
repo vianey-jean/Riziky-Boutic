@@ -26,7 +26,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
       
       <RadioGroup value={selectedMethod} onValueChange={onMethodChange} disabled={isDisabled}>
         <div className="flex flex-col space-y-3">
-          <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'card' ? 'border-primary bg-primary/5' : ''}`}>
+          {/* <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'card' ? 'border-primary bg-primary/5' : ''}`}>
             <RadioGroupItem value="card" id="card" />
             <Label htmlFor="card" className="flex-grow cursor-pointer flex items-center">
               <CreditCard className="mr-2 h-4 w-4" />
@@ -36,9 +36,16 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
               <img src={visaLogo} alt="Visa" className="h-6" />
               <img src={mastercardLogo} alt="Mastercard" className="h-6" />
             </div>
+          </div> */}
+          <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'cash' ? 'border-primary bg-primary/5' : ''}`}>
+            <RadioGroupItem value="cash" id="cash" />
+            <Label htmlFor="cash" className="flex-grow cursor-pointer flex items-center">
+              <Banknote className="mr-2 h-4 w-4" />
+              <span>Paiement à la livraison</span>
+            </Label>
           </div>
 
-          <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'paypal' ? 'border-primary bg-primary/5' : ''}`}>
+          {/* <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'paypal' ? 'border-primary bg-primary/5' : ''}`}>
             <RadioGroupItem value="paypal" id="paypal" />
             <Label htmlFor="paypal" className="flex-grow cursor-pointer">
               <div className="flex items-center">
@@ -57,14 +64,8 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
               </div>
             </Label>
           </div>
+           */}
           
-          <div className={`flex items-center space-x-2 rounded-md border p-3 ${selectedMethod === 'cash' ? 'border-primary bg-primary/5' : ''}`}>
-            <RadioGroupItem value="cash" id="cash" />
-            <Label htmlFor="cash" className="flex-grow cursor-pointer flex items-center">
-              <Banknote className="mr-2 h-4 w-4" />
-              <span>Paiement à la livraison</span>
-            </Label>
-          </div>
         </div>
       </RadioGroup>
 
