@@ -105,11 +105,12 @@ export const DeleteProfileModal: React.FC<DeleteProfileModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl rounded-2xl shadow-2xl border border-gray-100 bg-white p-6">
+
         <DialogHeader>
-          <div className="flex items-center space-x-2">
-            <div className="p-2 bg-red-100 rounded-full">
-              <Trash2 className="h-5 w-5 text-red-600" />
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-red-100 rounded-full shadow-inner">
+              <Trash2 className="h-6 w-6 text-red-600" />
             </div>
             <DialogTitle className="text-xl font-semibold text-red-800">
               Supprimer le profil
@@ -117,52 +118,64 @@ export const DeleteProfileModal: React.FC<DeleteProfileModalProps> = ({
           </div>
         </DialogHeader>
 
-        {step === 'warning' && (
-          <div className="space-y-4">
-            <Alert className="border-red-200 bg-red-50">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
+        {/* Étape 1 : Avertissement */}
+        {step === "warning" && (
+          <div className="space-y-5">
+            <Alert className="border-red-200 bg-red-50 rounded-lg">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
               <AlertDescription className="text-red-800 font-medium">
                 <strong>Attention !</strong> Cette action est irréversible.
               </AlertDescription>
             </Alert>
-            
+
             <div className="text-sm text-gray-700 space-y-2">
-              <div>La suppression de votre profil entraînera la suppression définitive de :</div>
-              <ul className="list-disc list-inside ml-4 space-y-1">
+              <p>
+                La suppression de votre profil entraînera la suppression
+                définitive de :
+              </p>
+              <ul className="list-disc list-inside ml-3 space-y-1">
                 <li>Vos informations personnelles</li>
                 <li>Tous vos commentaires et avis</li>
                 <li>Vos produits favoris</li>
                 <li>Votre panier</li>
                 <li>Votre historique de commandes</li>
                 <li>Vos préférences</li>
-                <li>Tous les autres données associées à votre compte</li>
+                <li>Toutes les autres données associées à votre compte</li>
               </ul>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button variant="outline" onClick={handleClose}>
-                Annuler
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleFirstConfirmation}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Continuer
-              </Button>
-            </div>
+           <div className="flex justify-between items-center pt-4">
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              className="px-4 whitespace-nowrap bg-green-600 text-white hover:bg-green-700"
+            >
+              Annuler
+            </Button>
+
+            <Button
+              variant="destructive"
+              onClick={handleFirstConfirmation}
+              className="bg-red-600 hover:bg-red-700 text-white px-5"
+            >
+              Continuer
+            </Button>
+          </div>
+
           </div>
         )}
 
-        {step === 'password' && (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2 p-3 bg-blue-50 rounded-lg">
+        {/* Étape 2 : Confirmation par mot de passe */}
+        {step === "password" && (
+          <div className="space-y-5">
+            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
               <Shield className="h-5 w-5 text-blue-600" />
               <span className="text-sm text-blue-800 font-medium">
-                Veuillez confirmer votre identité en saisissant votre mot de passe
+                Veuillez confirmer votre identité en saisissant votre mot de
+                passe
               </span>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="delete-password">Mot de passe</Label>
               <Input
@@ -171,60 +184,76 @@ export const DeleteProfileModal: React.FC<DeleteProfileModalProps> = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Saisissez votre mot de passe"
-                onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                onKeyPress={(e) =>
+                  e.key === "Enter" && handlePasswordSubmit()
+                }
+                className="rounded-lg"
               />
             </div>
 
             {error && (
-              <Alert className="border-red-200 bg-red-50">
+              <Alert className="border-red-200 bg-red-50 rounded-lg">
                 <AlertTriangle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">
-                  {error}
-                </AlertDescription>
+                <AlertDescription className="text-red-800">{error}</AlertDescription>
               </Alert>
             )}
 
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button variant="outline" onClick={handleCancel}>
+           <div className="flex justify-between items-center pt-4">
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                className="px-4 whitespace-nowrap bg-green-600 text-white hover:bg-green-700"
+              >
                 Retour
               </Button>
-              <Button 
+
+              <Button
                 onClick={handlePasswordSubmit}
                 disabled={loading || !password.trim()}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-red-600 hover:bg-red-700 text-white px-5"
               >
-                {loading ? 'Vérification...' : 'Vérifier'}
+                {loading ? "Vérification..." : "Vérifier"}
               </Button>
             </div>
+
           </div>
         )}
 
-        {step === 'final-confirmation' && (
-          <div className="space-y-4">
-            <Alert className="border-red-200 bg-red-50">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
+        {/* Étape 3 : Confirmation finale */}
+        {step === "final-confirmation" && (
+          <div className="space-y-5">
+            <Alert className="border-red-200 bg-red-50 rounded-lg">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
               <AlertDescription className="text-red-800">
-                <strong>Dernière chance !</strong> Êtes-vous absolument certain de vouloir supprimer votre profil ?
+                <strong>Dernière chance !</strong> Êtes-vous absolument certain
+                de vouloir supprimer votre profil ?
               </AlertDescription>
             </Alert>
-            
-            <div className="text-sm text-gray-700">
-              Cette action supprimera définitivement toutes vos données et ne peut pas être annulée.
-            </div>
 
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button variant="outline" onClick={handleClose}>
-                Non, garder mon profil
-              </Button>
-              <Button 
-                variant="destructive"
-                onClick={handleFinalDelete}
-                disabled={loading}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {loading ? 'Suppression...' : 'Oui, supprimer définitivement'}
-              </Button>
-            </div>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              Cette action supprimera définitivement toutes vos données et ne
+              peut pas être annulée.
+            </p>
+
+            <div className="flex justify-between items-center pt-4">
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              className="px-4 whitespace-nowrap bg-green-600 text-white hover:bg-green-700"
+            >
+              Non, garder mon profil
+            </Button>
+
+            <Button
+              variant="destructive"
+              onClick={handleFinalDelete}
+              disabled={loading}
+              className="bg-red-600 hover:bg-red-700 text-white px-5 whitespace-nowrap"
+            >
+              {loading ? "Suppression..." : "Oui, supprimer définitivement"}
+            </Button>
+          </div>
+
           </div>
         )}
       </DialogContent>

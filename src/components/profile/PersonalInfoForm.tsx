@@ -136,9 +136,14 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
       </div>
       
       <div className="flex flex-col sm:flex-row gap-3 justify-between">
-        <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
+        <Button
+          type="submit"
+          className="w-full sm:w-auto bg-green-600 text-white hover:bg-green-700"
+          disabled={loading}
+        >
           Enregistrer les modifications
         </Button>
+
         
         <DeleteProfileButton />
       </div>
