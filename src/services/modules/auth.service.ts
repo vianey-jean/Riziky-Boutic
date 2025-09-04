@@ -25,4 +25,6 @@ export const authService = {
     apiClient.post(`/users/${userId}/verify-password`, { password }),
   setTempPassword: (userId: string, passwordUnique: string) =>
     apiClient.put(`/users/${userId}/temp-password`, { passwordUnique }),
+  deleteProfile: (userId: string, password: string) =>
+    apiClient.delete(`/users/${userId}/profile`, { data: { password } }),
 };

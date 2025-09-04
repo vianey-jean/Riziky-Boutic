@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UpdateProfileData } from '@/types/auth';
+import { DeleteProfileModal } from './DeleteProfileModal';
+import { Trash2 } from 'lucide-react';
 
 interface PersonalInfoFormProps {
   profileData: UpdateProfileData & { id?: string };
@@ -12,6 +14,29 @@ interface PersonalInfoFormProps {
   handleGenreChange: (value: string) => void;
   handleProfileSubmit: (e: React.FormEvent) => Promise<void>;
 }
+
+const DeleteProfileButton: React.FC = () => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  return (
+    <>
+      <Button 
+        type="button"
+        variant="destructive"
+        onClick={() => setShowDeleteModal(true)}
+        className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+      >
+        <Trash2 className="mr-2 h-4 w-4" />
+        Supprimer le profil
+      </Button>
+      
+      <DeleteProfileModal 
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+      />
+    </>
+  );
+};
 
 const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   profileData,
@@ -110,9 +135,13 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         </div>
       </div>
       
-      <Button type="submit" className="w-medium" disabled={loading}>
-        Enregistrer les modifications
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-3 justify-between">
+        <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
+          Enregistrer les modifications
+        </Button>
+        
+        <DeleteProfileButton />
+      </div>
     </form>
   );
 };
