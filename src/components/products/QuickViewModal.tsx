@@ -10,6 +10,7 @@ import { toast } from '@/components/ui/sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { getSecureProductId } from '@/services/secureIds';
+import QuantitySelector from '@/components/ui/quantity-selector';
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -56,9 +57,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       return;
     }
 
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product);
-    }
+    addToCart(product, quantity);
     toast.success(
       `${quantity} ${quantity > 1 ? 'exemplaires ajoutés' : 'exemplaire ajouté'} au panier`
     );
@@ -209,25 +208,13 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             </div>
 
             <div className="flex items-center space-x-4 mb-6">
-              <div className="flex items-center border border-gray-300 rounded-md">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                  className="px-3 py-1 text-gray-600 disabled:text-gray-300"
-                >
-                  -
-                </button>
-                <span className="px-4 py-1 border-x border-gray-300 min-w-[40px] text-center">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  disabled={product.stock !== undefined && quantity >= product.stock}
-                  className="px-3 py-1 text-gray-600 disabled:text-gray-300"
-                >
-                  +
-                </button>
-              </div>
+              <QuantitySelector
+                quantity={quantity}
+                onQuantityChange={setQuantity}
+                maxStock={product.stock}
+                disabled={!isInStock}
+                size="default"
+              />
             </div>
 
             <div className="flex space-x-3">

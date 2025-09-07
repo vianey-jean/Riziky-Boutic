@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getSecureId } from '@/services/secureIds';
 import { Star, Heart, ShoppingCart, Sparkles } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
+import QuantitySelector from '@/components/ui/quantity-selector';
 
 interface FeaturedProductsCarouselProps {
   products: Product[];
@@ -17,6 +18,7 @@ interface FeaturedProductsCarouselProps {
 const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> = ({ products }) => {
   const { addToCart, toggleFavorite, isFavorite } = useStore();
   const { isAuthenticated } = useAuth();
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const PRODUCT_PLACEHOLDER_IMAGE = '/placeholder.svg';
 
@@ -42,6 +44,12 @@ const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> = ({ pro
     return `${hoursRemaining}h ${minutesRemaining}m`;
   };
 
+  const getQuantity = (productId: string) => quantities[productId] || 1;
+  
+  const setQuantity = (productId: string, quantity: number) => {
+    setQuantities(prev => ({ ...prev, [productId]: quantity }));
+  };
+
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
@@ -57,8 +65,9 @@ const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> = ({ pro
       return;
     }
     
-    addToCart(product);
-    toast.success("Produit ajouté au panier");
+    const quantity = getQuantity(product.id);
+    addToCart(product, quantity);
+    toast.success(`${quantity} produit${quantity > 1 ? 's' : ''} ajouté${quantity > 1 ? 's' : ''} au panier`);
   };
 
   const handleToggleFavorite = (e: React.MouseEvent, product: Product) => {
@@ -193,19 +202,29 @@ const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> = ({ pro
                         )}
                       </div>
 
-                      {/* Quick add button or out of stock message */}
+                      {/* Quantity selector and add button */}
                       {isOutOfStock ? (
                         <div className="w-full mt-4 bg-gray-400 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-center space-x-2 cursor-not-allowed">
                           <span>❌ Rupture de stock</span>
                         </div>
                       ) : (
-                        <button 
-                          className="w-full mt-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2"
-                          onClick={(e) => handleAddToCart(e, product)}
-                        >
-                          <ShoppingCart className="h-4 w-4" />
-                          <span>Ajouter au panier</span>
-                        </button>
+                        <div className="mt-4 space-y-3">
+                          <div className="flex justify-center">
+                            <QuantitySelector
+                              quantity={getQuantity(product.id)}
+                              onQuantityChange={(qty) => setQuantity(product.id, qty)}
+                              maxStock={product.stock}
+                              size="sm"
+                            />
+                          </div>
+                          <button 
+                            className="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2"
+                            onClick={(e) => handleAddToCart(e, product)}
+                          >
+                            <ShoppingCart className="h-4 w-4" />
+                            <span>Ajouter au panier</span>
+                          </button>
+                        </div>
                       )}
                     </CardContent>
                   </Card>

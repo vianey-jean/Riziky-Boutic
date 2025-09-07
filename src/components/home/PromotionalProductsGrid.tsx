@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getSecureId } from '@/services/secureIds';
 import { Clock, Zap, Star, Heart, ShoppingCart, Flame } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
+import QuantitySelector from '@/components/ui/quantity-selector';
 
 interface PromotionalProductsGridProps {
   products: Product[];
@@ -16,6 +17,7 @@ interface PromotionalProductsGridProps {
 const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ products }) => {
   const { addToCart, toggleFavorite, isFavorite } = useStore();
   const { isAuthenticated } = useAuth();
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const PRODUCT_PLACEHOLDER_IMAGE = '/placeholder.svg';
 
@@ -41,6 +43,12 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
     return `${hoursRemaining}h ${minutesRemaining}m`;
   };
 
+  const getQuantity = (productId: string) => quantities[productId] || 1;
+  
+  const setQuantity = (productId: string, quantity: number) => {
+    setQuantities(prev => ({ ...prev, [productId]: quantity }));
+  };
+
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
@@ -56,8 +64,9 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
       return;
     }
     
-    addToCart(product);
-    toast.success("Produit ajouté au panier");
+    const quantity = getQuantity(product.id);
+    addToCart(product, quantity);
+    toast.success(`${quantity} produit${quantity > 1 ? 's' : ''} ajouté${quantity > 1 ? 's' : ''} au panier`);
   };
 
   const handleToggleFavorite = (e: React.MouseEvent, product: Product) => {
@@ -211,19 +220,29 @@ const PromotionalProductsGrid: React.FC<PromotionalProductsGridProps> = ({ produ
                         </div>
                       </div>
 
-                      {/* Add to cart button or out of stock message */}
+                      {/* Quantity selector and add to cart button */}
                       {isOutOfStock ? (
                         <div className="w-full mt-6 bg-gray-400 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center space-x-2 cursor-not-allowed">
                           <span>❌ Rupture de stock</span>
                         </div>
                       ) : (
-                        <button 
-                          className="w-full mt-6 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2 shadow-lg"
-                          onClick={(e) => handleAddToCart(e, product)}
-                        >
-                          <ShoppingCart className="h-5 w-5" />
-                          <span>Profiter de l'offre</span>
-                        </button>
+                        <div className="mt-6 space-y-3">
+                          <div className="flex justify-center">
+                            <QuantitySelector
+                              quantity={getQuantity(product.id)}
+                              onQuantityChange={(qty) => setQuantity(product.id, qty)}
+                              maxStock={product.stock}
+                              size="default"
+                            />
+                          </div>
+                          <button 
+                            className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 flex items-center justify-center space-x-2 shadow-lg"
+                            onClick={(e) => handleAddToCart(e, product)}
+                          >
+                            <ShoppingCart className="h-5 w-5" />
+                            <span>Profiter de l'offre</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                   </CardContent>

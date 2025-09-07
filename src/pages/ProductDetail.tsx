@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
+import QuantitySelector from '@/components/ui/quantity-selector';
 
 const ProductDetail = () => {
   const { productId: secureProductId } = useParams<{ productId: string }>();
@@ -129,9 +130,7 @@ const ProductDetail = () => {
     }
 
     if (product) {
-      for (let i = 0; i < quantity; i++) {
-        addToCart(product);
-      }
+      addToCart(product, quantity);
       setAddedToCart(true);
       toast.success(`${quantity} ${quantity > 1 ? 'exemplaires' : 'exemplaire'} ajouté${quantity > 1 ? 's' : ''} au panier`);
       setTimeout(() => setAddedToCart(false), 2000);
@@ -423,25 +422,13 @@ const ProductDetail = () => {
                 <div className="flex flex-col space-y-6">
                   <div className="flex items-center">
                     <span className="mr-6 text-neutral-700 dark:text-neutral-300 font-medium">Quantité:</span>
-                    <div className="flex items-center bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl shadow-lg">
-                      <button
-                        onClick={() => handleQuantityChange(quantity - 1)}
-                        disabled={quantity <= 1}
-                        className="px-4 py-3 text-neutral-500 disabled:text-neutral-300 disabled:cursor-not-allowed hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-l-xl transition-colors"
-                      >
-                        -
-                      </button>
-                      <span className="px-6 py-3 border-l border-r border-neutral-300 dark:border-neutral-700 min-w-[60px] text-center font-medium">
-                        {quantity}
-                      </span>
-                      <button
-                        onClick={() => handleQuantityChange(quantity + 1)}
-                        disabled={product.stock !== undefined && quantity >= product.stock}
-                        className="px-4 py-3 text-neutral-500 disabled:text-neutral-300 disabled:cursor-not-allowed hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-r-xl transition-colors"
-                      >
-                        +
-                      </button>
-                    </div>
+                    <QuantitySelector
+                      quantity={quantity}
+                      onQuantityChange={setQuantity}
+                      maxStock={product.stock}
+                      disabled={!isInStock}
+                      size="lg"
+                    />
                     {product.stock !== undefined && product.stock > 0 && product.stock <= 10 && (
                       <span className="ml-4 text-sm text-orange-600 font-medium">
                         ({product.stock} disponible{product.stock > 1 ? 's' : ''})

@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Link } from 'react-router-dom';
 import { getSecureRoute } from '@/services/secureIds';
 import LoadingSpinner from '@/components/ui/loading-spinner';
+import QuantitySelector from '@/components/ui/quantity-selector';
 
 interface ProductGridProps {
   products: Product[];
@@ -30,6 +31,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [visibleProducts, setVisibleProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const productsPerPage = 12;
 
   const { favorites, toggleFavorite, addToCart } = useStore();
@@ -50,6 +52,17 @@ const ProductGrid: React.FC<ProductGridProps> = ({
 
   const isFavorite = (product: Product) => {
     return favorites.some(fav => fav.id === product.id);
+  };
+
+  const getQuantity = (productId: string) => quantities[productId] || 1;
+  
+  const setQuantity = (productId: string, quantity: number) => {
+    setQuantities(prev => ({ ...prev, [productId]: quantity }));
+  };
+
+  const handleAddToCart = (product: Product) => {
+    const quantity = getQuantity(product.id);
+    addToCart(product, quantity);
   };
 
   const containerVariants = {
@@ -258,25 +271,36 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                             )}
                           </div>
 
-                          <div className="flex gap-3">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className={`border ${isFavorite(product) ? 'border-red-300 text-red-600 bg-red-50' : 'border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300'} rounded-xl transition-all duration-300`}
-                              onClick={() => toggleFavorite(product)}
-                            >
-                              <Heart className={`h-4 w-4 mr-2 ${isFavorite(product) ? 'text-red-600 fill-red-600' : 'text-gray-400'}`} />
-                              Favoris
-                            </Button>
-                            <Button 
-                              size="sm"
-                              className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                              onClick={() => addToCart(product)}
-                              disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
-                            >
-                              <ShoppingCart className="h-4 w-4 mr-2" />
-                              Ajouter au panier
-                            </Button>
+                          <div className="flex flex-col gap-3">
+                            <div className="flex gap-3">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className={`border ${isFavorite(product) ? 'border-red-300 text-red-600 bg-red-50' : 'border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300'} rounded-xl transition-all duration-300`}
+                                onClick={() => toggleFavorite(product)}
+                              >
+                                <Heart className={`h-4 w-4 mr-2 ${isFavorite(product) ? 'text-red-600 fill-red-600' : 'text-gray-400'}`} />
+                                Favoris
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <QuantitySelector
+                                quantity={getQuantity(product.id)}
+                                onQuantityChange={(qty) => setQuantity(product.id, qty)}
+                                maxStock={product.stock}
+                                disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
+                                size="sm"
+                              />
+                              <Button 
+                                size="sm"
+                                className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex-1"
+                                onClick={() => handleAddToCart(product)}
+                                disabled={!product.isSold || (product.stock !== undefined && product.stock <= 0)}
+                              >
+                                <ShoppingCart className="h-4 w-4 mr-2" />
+                                Ajouter au panier
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
