@@ -1,1402 +1,920 @@
-
 # 🏗️ Architecture Technique - Riziky-Boutic
 
 ## 📋 Vue d'Ensemble Architecturale
 
-Cette documentation détaille l'architecture technique complète de la plateforme Riziky-Boutic, expliquant chaque composant, sa logique métier, et son interaction avec le système global.
+Cette documentation détaille l'architecture technique complète de la plateforme Riziky-Boutic, incluant les patterns de conception, les flux de données, les interfaces API, et les choix technologiques.
 
 ---
 
 ## 🎯 Principes Architecturaux
 
-### Architecture en Couches
+### 1. Architecture en Couches (Layered Architecture)
+
 ```
-┌─────────────────────────────────────────┐
-│           COUCHE PRÉSENTATION           │
-│        (React Components + UI)          │
-├─────────────────────────────────────────┤
-│           COUCHE LOGIQUE MÉTIER         │
-│        (Hooks + Contexts + Services)    │
-├─────────────────────────────────────────┤
-│           COUCHE COMMUNICATION          │
-│          (API Client + WebSocket)       │
-├─────────────────────────────────────────┤
-│           COUCHE SERVEUR                │
-│       (Express Routes + Middlewares)    │
-├─────────────────────────────────────────┤
-│           COUCHE DONNÉES                │
-│         (JSON Files / Database)         │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│           Présentation              │ ← React Components, UI
+├─────────────────────────────────────┤
+│            Logique Métier           │ ← Hooks, Services, Contexts
+├─────────────────────────────────────┤
+│            Services API             │ ← HTTP Clients, WebSocket
+├─────────────────────────────────────┤
+│         Backend/Serveur             │ ← Express Routes, Middleware
+├─────────────────────────────────────┤
+│         Accès aux Données           │ ← File System, Future DB
+└─────────────────────────────────────┘
 ```
 
-### Patterns Utilisés
-- **Component Pattern** : Composants réutilisables et modulaires
-- **Hook Pattern** : Logique métier encapsulée dans des hooks personnalisés
-- **Context Pattern** : État global partagé via React Context
-- **Service Pattern** : Services pour la communication API
-- **Middleware Pattern** : Middlewares Express pour la sécurité et validation
+### 2. Séparation des Responsabilités
+
+#### Frontend (React/TypeScript)
+- **Présentation**: Composants UI purs et réutilisables
+- **État Local**: Hooks personnalisés pour la logique métier
+- **État Global**: Contexts React pour les données partagées
+- **Communication**: Services API avec Axios et Socket.io
+
+#### Backend (Node.js/Express)
+- **Routage**: Express routes avec middleware de sécurité
+- **Logique Métier**: Services séparés par domaine
+- **Validation**: Middleware de validation des entrées
+- **Stockage**: Couche d'abstraction pour les données
 
 ---
 
-## 🖥️ Architecture Frontend (React)
+## 🔧 Stack Technique Détaillée
 
-### Structure des Composants
+### Frontend Technologies
 
-#### 1. Composants Layout (`src/components/layout/`)
-
-##### `Navbar.tsx`
-**Objectif :** Navigation principale de l'application
-**Logique :**
+#### Core Framework
 ```typescript
-// Navigation dynamique selon l'état d'authentification
-const { user, isAuthenticated } = useAuth();
-const { cartItemCount } = useCart();
-
-// Affichage conditionnel des éléments
-{isAuthenticated ? (
-  <UserMenu user={user} />
-) : (
-  <AuthButtons />
-)}
+// React 18.3.1 - Fonctionnalités utilisées
+- Concurrent Features
+- Automatic Batching
+- Suspense for Data Fetching
+- Error Boundaries
+- Custom Hooks
+- Context API
 ```
 
-**Utilisation :**
-- Affichage automatique sur toutes les pages
-- Navigation entre les sections
-- Indicateur du panier en temps réel
-- Menu utilisateur contextuel
-
-**Modification :**
+#### State Management
 ```typescript
-// Pour ajouter un nouvel élément de navigation
-const navigationItems = [
-  { label: "Accueil", href: "/" },
-  { label: "Produits", href: "/products" },
-  // Ajouter ici
+// Contextes React pour l'état global
+- AuthContext: Gestion authentification utilisateur
+- StoreContext: État global de l'application
+- VideoCallContext: Gestion des appels vidéo (future)
+
+// React Query pour l'état serveur
+- Cache automatique des requêtes
+- Synchronisation en arrière-plan
+- Optimistic updates
+- Gestion des erreurs centralisée
+```
+
+#### Styling et UI
+```css
+/* Tailwind CSS 3.3+ Configuration */
+- Design system personnalisé
+- Dark/Light mode support
+- Responsive design mobile-first
+- Composants Shadcn/UI customisés
+```
+
+#### Routing et Navigation
+```typescript
+// React Router 6.26+
+- Nested routing
+- Protected routes avec middleware
+- Secure routes avec IDs obfusqués
+- Lazy loading des pages
+```
+
+### Backend Technologies
+
+#### Server Framework
+```javascript
+// Express.js 4.18+ Configuration
+const app = express();
+
+// Middleware Stack
+app.use(helmet()); // Sécurité headers
+app.use(cors(corsOptions)); // CORS configuré
+app.use(express.json({ limit: '10mb' })); // Body parsing
+app.use(xss()); // Protection XSS
+app.use(rateLimit(rateLimitConfig)); // Rate limiting
+```
+
+#### Authentication & Security
+```javascript
+// JWT Strategy
+const jwtConfig = {
+  secret: process.env.JWT_SECRET,
+  expiresIn: '24h',
+  issuer: 'riziky-boutic',
+  audience: 'riziky-boutic-users'
+};
+
+// Security Middleware Chain
+const securityChain = [
+  ipValidation,
+  rateLimiting,
+  jwtValidation,
+  permissionCheck,
+  dataSanitization
 ];
 ```
 
-##### `Footer.tsx`
-**Objectif :** Pied de page avec liens et informations légales
-**Logique :**
-- Liens statiques vers pages légales
-- Informations de contact dynamiques
-- Intégration réseaux sociaux
+#### Real-time Communication
+```javascript
+// Socket.io 4.8+ Configuration
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
+});
 
-**Modification :**
-```typescript
-// Mise à jour des liens
-const footerLinks = {
-  company: [
-    { label: "À propos", href: "/about" },
-    // Ajouter nouveaux liens
-  ]
-};
+// Namespaces pour organisation
+io.of('/chat').use(socketAuth);
+io.of('/admin').use(adminAuth);
 ```
 
-#### 2. Composants Produits (`src/components/products/`)
+---
 
-##### `ProductCard.tsx`
-**Objectif :** Carte produit réutilisable
-**Logique Complète :**
-```typescript
-interface ProductCardProps {
-  product: Product;
-  showQuickView?: boolean;
-  showAddToCart?: boolean;
+## 📁 Structure des Dossiers Détaillée
+
+### Frontend Structure (`src/`)
+
+```
+src/
+├── components/           # Composants réutilisables
+│   ├── ui/              # Composants UI de base (Shadcn)
+│   │   ├── button.tsx   # Composant bouton avec variants
+│   │   ├── input.tsx    # Composant input avec validation
+│   │   ├── quantity-selector.tsx # NOUVEAU: Sélecteur quantité
+│   │   └── ...
+│   ├── layout/          # Composants de mise en page
+│   │   ├── Navbar.tsx   # Navigation principale
+│   │   ├── Footer.tsx   # Pied de page
+│   │   ├── Layout.tsx   # Layout principal
+│   │   └── ...
+│   ├── products/        # Composants liés aux produits
+│   │   ├── ProductCard.tsx     # Carte produit avec quantité
+│   │   ├── ProductGrid.tsx     # Grille de produits
+│   │   ├── QuickViewModal.tsx  # Vue rapide produit
+│   │   └── ...
+│   ├── cart/           # Composants panier
+│   │   ├── CartItemCard.tsx    # Item du panier
+│   │   ├── CartSummary.tsx     # Résumé panier
+│   │   └── ...
+│   ├── chat/           # NOUVEAU: Composants chat
+│   │   ├── LiveChatWidget.tsx  # Widget chat principal
+│   │   ├── ClientServiceChatWidget.tsx # Chat client
+│   │   ├── AdminServiceChatWidget.tsx  # Chat admin
+│   │   ├── VoiceRecorder.tsx   # Enregistrement vocal
+│   │   └── ...
+│   ├── admin/          # Composants administration
+│   │   ├── AdminCard.tsx       # Carte admin
+│   │   ├── ProductForm.tsx     # Formulaire produit
+│   │   ├── FlashSaleForm.tsx   # Gestion flash sales
+│   │   └── ...
+│   ├── auth/           # Composants authentification
+│   │   ├── PasswordStrengthIndicator.tsx
+│   │   └── ...
+│   └── ...
+├── pages/              # Pages de l'application
+│   ├── HomePage.tsx         # Page d'accueil
+│   ├── ProductDetail.tsx    # Détail produit avec quantité
+│   ├── CartPage.tsx         # Page panier
+│   ├── CheckoutPage.tsx     # Processus de commande
+│   ├── admin/              # Pages administration
+│   │   ├── AdminLayout.tsx
+│   │   ├── AdminProductsPage.tsx
+│   │   └── ...
+│   └── ...
+├── hooks/              # Hooks personnalisés
+│   ├── useAuth.ts          # Authentification
+│   ├── useCart.ts          # Gestion panier avec quantités
+│   ├── useProducts.ts      # Gestion produits
+│   ├── useProductFilters.ts # Filtres produits
+│   └── ...
+├── services/           # Services API et logique métier
+│   ├── core/
+│   │   └── apiClient.ts    # Client HTTP configuré
+│   ├── modules/
+│   │   ├── auth.service.ts # Service authentification
+│   │   ├── products.service.ts # Service produits
+│   │   ├── cart.service.ts # Service panier
+│   │   └── ...
+│   ├── security/
+│   │   ├── secureIdGenerator.ts # Génération IDs sécurisés
+│   │   ├── routeSecurity.ts     # Sécurité routes
+│   │   └── ...
+│   └── ...
+├── contexts/           # Contextes React
+│   ├── AuthContext.tsx     # Contexte authentification
+│   ├── StoreContext.tsx    # Contexte global app
+│   └── ...
+├── types/              # Définitions TypeScript
+│   ├── auth.ts            # Types authentification
+│   ├── product.ts         # Types produits
+│   ├── cart.ts            # Types panier
+│   ├── chat.ts            # NOUVEAU: Types chat
+│   └── ...
+└── lib/                # Utilitaires et helpers
+    ├── utils.ts           # Utilitaires généraux
+    ├── ecommerce-utils.ts # Utilitaires e-commerce
+    └── ...
+```
+
+### Backend Structure (`server/`)
+
+```
+server/
+├── config/             # Configuration serveur
+│   ├── auth.js            # Config authentification JWT
+│   ├── cors.js            # Configuration CORS
+│   ├── security.js        # Config sécurité générale
+│   ├── routes.js          # Setup routes principales
+│   └── errorHandlers.js   # Gestionnaires d'erreurs
+├── routes/             # Routes API REST
+│   ├── auth.js            # Routes authentification
+│   ├── products.js        # Routes produits
+│   ├── panier.js          # Routes panier
+│   ├── orders.js          # Routes commandes
+│   ├── chat-files.js      # NOUVEAU: Routes chat
+│   ├── client-chat.js     # NOUVEAU: Chat client
+│   ├── admin-chat.js      # NOUVEAU: Chat admin
+│   └── ...
+├── services/           # Logique métier serveur
+│   ├── auth.service.js    # Service authentification
+│   ├── products.service.js # Service produits
+│   ├── cart.service.js    # Service panier
+│   ├── orders.service.js  # Service commandes
+│   └── ...
+├── middlewares/        # Middlewares Express
+│   ├── auth.js           # Middleware authentification
+│   ├── security.js       # Middleware sécurité
+│   └── validation.js     # Middleware validation
+├── socket/             # NOUVEAU: Gestion WebSocket
+│   ├── socketConfig.js   # Configuration Socket.io
+│   ├── socketAuth.js     # Authentification WebSocket
+│   ├── socketHandlers.js # Gestionnaires événements
+│   └── ...
+├── data/               # Stockage JSON (temporaire)
+│   ├── users.json        # Données utilisateurs
+│   ├── products.json     # Données produits
+│   ├── panier.json       # Données panier
+│   ├── orders.json       # Données commandes
+│   ├── client-chat.json  # NOUVEAU: Messages chat client
+│   ├── admin-chat.json   # NOUVEAU: Messages chat admin
+│   └── ...
+├── uploads/            # Fichiers uploadés
+│   ├── avatars/          # Photos de profil
+│   ├── images/           # Images produits
+│   ├── chat-files/       # NOUVEAU: Fichiers chat
+│   └── ...
+└── core/               # Modules core serveur
+    ├── database.js       # Abstraction base de données
+    └── logger.js         # Système de logs
+```
+
+---
+
+## 🔄 Flux de Données et Communication
+
+### 1. Flux d'Authentification
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant C as Client
+    participant S as Server
+    participant DB as DataStore
+
+    U->>C: Saisit identifiants
+    C->>C: Validation côté client
+    C->>S: POST /api/auth/login
+    S->>S: Validation sécurisée
+    S->>DB: Vérification utilisateur
+    DB-->>S: Données utilisateur
+    S->>S: Génération JWT
+    S-->>C: JWT + données user
+    C->>C: Stockage token sécurisé
+    C-->>U: Redirection authentifiée
+```
+
+### 2. Flux d'Ajout au Panier avec Quantité
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant QS as QuantitySelector
+    participant C as CartContext
+    participant S as Server
+    participant DB as DataStore
+
+    U->>QS: Clique sur +
+    QS->>QS: Vérification stock local
+    QS->>U: Mise à jour UI quantité
+    U->>QS: Clique "Ajouter au panier"
+    QS->>C: addToCart(productId, quantity)
+    C->>S: POST /api/panier/add {productId, quantity}
+    S->>S: Validation stock serveur
+    S->>DB: Mise à jour panier
+    DB-->>S: Confirmation
+    S-->>C: Panier mis à jour
+    C->>C: Mise à jour état local
+    C-->>U: Notification succès
+```
+
+### 3. Flux Chat Temps Réel
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant WS as WebSocket
+    participant S as Server
+    participant A as Admin
+
+    C->>WS: Connexion WebSocket
+    WS->>S: socket.connect avec auth
+    S->>S: Validation token
+    S-->>WS: Connexion acceptée
+    
+    C->>WS: Envoi message
+    WS->>S: Traitement message
+    S->>S: Sauvegarde en DB
+    S->>WS: Broadcast vers admin
+    WS-->>A: Nouveau message reçu
+    
+    A->>WS: Réponse admin
+    WS->>S: Traitement réponse
+    S->>WS: Broadcast vers client
+    WS-->>C: Réponse admin reçue
+```
+
+---
+
+## 🔐 Architecture de Sécurité
+
+### 1. Middleware de Sécurité Multicouche
+
+```javascript
+// SecurityChainBuilder - Pattern Builder pour sécurité
+class SecurityChainBuilder {
+  constructor() {
+    this.middlewares = [];
+  }
+
+  addIPValidation() {
+    this.middlewares.push(ipValidationMiddleware);
+    return this;
+  }
+
+  addRateLimit(config = defaultRateLimit) {
+    this.middlewares.push(rateLimit(config));
+    return this;
+  }
+
+  addJWTValidation() {
+    this.middlewares.push(jwtValidationMiddleware);
+    return this;
+  }
+
+  addPermissionCheck(permission) {
+    this.middlewares.push(permissionMiddleware(permission));
+    return this;
+  }
+
+  addDataSanitization() {
+    this.middlewares.push(sanitizationMiddleware);
+    return this;
+  }
+
+  build() {
+    return this.middlewares;
+  }
 }
 
-const ProductCard: FC<ProductCardProps> = ({ product, showQuickView = true }) => {
-  const { addToCart } = useCart();
-  const { toggleFavorite, isFavorite } = useFavorites();
+// Utilisation
+const adminSecurityChain = new SecurityChainBuilder()
+  .addIPValidation()
+  .addRateLimit({ max: 100, windowMs: 15 * 60 * 1000 })
+  .addJWTValidation()
+  .addPermissionCheck('admin')
+  .addDataSanitization()
+  .build();
+
+app.use('/api/admin', adminSecurityChain);
+```
+
+### 2. Système d'IDs Sécurisés
+
+```typescript
+// Génération et décodage d'IDs obfusqués
+class SecureIdGenerator {
+  private static readonly ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  private static readonly SALT = process.env.ID_SALT || 'default-salt';
+
+  static generateSecureId(realId: string, entityType: string): string {
+    const timestamp = Date.now();
+    const data = `${entityType}:${realId}:${timestamp}`;
+    const encoded = this.encode(data);
+    
+    // Stockage du mapping
+    MappingStorage.store(encoded, realId, entityType);
+    
+    return encoded;
+  }
+
+  static getRealId(secureId: string): string | null {
+    return MappingStorage.retrieve(secureId);
+  }
+
+  private static encode(data: string): string {
+    // Algorithme d'encodage personnalisé
+    const buffer = Buffer.from(data, 'utf8');
+    return buffer.toString('base64url');
+  }
+}
+```
+
+### 3. Validation et Sanitisation
+
+```typescript
+// Schémas de validation Zod
+export const productValidationSchema = z.object({
+  name: z.string()
+    .min(1, "Le nom est requis")
+    .max(100, "Le nom ne peut pas dépasser 100 caractères")
+    .regex(/^[a-zA-Z0-9\s\-']+$/, "Caractères non autorisés"),
   
-  // Gestion de l'ajout au panier
-  const handleAddToCart = async () => {
-    try {
-      await addToCart(product.id, 1);
-      toast.success("Produit ajouté au panier");
-    } catch (error) {
-      toast.error("Erreur lors de l'ajout");
-    }
-  };
+  price: z.number()
+    .positive("Le prix doit être positif")
+    .max(999999, "Prix trop élevé"),
   
-  // Gestion des favoris
-  const handleToggleFavorite = async () => {
-    await toggleFavorite(product.id);
-  };
+  stock: z.number()
+    .int("Le stock doit être un entier")
+    .min(0, "Le stock ne peut pas être négatif"),
   
-  // Calcul du prix avec promotion
-  const displayPrice = product.promotion 
-    ? product.prix - (product.prix * product.promotion.pourcentage / 100)
-    : product.prix;
+  description: z.string()
+    .max(1000, "Description trop longue")
+    .optional(),
+    
+  images: z.array(z.string().url())
+    .max(5, "Maximum 5 images")
+    .optional()
+});
+
+// Middleware de validation
+const validateProduct = (req, res, next) => {
+  try {
+    req.body = productValidationSchema.parse(req.body);
+    next();
+  } catch (error) {
+    res.status(400).json({
+      message: "Données invalides",
+      errors: error.errors
+    });
+  }
 };
 ```
 
-**Utilisation :**
+---
+
+## 📡 Architecture API
+
+### 1. RESTful API Design
+
 ```typescript
-// Dans une grille de produits
-<ProductCard 
-  product={product} 
-  showQuickView={true}
-  onAddToCart={handleAddToCart}
-/>
+// Structure des endpoints
+const apiEndpoints = {
+  // Authentification
+  auth: {
+    login: 'POST /api/auth/login',
+    logout: 'POST /api/auth/logout',
+    register: 'POST /api/auth/register',
+    refresh: 'POST /api/auth/refresh',
+    resetPassword: 'POST /api/auth/reset-password'
+  },
+
+  // Produits
+  products: {
+    getAll: 'GET /api/products',
+    getById: 'GET /api/products/:id',
+    create: 'POST /api/products', // Admin only
+    update: 'PUT /api/products/:id', // Admin only
+    delete: 'DELETE /api/products/:id', // Admin only
+    search: 'GET /api/products/search?q=:query'
+  },
+
+  // Panier (NOUVEAU: Support quantités)
+  cart: {
+    get: 'GET /api/panier',
+    add: 'POST /api/panier/add', // Body: {productId, quantity}
+    remove: 'DELETE /api/panier/remove/:productId',
+    update: 'PUT /api/panier/update', // Body: {productId, quantity}
+    clear: 'DELETE /api/panier/clear'
+  },
+
+  // Chat (NOUVEAU)
+  chat: {
+    getMessages: 'GET /api/client-chat/:userId',
+    sendMessage: 'POST /api/client-chat/send',
+    uploadFile: 'POST /api/chat-files/upload',
+    getAdminChats: 'GET /api/admin-chat', // Admin only
+    adminReply: 'POST /api/admin-chat/reply' // Admin only
+  }
+};
 ```
 
-**Modification :**
-- Ajouter de nouveaux badges promotionnels
-- Modifier l'affichage des prix
-- Personnaliser les actions disponibles
+### 2. WebSocket Events
 
-##### `ProductGrid.tsx`
-**Objectif :** Grille responsive pour l'affichage des produits
-**Logique :**
 ```typescript
-const ProductGrid: FC<ProductGridProps> = ({ products, isLoading }) => {
-  // Responsive grid avec Tailwind
-  const gridClasses = cn(
-    "grid gap-4",
-    "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-  );
+// Événements Socket.io
+const socketEvents = {
+  // Client vers serveur
+  CLIENT_MESSAGE: 'client:message',
+  CLIENT_TYPING: 'client:typing',
+  CLIENT_FILE_UPLOAD: 'client:file-upload',
   
-  // Gestion des états de chargement
-  if (isLoading) return <ProductGridSkeleton />;
-  if (!products.length) return <EmptyProductsMessage />;
+  // Serveur vers client
+  MESSAGE_RECEIVED: 'message:received',
+  ADMIN_REPLY: 'admin:reply',
+  ADMIN_TYPING: 'admin:typing',
+  CONNECTION_STATUS: 'connection:status',
   
+  // Admin spécifique
+  NEW_CLIENT_MESSAGE: 'admin:new-client-message',
+  CLIENT_CONNECTED: 'admin:client-connected',
+  CLIENT_DISCONNECTED: 'admin:client-disconnected'
+};
+
+// Configuration des namespaces
+io.of('/chat').on('connection', (socket) => {
+  socket.on(socketEvents.CLIENT_MESSAGE, handleClientMessage);
+  socket.on(socketEvents.CLIENT_TYPING, handleClientTyping);
+});
+
+io.of('/admin').on('connection', (socket) => {
+  socket.on(socketEvents.ADMIN_REPLY, handleAdminReply);
+  socket.join('admin-room');
+});
+```
+
+---
+
+## 🎨 Architecture UI/UX
+
+### 1. Design System
+
+```css
+/* Variables CSS personnalisées */
+:root {
+  /* Couleurs primaires */
+  --primary: 0 84% 60%;
+  --primary-foreground: 0 0% 98%;
+  --primary-glow: 0 84% 70%;
+  
+  /* Couleurs sémantiques */
+  --success: 142 71% 45%;
+  --warning: 38 92% 50%;
+  --error: 0 84% 60%;
+  --info: 217 91% 60%;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+  --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  
+  /* Ombres */
+  --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  
+  /* Transitions */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+```
+
+### 2. Composants avec Variants
+
+```typescript
+// Button avec système de variants Tailwind
+const buttonVariants = cva(
+  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "underline-offset-4 hover:underline text-primary",
+        // NOUVEAU: Variants pour e-commerce
+        cart: "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700",
+        buy: "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700"
+      },
+      size: {
+        default: "h-10 py-2 px-4",
+        sm: "h-9 px-3 rounded-md",
+        lg: "h-11 px-8 rounded-md",
+        icon: "h-10 w-10"
+      }
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default"
+    }
+  }
+);
+```
+
+### 3. Responsive Design Strategy
+
+```typescript
+// Breakpoints Tailwind personnalisés
+const screens = {
+  'xs': '475px',
+  'sm': '640px',
+  'md': '768px',
+  'lg': '1024px',
+  'xl': '1280px',
+  '2xl': '1536px'
+};
+
+// Utilisation dans les composants
+const ProductGrid = () => {
   return (
-    <div className={gridClasses}>
-      {products.map(product => (
-        <ProductCard key={product.id} product={product} />
-      ))}
+    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      {/* Produits */}
     </div>
   );
 };
 ```
 
-#### 3. Composants Panier (`src/components/cart/`)
-
-##### `CartDrawer.tsx`
-**Objectif :** Panneau latéral du panier
-**Logique Complète :**
-```typescript
-const CartDrawer: FC = () => {
-  const { 
-    cart, 
-    updateQuantity, 
-    removeFromCart, 
-    totalPrice,
-    itemCount 
-  } = useCart();
-  
-  // Calcul des totaux en temps réel
-  const subtotal = cart.reduce((acc, item) => 
-    acc + (item.prix * item.quantite), 0
-  );
-  
-  const shipping = subtotal > 50 ? 0 : 5.99;
-  const total = subtotal + shipping;
-  
-  // Gestion de la modification des quantités
-  const handleQuantityChange = async (itemId: string, newQuantity: number) => {
-    if (newQuantity === 0) {
-      await removeFromCart(itemId);
-    } else {
-      await updateQuantity(itemId, newQuantity);
-    }
-  };
-};
-```
-
-**Modification :**
-- Changer les seuils de frais de port
-- Ajouter des codes promo
-- Modifier le calcul des taxes
-
-#### 4. Composants Authentification (`src/components/auth/`)
-
-##### `LoginForm.tsx`
-**Objectif :** Formulaire de connexion sécurisé
-**Logique :**
-```typescript
-const LoginForm: FC = () => {
-  const { login } = useAuth();
-  const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema)
-  });
-  
-  const onSubmit = async (data: LoginFormData) => {
-    try {
-      await login(data.email, data.password);
-      navigate('/dashboard');
-    } catch (error) {
-      setError('email', { message: 'Identifiants incorrects' });
-    }
-  };
-};
-
-// Schéma de validation Zod
-const loginSchema = z.object({
-  email: z.string().email("Email invalide"),
-  password: z.string().min(8, "Mot de passe trop court")
-});
-```
-
-### Hooks Personnalisés
-
-#### 1. `useAuth.ts`
-**Objectif :** Gestion centralisée de l'authentification
-**Logique Complète :**
-```typescript
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  register: (userData: RegisterData) => Promise<void>;
-}
-
-const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Vérification du token au chargement
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const userData = await authAPI.verifyToken(token);
-          setUser(userData);
-        } catch (error) {
-          localStorage.removeItem('token');
-        }
-      }
-      setIsLoading(false);
-    };
-    
-    checkAuthStatus();
-  }, []);
-  
-  // Fonction de connexion
-  const login = async (email: string, password: string) => {
-    const response = await authAPI.login({ email, password });
-    const { token, user: userData } = response.data;
-    
-    localStorage.setItem('token', token);
-    setUser(userData);
-    
-    // Configuration du header Authorization pour toutes les requêtes
-    apiClient.defaults.headers.Authorization = `Bearer ${token}`;
-  };
-  
-  // Fonction de déconnexion
-  const logout = () => {
-    localStorage.removeItem('token');
-    delete apiClient.defaults.headers.Authorization;
-    setUser(null);
-  };
-};
-```
-
-**Utilisation :**
-```typescript
-const MyComponent = () => {
-  const { user, login, logout, isAuthenticated } = useAuth();
-  
-  if (isAuthenticated) {
-    return <DashboardContent user={user} />;
-  }
-  
-  return <LoginForm onLogin={login} />;
-};
-```
-
-**Modification :**
-- Ajouter la gestion 2FA
-- Implémenter le refresh token
-- Ajouter la validation de session
-
-#### 2. `useCart.ts`
-**Objectif :** Gestion du panier d'achat
-**Logique Complète :**
-```typescript
-const useCart = () => {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Synchronisation avec le serveur
-  useEffect(() => {
-    const syncCart = async () => {
-      try {
-        const serverCart = await cartAPI.getCart();
-        setCart(serverCart);
-      } catch (error) {
-        // Fallback sur le localStorage
-        const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
-        setCart(localCart);
-      }
-    };
-    
-    syncCart();
-  }, []);
-  
-  // Ajout au panier avec gestion des conflits
-  const addToCart = async (productId: string, quantity: number = 1) => {
-    setIsLoading(true);
-    try {
-      // Vérifier le stock disponible
-      const product = await productsAPI.getProduct(productId);
-      if (product.stock < quantity) {
-        throw new Error('Stock insuffisant');
-      }
-      
-      // Ajouter au panier serveur
-      const updatedCart = await cartAPI.addItem(productId, quantity);
-      setCart(updatedCart);
-      
-      // Synchroniser localStorage
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
-      
-      // Notification utilisateur
-      toast.success(`${product.nom} ajouté au panier`);
-      
-    } catch (error) {
-      toast.error(error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Calculs dérivés
-  const itemCount = cart.reduce((acc, item) => acc + item.quantite, 0);
-  const totalPrice = cart.reduce((acc, item) => 
-    acc + (item.prix * item.quantite), 0
-  );
-};
-```
-
-#### 3. `useProducts.ts`
-**Objectif :** Gestion des produits et recherche
-**Logique :**
-```typescript
-const useProducts = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filters, setFilters] = useState<ProductFilters>({});
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 12,
-    total: 0
-  });
-  
-  // Recherche avec debounce
-  const debouncedSearch = useDebounce(filters.search, 300);
-  
-  useEffect(() => {
-    const fetchProducts = async () => {
-      const response = await productsAPI.getProducts({
-        ...filters,
-        search: debouncedSearch,
-        page: pagination.page,
-        limit: pagination.limit
-      });
-      
-      setProducts(response.products);
-      setPagination(prev => ({
-        ...prev,
-        total: response.total
-      }));
-    };
-    
-    fetchProducts();
-  }, [filters, debouncedSearch, pagination.page]);
-};
-```
-
-### Services API
-
-#### 1. `authAPI.ts`
-**Objectif :** Communication avec l'API d'authentification
-**Logique :**
-```typescript
-class AuthAPI {
-  private baseURL = '/api/auth';
-  
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await apiClient.post(`${this.baseURL}/login`, credentials);
-    return response.data;
-  }
-  
-  async register(userData: RegisterData): Promise<AuthResponse> {
-    const response = await apiClient.post(`${this.baseURL}/register`, userData);
-    return response.data;
-  }
-  
-  async verifyToken(token: string): Promise<User> {
-    const response = await apiClient.get(`${this.baseURL}/verify`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
-  }
-  
-  async refreshToken(refreshToken: string): Promise<AuthResponse> {
-    const response = await apiClient.post(`${this.baseURL}/refresh`, {
-      refreshToken
-    });
-    return response.data;
-  }
-}
-
-export const authAPI = new AuthAPI();
-```
-
-#### 2. `productsAPI.ts`
-**Objectif :** Gestion des produits via API
-**Logique :**
-```typescript
-class ProductsAPI {
-  private baseURL = '/api/products';
-  
-  async getProducts(params: ProductQueryParams = {}): Promise<ProductsResponse> {
-    const response = await apiClient.get(this.baseURL, { params });
-    return response.data;
-  }
-  
-  async getProduct(id: string): Promise<Product> {
-    const secureId = secureIds.encodeId(id);
-    const response = await apiClient.get(`${this.baseURL}/${secureId}`);
-    return response.data;
-  }
-  
-  async createProduct(productData: CreateProductData): Promise<Product> {
-    const formData = new FormData();
-    Object.keys(productData).forEach(key => {
-      if (key === 'images') {
-        productData.images?.forEach(image => {
-          formData.append('images', image);
-        });
-      } else {
-        formData.append(key, productData[key]);
-      }
-    });
-    
-    const response = await apiClient.post(this.baseURL, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-    return response.data;
-  }
-}
-```
-
 ---
 
-## 🔧 Architecture Backend (Node.js/Express)
+## 🚀 Performance et Optimisation
 
-### Structure des Routes
+### 1. Code Splitting et Lazy Loading
 
-#### 1. Routes d'Authentification (`server/routes/auth.js`)
+```typescript
+// Lazy loading des pages avec Suspense
+const HomePage = lazy(() => import('@/pages/HomePage'));
+const ProductDetail = lazy(() => import('@/pages/ProductDetail'));
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 
-**Logique Complète :**
-```javascript
-const express = require('express');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const rateLimit = require('express-rate-limit');
-const { body, validationResult } = require('express-validator');
+// Composant de chargement global
+const AppRouter = () => {
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route 
+            path="/admin/*" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  );
+};
+```
 
-const router = express.Router();
+### 2. Optimisation React Query
 
-// Rate limiting pour les tentatives de connexion
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 tentatives max
-  skipSuccessfulRequests: true,
-  message: { error: 'Trop de tentatives de connexion' }
-});
-
-// Validation des données d'entrée
-const loginValidation = [
-  body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 8 })
-];
-
-// Route de connexion
-router.post('/login', loginLimiter, loginValidation, async (req, res) => {
-  try {
-    // Vérifier les erreurs de validation
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    
-    const { email, password } = req.body;
-    
-    // Rechercher l'utilisateur
-    const users = await db.getUsers();
-    const user = users.find(u => u.email === email);
-    
-    if (!user) {
-      return res.status(401).json({ error: 'Identifiants incorrects' });
-    }
-    
-    // Vérifier le mot de passe
-    const isValidPassword = await bcrypt.compare(password, user.motDePasse);
-    if (!isValidPassword) {
-      return res.status(401).json({ error: 'Identifiants incorrects' });
-    }
-    
-    // Générer le token JWT
-    const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email, 
-        role: user.role 
+```typescript
+// Configuration optimisée pour e-commerce
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: (failureCount, error) => {
+        if (error.status === 404) return false;
+        return failureCount < 3;
       },
-      process.env.JWT_SECRET,
-      { 
-        expiresIn: '24h',
-        issuer: 'riziky-boutic',
-        audience: 'riziky-users'
-      }
-    );
-    
-    // Supprimer le mot de passe de la réponse
-    const { motDePasse, ...userWithoutPassword } = user;
-    
-    // Log de sécurité
-    console.log(`Connexion réussie: ${email} à ${new Date().toISOString()}`);
-    
-    res.json({ 
-      token, 
-      user: userWithoutPassword,
-      expiresIn: '24h'
-    });
-    
-  } catch (error) {
-    console.error('Erreur lors de la connexion:', error);
-    res.status(500).json({ error: 'Erreur interne du serveur' });
-  }
-});
-
-// Route d'inscription
-router.post('/register', async (req, res) => {
-  try {
-    const { nom, prenom, email, motDePasse, phone, genre } = req.body;
-    
-    // Vérifier si l'utilisateur existe déjà
-    const users = await db.getUsers();
-    const existingUser = users.find(u => u.email === email);
-    
-    if (existingUser) {
-      return res.status(409).json({ error: 'Cet email est déjà utilisé' });
-    }
-    
-    // Hacher le mot de passe
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(motDePasse, saltRounds);
-    
-    // Créer le nouvel utilisateur
-    const newUser = {
-      id: users.length + 1,
-      nom,
-      prenom,
-      email: email.toLowerCase(),
-      motDePasse: hashedPassword,
-      phone,
-      genre,
-      role: 'user',
-      createdAt: new Date().toISOString(),
-      isActive: true
-    };
-    
-    // Sauvegarder dans la base
-    users.push(newUser);
-    await db.saveUsers(users);
-    
-    // Générer le token pour connexion automatique
-    const token = jwt.sign(
-      { userId: newUser.id, email: newUser.email, role: newUser.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-    
-    const { motDePasse: _, ...userWithoutPassword } = newUser;
-    
-    res.status(201).json({ 
-      message: 'Compte créé avec succès',
-      token, 
-      user: userWithoutPassword 
-    });
-    
-  } catch (error) {
-    console.error('Erreur lors de l\'inscription:', error);
-    res.status(500).json({ error: 'Erreur interne du serveur' });
-  }
-});
-```
-
-#### 2. Routes des Produits (`server/routes/products.js`)
-
-**Logique :**
-```javascript
-// Récupération des produits avec filtrage et pagination
-router.get('/', async (req, res) => {
-  try {
-    const { 
-      page = 1, 
-      limit = 12, 
-      category, 
-      search, 
-      minPrice, 
-      maxPrice,
-      sortBy = 'nom',
-      sortOrder = 'asc'
-    } = req.query;
-    
-    let products = await db.getProducts();
-    
-    // Filtrage par catégorie
-    if (category && category !== 'all') {
-      products = products.filter(p => p.category === category);
-    }
-    
-    // Recherche textuelle
-    if (search) {
-      const searchLower = search.toLowerCase();
-      products = products.filter(p => 
-        p.nom.toLowerCase().includes(searchLower) ||
-        p.description.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    // Filtrage par prix
-    if (minPrice) {
-      products = products.filter(p => p.prix >= parseFloat(minPrice));
-    }
-    if (maxPrice) {
-      products = products.filter(p => p.prix <= parseFloat(maxPrice));
-    }
-    
-    // Tri
-    products.sort((a, b) => {
-      let aVal = a[sortBy];
-      let bVal = b[sortBy];
-      
-      if (typeof aVal === 'string') {
-        aVal = aVal.toLowerCase();
-        bVal = bVal.toLowerCase();
-      }
-      
-      if (sortOrder === 'desc') {
-        return bVal > aVal ? 1 : -1;
-      }
-      return aVal > bVal ? 1 : -1;
-    });
-    
-    // Pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + parseInt(limit);
-    const paginatedProducts = products.slice(startIndex, endIndex);
-    
-    // Sécuriser les IDs
-    const secureProducts = paginatedProducts.map(product => ({
-      ...product,
-      id: secureIds.encodeId(product.id)
-    }));
-    
-    res.json({
-      products: secureProducts,
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(products.length / limit),
-        totalItems: products.length,
-        hasNext: endIndex < products.length,
-        hasPrev: startIndex > 0
-      }
-    });
-    
-  } catch (error) {
-    console.error('Erreur lors de la récupération des produits:', error);
-    res.status(500).json({ error: 'Erreur interne du serveur' });
-  }
-});
-```
-
-### Middlewares de Sécurité
-
-#### 1. Authentification (`server/middlewares/auth.js`)
-**Logique :**
-```javascript
-const jwt = require('jsonwebtoken');
-
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-  
-  if (!token) {
-    return res.status(401).json({ error: 'Token d\'accès requis' });
-  }
-  
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      if (err.name === 'TokenExpiredError') {
-        return res.status(401).json({ error: 'Token expiré' });
-      }
-      return res.status(403).json({ error: 'Token invalide' });
-    }
-    
-    req.user = decoded;
-    next();
-  });
-};
-
-const requireAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Accès administrateur requis' });
-  }
-  next();
-};
-
-module.exports = { authenticateToken, requireAdmin };
-```
-
-#### 2. Sécurité Générale (`server/middlewares/security.js`)
-**Logique :**
-```javascript
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const xss = require('xss-clean');
-
-// Configuration Helmet pour la sécurité des headers
-const helmetConfig = helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
+      refetchOnWindowFocus: false
     },
-  },
-  crossOriginEmbedderPolicy: false
+    mutations: {
+      retry: 1,
+      onError: (error) => {
+        toast.error("Une erreur est survenue", {
+          description: error.message
+        });
+      }
+    }
+  }
 });
 
-// Rate limiting global
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requêtes par IP
-  message: { error: 'Trop de requêtes, veuillez réessayer plus tard' }
-});
-
-// Rate limiting pour l'API
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 50,
-  message: { error: 'Limite API atteinte' }
-});
-
-module.exports = {
-  helmetConfig,
-  generalLimiter,
-  apiLimiter,
-  xssProtection: xss()
-};
-```
-
-### Services Métier
-
-#### 1. Service des Produits (`server/services/products.service.js`)
-**Logique :**
-```javascript
-const fs = require('fs').promises;
-const path = require('path');
-const sharp = require('sharp'); // Pour l'optimisation d'images
-
-class ProductsService {
-  constructor() {
-    this.productsFile = path.join(__dirname, '../data/products.json');
-    this.uploadsDir = path.join(__dirname, '../uploads');
-  }
-  
-  async getAllProducts(filters = {}) {
-    try {
-      const data = await fs.readFile(this.productsFile, 'utf8');
-      let products = JSON.parse(data);
-      
-      // Appliquer les filtres
-      if (filters.category) {
-        products = products.filter(p => p.category === filters.category);
-      }
-      
-      if (filters.inStock) {
-        products = products.filter(p => p.stock > 0);
-      }
-      
-      return products;
-    } catch (error) {
-      throw new Error('Erreur lors de la récupération des produits');
-    }
-  }
-  
-  async getProductById(id) {
-    const products = await this.getAllProducts();
-    const product = products.find(p => p.id === parseInt(id));
-    
-    if (!product) {
-      throw new Error('Produit non trouvé');
-    }
-    
-    return product;
-  }
-  
-  async createProduct(productData, imageFiles = []) {
-    try {
-      const products = await this.getAllProducts();
-      
-      // Traitement des images
-      const imageUrls = await this.processImages(imageFiles);
-      
-      const newProduct = {
-        id: Math.max(...products.map(p => p.id)) + 1,
-        ...productData,
-        images: imageUrls,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      products.push(newProduct);
-      await this.saveProducts(products);
-      
-      return newProduct;
-    } catch (error) {
-      throw new Error('Erreur lors de la création du produit');
-    }
-  }
-  
-  async processImages(imageFiles) {
-    const imageUrls = [];
-    
-    for (const file of imageFiles) {
-      // Génération d'un nom unique
-      const filename = `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.webp`;
-      const filepath = path.join(this.uploadsDir, filename);
-      
-      // Optimisation avec Sharp
-      await sharp(file.buffer)
-        .resize(800, 600, { fit: 'contain', background: { r: 255, g: 255, b: 255 } })
-        .webp({ quality: 85 })
-        .toFile(filepath);
-      
-      imageUrls.push(`/uploads/${filename}`);
-    }
-    
-    return imageUrls;
-  }
-  
-  async updateProduct(id, updateData) {
-    const products = await this.getAllProducts();
-    const productIndex = products.findIndex(p => p.id === parseInt(id));
-    
-    if (productIndex === -1) {
-      throw new Error('Produit non trouvé');
-    }
-    
-    products[productIndex] = {
-      ...products[productIndex],
-      ...updateData,
-      updatedAt: new Date().toISOString()
-    };
-    
-    await this.saveProducts(products);
-    return products[productIndex];
-  }
-  
-  async deleteProduct(id) {
-    const products = await this.getAllProducts();
-    const productIndex = products.findIndex(p => p.id === parseInt(id));
-    
-    if (productIndex === -1) {
-      throw new Error('Produit non trouvé');
-    }
-    
-    // Supprimer les images associées
-    const product = products[productIndex];
-    if (product.images) {
-      for (const imageUrl of product.images) {
-        const imagePath = path.join(__dirname, '..', imageUrl);
-        try {
-          await fs.unlink(imagePath);
-        } catch (error) {
-          console.warn('Impossible de supprimer l\'image:', imagePath);
-        }
-      }
-    }
-    
-    products.splice(productIndex, 1);
-    await this.saveProducts(products);
-    
-    return { message: 'Produit supprimé avec succès' };
-  }
-  
-  async saveProducts(products) {
-    await fs.writeFile(this.productsFile, JSON.stringify(products, null, 2));
-  }
-}
-
-module.exports = new ProductsService();
-```
-
-### Sécurisation des IDs
-
-#### 1. Service de Sécurisation (`src/services/secureIds.ts`)
-**Objectif :** Masquer les vrais IDs des ressources
-**Logique :**
-```typescript
-class SecureIdService {
-  private mapping = new Map<string, string>();
-  private reverseMapping = new Map<string, string>();
-  
-  encodeId(realId: string | number): string {
-    const id = String(realId);
-    
-    if (this.mapping.has(id)) {
-      return this.mapping.get(id)!;
-    }
-    
-    // Générer un ID sécurisé unique
-    const secureId = this.generateSecureId();
-    
-    this.mapping.set(id, secureId);
-    this.reverseMapping.set(secureId, id);
-    
-    return secureId;
-  }
-  
-  decodeId(secureId: string): string {
-    const realId = this.reverseMapping.get(secureId);
-    
-    if (!realId) {
-      throw new Error('ID sécurisé invalide');
-    }
-    
-    return realId;
-  }
-  
-  private generateSecureId(): string {
-    // Combinaison de timestamp et random pour unicité
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substr(2, 15);
-    
-    return `${timestamp}_${random}`;
-  }
-  
-  // Nettoyage périodique des mappings anciens
-  cleanup(): void {
-    const maxAge = 24 * 60 * 60 * 1000; // 24 heures
-    const now = Date.now();
-    
-    for (const [secureId, _] of this.reverseMapping) {
-      const [timestampPart] = secureId.split('_');
-      const timestamp = parseInt(timestampPart, 36);
-      
-      if (now - timestamp > maxAge) {
-        const realId = this.reverseMapping.get(secureId)!;
-        this.mapping.delete(realId);
-        this.reverseMapping.delete(secureId);
-      }
-    }
-  }
-}
-
-export const secureIds = new SecureIdService();
-
-// Nettoyage automatique toutes les heures
-setInterval(() => secureIds.cleanup(), 60 * 60 * 1000);
-```
-
-**Utilisation :**
-```typescript
-// Lors de l'affichage des produits
-const secureProductId = secureIds.encodeId(product.id);
-const productUrl = `/product/${secureProductId}`;
-
-// Lors de la récupération d'un produit
-const realProductId = secureIds.decodeId(params.id);
-const product = await getProduct(realProductId);
-```
-
----
-
-## 🔄 Communication Temps Réel (WebSocket)
-
-### Configuration Socket.io
-
-#### Server (`server/socket/socketHandlers.js`)
-```javascript
-const socketAuth = require('./socketAuth');
-
-const setupSocketHandlers = (io) => {
-  // Middleware d'authentification
-  io.use(socketAuth.authenticate);
-  
-  io.on('connection', (socket) => {
-    console.log(`Utilisateur connecté: ${socket.user.email}`);
-    
-    // Rejoindre la room utilisateur
-    socket.join(`user_${socket.user.id}`);
-    
-    // Chat service client
-    socket.on('client:join_support', async (data) => {
-      const { orderId } = data;
-      const supportRoom = `support_${orderId}`;
-      
-      socket.join(supportRoom);
-      
-      // Notifier les admins
-      socket.to('admin_room').emit('client:support_request', {
-        userId: socket.user.id,
-        orderId,
-        timestamp: new Date().toISOString()
-      });
-    });
-    
-    // Messages chat
-    socket.on('message:send', async (data) => {
-      const { content, roomId, type } = data;
-      
-      const message = {
-        id: `msg_${Date.now()}`,
-        content,
-        senderId: socket.user.id,
-        senderName: `${socket.user.prenom} ${socket.user.nom}`,
-        timestamp: new Date().toISOString(),
-        type
-      };
-      
-      // Sauvegarder le message
-      await chatService.saveMessage(roomId, message);
-      
-      // Diffuser aux participants
-      socket.to(roomId).emit('message:received', message);
-    });
-    
-    // Notifications en temps réel
-    socket.on('order:status_update', async (data) => {
-      const { orderId, status } = data;
-      
-      // Mettre à jour la commande
-      await ordersService.updateOrderStatus(orderId, status);
-      
-      // Notifier le client
-      const order = await ordersService.getOrder(orderId);
-      socket.to(`user_${order.userId}`).emit('order:updated', {
-        orderId,
-        status,
-        timestamp: new Date().toISOString()
-      });
-    });
-    
-    // Déconnexion
-    socket.on('disconnect', () => {
-      console.log(`Utilisateur déconnecté: ${socket.user.email}`);
-    });
+// Queries spécialisées pour l'e-commerce
+export const useProducts = () => {
+  return useQuery({
+    queryKey: ['products'],
+    queryFn: productsService.getAll,
+    staleTime: 10 * 60 * 1000, // 10 minutes pour les produits
+    select: (data) => data.filter(product => product.active)
   });
 };
 
-module.exports = setupSocketHandlers;
+export const useCart = () => {
+  return useQuery({
+    queryKey: ['cart'],
+    queryFn: cartService.get,
+    staleTime: 30 * 1000, // 30 secondes pour le panier
+    refetchOnWindowFocus: true
+  });
+};
 ```
 
-#### Client (`src/services/socket.ts`)
+### 3. Optimisation Images
+
 ```typescript
-import io from 'socket.io-client';
+// Composant d'image optimisé
+const OptimizedImage: React.FC<{
+  src: string;
+  alt: string;
+  className?: string;
+  sizes?: string;
+}> = ({ src, alt, className, sizes = "100vw" }) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-class SocketService {
-  private socket: any = null;
-  private listeners: Map<string, Function[]> = new Map();
-  
-  connect(token: string): void {
-    this.socket = io(process.env.VITE_API_BASE_URL || 'http://localhost:10000', {
-      auth: { token },
-      transports: ['websocket', 'polling']
-    });
-    
-    this.socket.on('connect', () => {
-      console.log('Connected to server via WebSocket');
-    });
-    
-    this.socket.on('disconnect', (reason: string) => {
-      console.log('Disconnected:', reason);
-      
-      if (reason === 'io server disconnect') {
-        // Reconnexion manuelle si le serveur a fermé la connexion
-        this.socket.connect();
-      }
-    });
-    
-    // Réattacher tous les listeners
-    for (const [event, callbacks] of this.listeners) {
-      callbacks.forEach(callback => {
-        this.socket.on(event, callback);
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      {loading && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        onLoad={() => setLoading(false)}
+        onError={() => {
+          setError(true);
+          setLoading(false);
+        }}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${
+          loading || error ? 'opacity-0' : 'opacity-100'
+        }`}
+      />
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <span className="text-gray-400">Image indisponible</span>
+        </div>
+      )}
+    </div>
+  );
+};
+```
+
+---
+
+## 🔍 Monitoring et Observabilité
+
+### 1. Logging System
+
+```typescript
+// Logger Frontend
+class FrontendLogger {
+  private static instance: FrontendLogger;
+  private apiEndpoint = '/api/logs';
+
+  static getInstance(): FrontendLogger {
+    if (!FrontendLogger.instance) {
+      FrontendLogger.instance = new FrontendLogger();
+    }
+    return FrontendLogger.instance;
+  }
+
+  info(message: string, data?: any) {
+    console.log(`[INFO] ${message}`, data);
+    this.sendToServer('info', message, data);
+  }
+
+  error(message: string, error?: any) {
+    console.error(`[ERROR] ${message}`, error);
+    this.sendToServer('error', message, error);
+  }
+
+  warn(message: string, data?: any) {
+    console.warn(`[WARN] ${message}`, data);
+    this.sendToServer('warn', message, data);
+  }
+
+  private async sendToServer(level: string, message: string, data?: any) {
+    try {
+      await fetch(this.apiEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          level,
+          message,
+          data,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href
+        })
       });
-    }
-  }
-  
-  disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
-    }
-  }
-  
-  emit(event: string, data: any): void {
-    if (this.socket) {
-      this.socket.emit(event, data);
-    }
-  }
-  
-  on(event: string, callback: Function): void {
-    // Stocker le listener pour la reconnexion
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, []);
-    }
-    this.listeners.get(event)!.push(callback);
-    
-    if (this.socket) {
-      this.socket.on(event, callback);
-    }
-  }
-  
-  off(event: string, callback?: Function): void {
-    if (callback) {
-      const callbacks = this.listeners.get(event) || [];
-      const index = callbacks.indexOf(callback);
-      if (index > -1) {
-        callbacks.splice(index, 1);
-      }
-    } else {
-      this.listeners.delete(event);
-    }
-    
-    if (this.socket) {
-      this.socket.off(event, callback);
+    } catch (error) {
+      console.error('Failed to send log to server:', error);
     }
   }
 }
 
-export const socketService = new SocketService();
+export const logger = FrontendLogger.getInstance();
 ```
 
----
+### 2. Error Boundaries
 
-## 📊 Gestion des Données
-
-### Base de Données JSON Actuelle
-
-#### Structure des Fichiers
-```
-server/data/
-├── users.json          # Utilisateurs et authentification
-├── products.json       # Catalogue des produits
-├── orders.json         # Commandes clients
-├── categories.json     # Catégories de produits
-├── cart.json          # Paniers utilisateurs
-├── favorites.json     # Listes de favoris
-├── reviews.json       # Avis et commentaires
-├── flash-sales.json   # Ventes flash et promotions
-└── site-settings.json # Configuration du site
-```
-
-#### Service de Base de Données (`server/core/database.js`)
-```javascript
-const fs = require('fs').promises;
-const path = require('path');
-
-class DatabaseService {
-  constructor() {
-    this.dataDir = path.join(__dirname, '../data');
-    this.cache = new Map();
-    this.cacheTTL = new Map();
+```typescript
+// Error Boundary pour gestion globale des erreurs
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback?: React.ComponentType<any> },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
   }
-  
-  // Lecture avec cache
-  async readData(filename, useCache = true) {
-    const cacheKey = filename;
-    
-    if (useCache && this.cache.has(cacheKey)) {
-      const ttl = this.cacheTTL.get(cacheKey);
-      if (Date.now() < ttl) {
-        return this.cache.get(cacheKey);
-      }
-    }
-    
-    try {
-      const filePath = path.join(this.dataDir, filename);
-      const data = await fs.readFile(filePath, 'utf8');
-      const parsed = JSON.parse(data);
-      
-      // Mise en cache (5 minutes)
-      if (useCache) {
-        this.cache.set(cacheKey, parsed);
-        this.cacheTTL.set(cacheKey, Date.now() + 5 * 60 * 1000);
-      }
-      
-      return parsed;
-    } catch (error) {
-      console.error(`Erreur lecture ${filename}:`, error);
-      return [];
-    }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
-  
-  // Écriture avec sauvegarde
-  async writeData(filename, data) {
-    try {
-      const filePath = path.join(this.dataDir, filename);
-      const backupPath = `${filePath}.backup`;
-      
-      // Créer une sauvegarde
-      try {
-        await fs.copyFile(filePath, backupPath);
-      } catch (error) {
-        // Fichier n'existe pas encore, c'est normal
-      }
-      
-      // Écrire les nouvelles données
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-      
-      // Invalider le cache
-      this.cache.delete(filename);
-      this.cacheTTL.delete(filename);
-      
-      return true;
-    } catch (error) {
-      console.error(`Erreur écriture ${filename}:`, error);
-      throw error;
-    }
-  }
-  
-  // Méthodes spécialisées
-  async getUsers() { return this.readData('users.json'); }
-  async saveUsers(users) { return this.writeData('users.json', users); }
-  
-  async getProducts() { return this.readData('products.json'); }
-  async saveProducts(products) { return this.writeData('products.json', products); }
-  
-  async getOrders() { return this.readData('orders.json'); }
-  async saveOrders(orders) { return this.writeData('orders.json', orders); }
-}
 
-module.exports = new DatabaseService();
-```
-
-### Migration vers PostgreSQL (Préparation)
-
-#### Schéma de Base de Données
-```sql
--- Utilisateurs
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  nom VARCHAR(100) NOT NULL,
-  prenom VARCHAR(100) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  mot_de_passe VARCHAR(255) NOT NULL,
-  phone VARCHAR(20),
-  genre VARCHAR(10),
-  role VARCHAR(20) DEFAULT 'user',
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Catégories
-CREATE TABLE categories (
-  id SERIAL PRIMARY KEY,
-  nom VARCHAR(100) NOT NULL,
-  description TEXT,
-  parent_id INTEGER REFERENCES categories(id),
-  image_url VARCHAR(255),
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Produits
-CREATE TABLE products (
-  id SERIAL PRIMARY KEY,
-  nom VARCHAR(255) NOT NULL,
-  description TEXT,
-  prix DECIMAL(10,2) NOT NULL,
-  stock INTEGER DEFAULT 0,
-  category_id INTEGER REFERENCES categories(id),
-  images JSONB,
-  specifications JSONB,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Index pour les performances
-CREATE INDEX idx_products_category ON products(category_id);
-CREATE INDEX idx_products_active ON products(is_active);
-CREATE INDEX idx_products_prix ON products(prix);
-```
-
-#### Service de Migration
-```javascript
-const { Pool } = require('pg');
-
-class MigrationService {
-  constructor() {
-    this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    logger.error('React Error Boundary caught an error', {
+      error: error.message,
+      stack: error.stack,
+      errorInfo
     });
   }
-  
-  async migrateFromJSON() {
-    const client = await this.pool.connect();
+
+  render() {
+    if (this.state.hasError) {
+      const Fallback = this.props.fallback || DefaultErrorFallback;
+      return <Fallback error={this.state.error} />;
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+---
+
+## 📊 Métriques et Analytics
+
+### 1. Performance Metrics
+
+```typescript
+// Monitoring des performances
+class PerformanceMonitor {
+  static trackPageLoad(pageName: string) {
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     
-    try {
-      await client.query('BEGIN');
-      
-      // Migrer les utilisateurs
-      const users = await db.getUsers();
-      for (const user of users) {
-        await client.query(`
-          INSERT INTO users (nom, prenom, email, mot_de_passe, phone, genre, role, is_active)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        `, [
-          user.nom, user.prenom, user.email, user.motDePasse,
-          user.phone, user.genre, user.role || 'user', true
-        ]);
-      }
-      
-      // Migrer les catégories
-      const categories = await db.readData('categories.json');
-      for (const category of categories) {
-        await client.query(`
-          INSERT INTO categories (id, nom, description, image_url)
-          VALUES ($1, $2, $3, $4)
-        `, [category.id, category.nom, category.description, category.image]);
-      }
-      
-      // Migrer les produits
-      const products = await db.getProducts();
-      for (const product of products) {
-        await client.query(`
-          INSERT INTO products (nom, description, prix, stock, category_id, images)
-          VALUES ($1, $2, $3, $4, $5, $6)
-        `, [
-          product.nom, product.description, product.prix, product.stock,
-          product.category, JSON.stringify(product.images)
-        ]);
-      }
-      
-      await client.query('COMMIT');
-      console.log('Migration terminée avec succès');
-      
-    } catch (error) {
-      await client.query('ROLLBACK');
-      console.error('Erreur lors de la migration:', error);
-      throw error;
-    } finally {
-      client.release();
+    const metrics = {
+      page: pageName,
+      loadTime: navigation.loadEventEnd - navigation.loadEventStart,
+      domContentLoaded: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
+      firstPaint: this.getFirstPaint(),
+      firstContentfulPaint: this.getFirstContentfulPaint(),
+      timestamp: Date.now()
+    };
+
+    logger.info('Page performance metrics', metrics);
+    this.sendToAnalytics('page_performance', metrics);
+  }
+
+  static trackUserAction(action: string, data?: any) {
+    const actionData = {
+      action,
+      data,
+      timestamp: Date.now(),
+      sessionId: this.getSessionId()
+    };
+
+    logger.info('User action tracked', actionData);
+    this.sendToAnalytics('user_action', actionData);
+  }
+
+  private static getFirstPaint(): number | null {
+    const paintEntries = performance.getEntriesByType('paint');
+    const firstPaint = paintEntries.find(entry => entry.name === 'first-paint');
+    return firstPaint ? firstPaint.startTime : null;
+  }
+
+  private static sendToAnalytics(event: string, data: any) {
+    // Intégration avec service d'analytics
+    if (window.gtag) {
+      window.gtag('event', event, data);
     }
   }
 }
@@ -1404,4 +922,73 @@ class MigrationService {
 
 ---
 
-Cette documentation technique complète détaille tous les aspects architecturaux de Riziky-Boutic. Chaque composant, service et logique métier est expliqué avec des exemples d'utilisation et de modification. Cette base permet une maintenance efficace et une évolution maîtrisée de la plateforme.
+## 🔮 Évolution Future de l'Architecture
+
+### 1. Migration Base de Données
+
+```sql
+-- Schema PostgreSQL prévu
+CREATE SCHEMA riziky_boutic;
+
+-- Table utilisateurs
+CREATE TABLE riziky_boutic.users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    role VARCHAR(20) DEFAULT 'client',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table produits
+CREATE TABLE riziky_boutic.products (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    stock INTEGER DEFAULT 0,
+    images JSONB,
+    category_id UUID REFERENCES riziky_boutic.categories(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes pour performance
+CREATE INDEX idx_products_category ON riziky_boutic.products(category_id);
+CREATE INDEX idx_products_stock ON riziky_boutic.products(stock);
+CREATE INDEX idx_users_email ON riziky_boutic.users(email);
+```
+
+### 2. Microservices Architecture
+
+```typescript
+// Service découpling prévu
+interface ServiceArchitecture {
+  authService: {
+    endpoint: string;
+    responsibilities: ['authentication', 'authorization', 'user-management'];
+  };
+  productService: {
+    endpoint: string;
+    responsibilities: ['product-catalog', 'inventory', 'search'];
+  };
+  orderService: {
+    endpoint: string;
+    responsibilities: ['cart', 'checkout', 'orders', 'payments'];
+  };
+  chatService: {
+    endpoint: string;
+    responsibilities: ['real-time-chat', 'file-upload', 'notifications'];
+  };
+  analyticsService: {
+    endpoint: string;
+    responsibilities: ['metrics', 'reporting', 'insights'];
+  };
+}
+```
+
+---
+
+Cette architecture technique fournit une base solide pour le développement, la maintenance et l'évolution future de la plateforme Riziky-Boutic. Elle permet une séparation claire des responsabilités, une sécurité renforcée, et une scalabilité optimale.

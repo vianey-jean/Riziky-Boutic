@@ -1,12 +1,11 @@
-
-# 🏪 Riziky-Boutic - Documentation Complète
+# 🏪 Riziky-Boutic - Plateforme E-commerce Complète
 
 ## 📋 Vue d'Ensemble du Projet
 
-**Riziky-Boutic** est une plateforme e-commerce moderne et complète développée avec React/TypeScript pour le frontend et Node.js/Express pour le backend. Cette application offre une expérience d'achat en ligne professionnelle avec toutes les fonctionnalités essentielles d'un commerce électronique moderne.
+**Riziky-Boutic** est une plateforme e-commerce moderne et sécurisée développée avec React/TypeScript pour le frontend et Node.js/Express pour le backend. Cette application offre une expérience d'achat en ligne professionnelle avec toutes les fonctionnalités essentielles d'un commerce électronique moderne, incluant un système de chat en temps réel, des sélecteurs de quantité avancés, et une sécurité renforcée.
 
 ### 🎯 Objectif Principal
-Créer une plateforme e-commerce robuste, sécurisée et évolutive permettant aux entreprises de vendre leurs produits en ligne avec une expérience utilisateur exceptionnelle.
+Créer une plateforme e-commerce robuste, sécurisée et évolutive permettant aux entreprises de vendre leurs produits en ligne avec une expérience utilisateur exceptionnelle et une interface d'administration complète.
 
 ### 👥 Public Cible
 - **Clients finaux** : Particuliers et professionnels souhaitant acheter des produits en ligne
@@ -28,23 +27,50 @@ Shadcn/UI             → Composants UI pré-construits
 React Router 6.26+    → Routing côté client
 Axios                 → Client HTTP
 Socket.io-client      → Communication temps réel
+Framer Motion 12.12   → Animations
+Zod 3.23              → Validation des schémas
+React Query 5.56      → Gestion d'état serveur
 ```
 
 #### Backend (Serveur)
 ```
 Node.js 18+           → Runtime JavaScript serveur
 Express.js 4.18+      → Framework web
-Socket.io             → WebSocket serveur
+Socket.io 4.8         → WebSocket serveur
 JWT                   → Authentification
-Helmet.js            → Sécurité headers
+Helmet.js 7.1         → Sécurité headers
 Multer               → Upload fichiers
+Bcrypt 5.1           → Hachage mots de passe
+Express Rate Limit   → Protection contre spam
+XSS Clean            → Protection XSS
 ```
 
-#### Base de Données
+#### Base de Données et Stockage
 ```
 JSON Files           → Stockage actuel (développement)
 PostgreSQL/MongoDB   → Migration prête (production)
+LocalStorage         → Cache côté client
 ```
+
+### Nouvelles Fonctionnalités Ajoutées
+
+#### Sélecteur de Quantité Avancé
+- Contrôles +/- avec validation de stock
+- Prévention des dépassements de stock en temps réel
+- Interface utilisateur intuitive avec indication visuelle
+- Intégration complète dans tous les composants produits
+
+#### Système de Chat Temps Réel
+- Chat client-admin bidirectionnel
+- Support des fichiers et médias
+- Notifications en temps réel
+- Interface moderne avec états de lecture
+
+#### Sécurité Renforcée
+- Routes sécurisées avec IDs obfusqués
+- Protection CSRF et XSS
+- Validation stricte des entrées
+- Middleware de sécurité multicouche
 
 ### Structure des Répertoires
 
@@ -52,17 +78,29 @@ PostgreSQL/MongoDB   → Migration prête (production)
 riziky-boutic/
 ├── src/                    # Code source frontend React
 │   ├── components/         # Composants réutilisables
+│   │   ├── ui/            # Composants UI de base (shadcn)
+│   │   ├── layout/        # Composants de mise en page
+│   │   ├── products/      # Composants produits
+│   │   ├── cart/          # Composants panier
+│   │   ├── chat/          # Composants chat temps réel
+│   │   ├── admin/         # Composants administration
+│   │   └── auth/          # Composants authentification
 │   ├── pages/             # Pages de l'application
 │   ├── hooks/             # Hooks personnalisés
-│   ├── services/          # Services API
+│   ├── services/          # Services API et logique métier
 │   ├── contexts/          # Contextes React
-│   └── types/             # Définitions TypeScript
+│   ├── types/             # Définitions TypeScript
+│   └── lib/               # Utilitaires et helpers
 ├── server/                # Code source backend Node.js
-│   ├── routes/            # Routes API
-│   ├── services/          # Logique métier
+│   ├── routes/            # Routes API REST
+│   ├── services/          # Logique métier serveur
 │   ├── middlewares/       # Middlewares Express
+│   ├── socket/            # Gestion WebSocket
 │   ├── data/              # Fichiers JSON (base de données)
-│   └── uploads/           # Fichiers uploadés
+│   ├── uploads/           # Fichiers uploadés
+│   └── config/            # Configuration serveur
+├── tests/                 # Tests unitaires et e2e
+├── cypress/               # Tests end-to-end Cypress
 ├── public/                # Fichiers statiques
 └── docs/                  # Documentation projet
 ```
@@ -97,7 +135,18 @@ npm install
 cd ..
 ```
 
-4. **Démarrer en mode développement**
+4. **Configuration des variables d'environnement**
+```bash
+# Créer .env à la racine
+VITE_API_BASE_URL=http://localhost:10000
+
+# Créer server/.env
+JWT_SECRET=votre_secret_jwt_securise
+PORT=10000
+NODE_ENV=development
+```
+
+5. **Démarrer en mode développement**
 
 Terminal 1 (Backend) :
 ```bash
@@ -110,7 +159,7 @@ Terminal 2 (Frontend) :
 npm run dev
 ```
 
-5. **Accéder à l'application**
+6. **Accéder à l'application**
 - Frontend : http://localhost:8080
 - Backend API : http://localhost:10000
 
@@ -134,50 +183,54 @@ npm run dev
 - Créer un compte via la page d'inscription
 - Se connecter avec email/mot de passe
 - Récupération de mot de passe disponible
+- Protection par force brute intégrée
 
 #### 2. Navigation et Shopping
 - Parcourir le catalogue par catégories
-- Utiliser la recherche avancée
-- Filtrer par prix, disponibilité, etc.
-- Ajouter des produits au panier
+- Utiliser la recherche avancée avec filtres
+- Filtrer par prix, disponibilité, promotions
+- **NOUVEAU**: Sélectionner quantités avec contrôles +/-
+- Ajouter des produits au panier avec validation de stock
 - Gérer sa liste de favoris
 
-#### 3. Processus d'Achat
-- Réviser le contenu du panier
-- Saisir les informations de livraison
-- Choisir le mode de paiement
-- Confirmer la commande
-- Recevoir la confirmation par email
+#### 3. Fonctionnalités Avancées
+- **Chat en temps réel** avec le service client
+- Notifications d'achat en temps réel
+- Recommandations personnalisées
+- Historique de navigation sauvegardé
 
-#### 4. Suivi des Commandes
-- Consulter l'historique des commandes
-- Suivre l'état de livraison
-- Laisser des avis produits
-- Demander un remboursement si nécessaire
+#### 4. Processus d'Achat
+- Réviser le contenu du panier avec quantités
+- Saisir les informations de livraison
+- Choisir le mode de paiement sécurisé
+- Confirmer la commande
+- Suivi en temps réel de la commande
 
 ### Pour les Administrateurs
 
 #### 1. Accès à l'Administration
 - Se connecter avec un compte administrateur
-- Accéder au panel d'administration via `/admin`
+- Accéder au panel d'administration via routes sécurisées
+- Interface moderne avec tableaux de bord
 
 #### 2. Gestion des Produits
 - Créer/modifier/supprimer des produits
-- Gérer les catégories
-- Upload d'images produits
-- Gestion des stocks
-- Configuration des promotions
+- Gérer les catégories et sous-catégories
+- Upload d'images multiples avec compression
+- Gestion avancée des stocks avec alertes
+- Configuration des promotions et flash sales
 
 #### 3. Gestion des Commandes
-- Traiter les nouvelles commandes
+- Traiter les nouvelles commandes en temps réel
 - Mettre à jour les statuts de livraison
-- Gérer les remboursements
-- Communiquer avec les clients
+- Gérer les remboursements avec workflow
+- **NOUVEAU**: Chat direct avec les clients
 
-#### 4. Gestion des Utilisateurs
-- Consulter la liste des clients
-- Gérer les comptes utilisateurs
-- Modérer les avis et commentaires
+#### 4. Analytics et Reporting
+- Tableaux de bord des ventes
+- Statistiques des visiteurs
+- Rapports de performance
+- Gestion des notifications système
 
 ---
 
@@ -185,12 +238,20 @@ npm run dev
 
 ### Variables d'Environnement
 
-Créer un fichier `.env` à la racine :
-```
+#### Frontend (.env)
+```env
 VITE_API_BASE_URL=http://localhost:10000
 NODE_ENV=development
-JWT_SECRET=votre_secret_jwt_securise
+```
+
+#### Backend (server/.env)
+```env
+JWT_SECRET=votre_secret_jwt_securise_complexe
 PORT=10000
+NODE_ENV=development
+UPLOAD_MAX_SIZE=10485760
+SESSION_SECRET=votre_session_secret
+BCRYPT_ROUNDS=12
 ```
 
 ### Personnalisation du Design
@@ -203,275 +264,586 @@ Modifier `src/index.css` :
   --primary-foreground: 0 0% 98%;
   --secondary: 0 0% 96%;
   --accent: 0 84% 70%;         /* Rouge accent */
+  --muted: 0 0% 96%;
+  --border: 0 0% 89%;
+}
+
+.dark {
+  --primary: 0 84% 60%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 15%;
+  --accent: 0 84% 70%;
 }
 ```
 
-#### Logo et Images
-- Remplacer `public/images/Logo/Logo.png`
-- Mettre à jour `public/favicon.ico`
-- Ajouter des images dans `public/images/`
-
-### Configuration des Emails
-Modifier `server/services/email.service.js` pour configurer l'envoi d'emails.
+#### Configuration Tailwind
+Modifier `tailwind.config.ts` pour les thèmes personnalisés et les animations.
 
 ---
 
-## 📊 Fonctionnalités Principales
+## 📊 Fonctionnalités Principales Détaillées
 
-### Côté Client (Frontend)
+### Authentification et Sécurité
 
-#### Authentification
+#### Système d'Authentification JWT
 ```typescript
-// Hook d'authentification
-const { user, login, logout, isAuthenticated } = useAuth();
+// Hook d'authentification sécurisé
+const { user, login, logout, isAuthenticated, isAdmin } = useAuth();
 
-// Utilisation
+// Connexion avec validation
 await login(email, password);
-```
 
-#### Gestion du Panier
-```typescript
-// Hook du panier
-const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
-
-// Ajouter un produit
-await addToCart(productId, quantity);
-```
-
-#### Recherche de Produits
-```typescript
-// Hook des produits
-const { products, searchProducts, filterProducts } = useProducts();
-
-// Rechercher
-const results = await searchProducts(query, filters);
-```
-
-### Côté Serveur (Backend)
-
-#### Routes Principales
-```javascript
-// Authentification
-POST /api/auth/login
-POST /api/auth/register
-POST /api/auth/logout
-
-// Produits
-GET /api/products
-GET /api/products/:id
-POST /api/products (admin)
-PUT /api/products/:id (admin)
-
-// Commandes
-GET /api/orders
-POST /api/orders
-PUT /api/orders/:id/status (admin)
-
-// Panier
-GET /api/panier
-POST /api/panier/add
-DELETE /api/panier/remove
-```
-
-#### Services Métier
-```javascript
-// Service des produits
-const productsService = require('./services/products.service');
-
-// Obtenir tous les produits
-const products = await productsService.getAllProducts();
-
-// Créer un produit
-const newProduct = await productsService.createProduct(productData);
-```
-
----
-
-## 🛡️ Sécurité
-
-### Authentification JWT
-- Tokens sécurisés avec expiration
-- Refresh tokens automatiques
-- Protection contre les attaques par force brute
-
-### Protection des Routes
-```typescript
-// Route protégée
-<ProtectedRoute>
+// Routes protégées
+<ProtectedRoute requireAdmin={true}>
   <AdminDashboard />
 </ProtectedRoute>
+```
 
-// Route sécurisée avec IDs obfusqués
+#### Sécurité des Routes
+```typescript
+// Routes sécurisées avec IDs obfusqués
 <SecureRoute>
   <ProductDetail />
 </SecureRoute>
+
+// Validation automatique des IDs
+const secureId = generateSecureId(productId);
+const realId = getRealId(secureId);
 ```
 
-### Validation des Données
-- Validation côté client avec Zod
-- Sanitisation côté serveur
-- Protection XSS automatique
+### Gestion du Panier avec Sélecteur de Quantité
 
-### HTTPS et Sécurité Headers
+#### Composant QuantitySelector
+```typescript
+// Nouveau composant avec validation de stock
+<QuantitySelector
+  productId={product.id}
+  maxStock={product.stock}
+  onQuantityChange={(quantity) => setSelectedQuantity(quantity)}
+  size="default"
+  disabled={product.stock === 0}
+/>
+```
+
+#### Hook du Panier Avancé
+```typescript
+const { 
+  cart, 
+  addToCart, 
+  removeFromCart, 
+  updateQuantity,
+  getTotalItems,
+  getTotalPrice 
+} = useCart();
+
+// Ajouter avec quantité spécifique
+await addToCart(productId, quantity);
+```
+
+### Chat Temps Réel
+
+#### Composants Chat
+```typescript
+// Widget de chat client
+<ClientServiceChatWidget 
+  isOpen={isChatOpen}
+  onToggle={() => setIsChatOpen(!isChatOpen)}
+/>
+
+// Interface admin de chat
+<AdminServiceChatWidget
+  conversations={conversations}
+  activeConversation={activeConversation}
+/>
+```
+
+#### Socket.io Integration
 ```javascript
-// Headers de sécurité (Helmet.js)
+// Configuration WebSocket sécurisée
+const socketConfig = {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true
+  },
+  middleware: [authMiddleware]
+};
+```
+
+### Recherche et Filtrage Avancés
+
+#### Hook de Filtres Produits
+```typescript
+const {
+  searchTerm,
+  priceRange,
+  sortOption,
+  sortedProducts,
+  showInStock,
+  showPromoOnly,
+  activeFilters,
+  resetFilters
+} = useProductFilters({ products });
+```
+
+### Système de Reviews avec Photos
+
+#### Composant de Review Moderne
+```typescript
+<ModernReviewForm
+  productId={productId}
+  onSubmit={handleReviewSubmit}
+  allowPhotos={true}
+  maxPhotos={4}
+/>
+```
+
+---
+
+## 🛡️ Sécurité Avancée
+
+### Protection Multicouche
+
+#### Middleware de Sécurité
+```javascript
+// Chain de sécurité appliquée à toutes les routes
+const securityChain = new SecurityChainBuilder()
+  .addIPValidation()
+  .addRateLimit()
+  .addJWTValidation()
+  .addPermissionCheck()
+  .addDataSanitization()
+  .build();
+```
+
+#### Validation des Données
+```typescript
+// Schémas Zod pour validation stricte
+const productSchema = z.object({
+  name: z.string().min(1).max(100),
+  price: z.number().positive(),
+  stock: z.number().min(0),
+  description: z.string().optional()
+});
+```
+
+#### Protection XSS et CSRF
+```javascript
+// Configuration Helmet pour sécurité headers
 app.use(helmet({
-  contentSecurityPolicy: true,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"]
+    }
+  },
   crossOriginEmbedderPolicy: true
 }));
 ```
 
 ---
 
-## 🔍 Maintenance et Débogage
+## 🧪 Tests et Qualité
 
-### Logs et Monitoring
+### Tests Unitaires avec Vitest
 
-#### Logs Frontend
+#### Configuration des Tests
 ```javascript
-// Console logs structurés
-console.log('Action:', action, { data, timestamp: new Date() });
+// vitest.config.ts
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './tests/setup.ts'
+  }
+});
 ```
 
-#### Logs Backend
+#### Exemples de Tests Composants
+```typescript
+// Test du QuantitySelector
+describe('QuantitySelector', () => {
+  it('should increase quantity when plus button is clicked', async () => {
+    const onQuantityChange = vi.fn();
+    render(<QuantitySelector onQuantityChange={onQuantityChange} />);
+    
+    const plusButton = screen.getByRole('button', { name: /plus/i });
+    await userEvent.click(plusButton);
+    
+    expect(onQuantityChange).toHaveBeenCalledWith(2);
+  });
+});
+```
+
+### Tests E2E avec Cypress
+
+#### Configuration Cypress
 ```javascript
-// Logs serveur
-const logger = require('./core/logger');
-logger.info('User authenticated', { userId, timestamp });
-logger.error('Database error', { error: err.message });
+// cypress.config.js
+export default defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:8080',
+    supportFile: 'cypress/support/e2e.ts',
+    specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}'
+  }
+});
 ```
 
-### Tests
-
-#### Tests Frontend
-```bash
-# Tests unitaires
-npm run test
-
-# Tests avec couverture
-npm run test:coverage
+#### Tests de Parcours Utilisateur
+```typescript
+// cypress/e2e/shopping-flow.cy.ts
+describe('Shopping Flow', () => {
+  it('should complete full purchase flow', () => {
+    cy.visit('/');
+    cy.get('[data-testid="product-card"]').first().click();
+    cy.get('[data-testid="quantity-plus"]').click();
+    cy.get('[data-testid="add-to-cart"]').click();
+    cy.get('[data-testid="cart-icon"]').click();
+    cy.get('[data-testid="checkout-button"]').click();
+    // ... continue the flow
+  });
+});
 ```
-
-#### Tests Backend
-```bash
-cd server
-npm run test
-```
-
-### Base de Données
-
-#### Sauvegarde des Données JSON
-```bash
-# Copier les fichiers de données
-cp server/data/*.json backup/
-```
-
-#### Migration vers PostgreSQL
-1. Installer PostgreSQL
-2. Créer la base de données
-3. Exécuter les scripts de migration
-4. Mettre à jour la configuration
 
 ---
 
 ## 🚀 Déploiement Production
 
-### Préparation
+### Préparation Build
 
-1. **Build Production**
+#### Optimisation Frontend
 ```bash
+# Build optimisé avec Vite
 npm run build
+
+# Analyse du bundle
+npm run build:analyze
 ```
 
-2. **Variables d'Environnement Production**
-```
+#### Configuration Production
+```env
+# Variables production
 NODE_ENV=production
 VITE_API_BASE_URL=https://api.votre-domaine.com
-JWT_SECRET=secret_production_securise
+JWT_SECRET=secret_production_ultra_securise_64_chars_minimum
 DATABASE_URL=postgresql://user:pass@host:port/db
+REDIS_URL=redis://redis-host:6379
 ```
 
-3. **Optimisations**
-- Compression Gzip activée
-- Cache headers configurés
-- CDN pour les assets statiques
+### Optimisations Performance
+
+#### Code Splitting
+```typescript
+// Lazy loading des pages
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
+const ProductDetail = lazy(() => import('@/pages/ProductDetail'));
+
+// Suspense avec fallback
+<Suspense fallback={<LoadingSpinner />}>
+  <AdminDashboard />
+</Suspense>
+```
+
+#### Mise en Cache
+```typescript
+// Configuration React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+    }
+  }
+});
+```
 
 ### Hébergement Recommandé
 
 #### Frontend
-- Vercel, Netlify, ou AWS S3 + CloudFront
+- **Vercel** (recommandé) - Déploiement automatique
+- **Netlify** - Alternative avec plugins
+- **AWS S3 + CloudFront** - Contrôle total
 
 #### Backend
-- Heroku, DigitalOcean, ou AWS EC2
+- **Railway** (recommandé) - Configuration simple
+- **Heroku** - Classic mais reliable
+- **DigitalOcean App Platform** - Bon rapport qualité/prix
+- **AWS EC2/ECS** - Contrôle maximal
 
 #### Base de Données
-- PostgreSQL (Heroku Postgres, AWS RDS)
-- MongoDB Atlas pour NoSQL
+- **PostgreSQL**: Supabase, Neon, AWS RDS
+- **MongoDB**: MongoDB Atlas
+- **Redis**: Upstash, AWS ElastiCache
+
+---
+
+## 📚 Documentation pour Développeurs
+
+### Structure du Code
+
+#### Conventions de Nommage
+```typescript
+// Composants: PascalCase
+const ProductCard = () => {};
+
+// Hooks: camelCase avec préfixe 'use'
+const useProducts = () => {};
+
+// Services: camelCase avec suffixe 'Service'
+const authService = {};
+
+// Types: PascalCase avec suffixe 'Type' ou interface
+interface ProductType {}
+type OrderStatus = 'pending' | 'confirmed' | 'shipped';
+```
+
+#### Architecture des Composants
+```typescript
+// Structure standard d'un composant
+interface ComponentProps {
+  // Props typées
+}
+
+const Component: React.FC<ComponentProps> = ({ 
+  prop1, 
+  prop2 
+}) => {
+  // Hooks
+  // State
+  // Effects
+  // Handlers
+  // Render
+};
+
+export default Component;
+```
+
+### APIs et Services
+
+#### Configuration Axios
+```typescript
+// Configuration centralisée avec intercepteurs
+const apiClient = axios.create({
+  baseURL: process.env.VITE_API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Intercepteur pour l'authentification
+apiClient.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+```
+
+#### Services Métier
+```typescript
+// Service produits avec gestion d'erreurs
+export const productsService = {
+  async getAll(): Promise<Product[]> {
+    try {
+      const response = await apiClient.get('/products');
+      return response.data;
+    } catch (error) {
+      throw new ApiError('Failed to fetch products', error);
+    }
+  },
+  
+  async create(product: CreateProductDto): Promise<Product> {
+    const response = await apiClient.post('/products', product);
+    return response.data;
+  }
+};
+```
 
 ---
 
 ## ⚠️ Ce qu'il NE FAUT PAS Faire
 
-### Sécurité
+### Sécurité Critique
 - ❌ Exposer les clés API dans le code client
 - ❌ Stocker des mots de passe en clair
 - ❌ Ignorer la validation des entrées utilisateur
 - ❌ Utiliser HTTP en production
+- ❌ Désactiver les middlewares de sécurité
+- ❌ Exposer les stack traces en production
 
-### Performance
-- ❌ Charger tous les produits d'un coup
+### Performance et Bonnes Pratiques
+- ❌ Charger tous les produits d'un coup sans pagination
 - ❌ Faire des requêtes API dans des boucles
-- ❌ Oublier la mise en cache
+- ❌ Oublier la mise en cache des données
 - ❌ Négliger l'optimisation des images
+- ❌ Utiliser des re-renders inutiles
+- ❌ Ignorer le code splitting
 
-### Maintenance
+### Maintenance et Code
 - ❌ Modifier directement les fichiers JSON en production
 - ❌ Déployer sans tests
 - ❌ Supprimer les logs d'audit
-- ❌ Ignorer les sauvegardes
+- ❌ Ignorer les sauvegardes automatiques
+- ❌ Utiliser `any` en TypeScript
+- ❌ Dupliquer la logique métier
 
 ---
 
-## ✅ Bonnes Pratiques
+## ✅ Bonnes Pratiques Avancées
 
 ### Développement
-- ✅ Utiliser TypeScript pour la sécurité des types
-- ✅ Suivre les conventions de nommage
-- ✅ Écrire des tests pour les fonctionnalités critiques
-- ✅ Documenter les modifications importantes
+- ✅ Utiliser TypeScript avec strict mode
+- ✅ Implémenter des tests pour toutes les fonctionnalités critiques
+- ✅ Suivre les conventions de commit (Conventional Commits)
+- ✅ Utiliser ESLint et Prettier pour la cohérence du code
+- ✅ Documenter les APIs avec JSDoc
+- ✅ Implémenter la gestion d'erreurs robuste
 
 ### Performance
-- ✅ Implémenter la pagination pour les listes
-- ✅ Utiliser le lazy loading pour les images
-- ✅ Mettre en cache les données fréquemment utilisées
+- ✅ Implémenter la pagination pour toutes les listes
+- ✅ Utiliser le lazy loading pour les images et composants
+- ✅ Mettre en cache les données avec React Query
 - ✅ Optimiser les requêtes base de données
+- ✅ Implémenter le debouncing pour les recherches
+- ✅ Utiliser les Web Workers pour les calculs lourds
 
 ### UX/UI
-- ✅ Maintenir une cohérence visuelle
-- ✅ Implémenter des états de chargement
-- ✅ Fournir des messages d'erreur clairs
-- ✅ Assurer la responsivité mobile
+- ✅ Maintenir une cohérence visuelle avec le design system
+- ✅ Implémenter des états de chargement significatifs
+- ✅ Fournir des messages d'erreur clairs et actionnables
+- ✅ Assurer la responsivité sur tous les appareils
+- ✅ Implémenter l'accessibilité (ARIA, navigation clavier)
+- ✅ Tester sur différents navigateurs
+
+### Sécurité
+- ✅ Valider toutes les entrées côté client ET serveur
+- ✅ Implémenter une authentification robuste
+- ✅ Utiliser HTTPS en production
+- ✅ Implémenter la protection CSRF
+- ✅ Auditer régulièrement les dépendances
+- ✅ Logger les actions sensibles
 
 ---
 
-## 📞 Support et Contact
+## 🔍 Maintenance et Monitoring
 
-### Documentation Technique
-- Architecture : `docs/ARCHITECTURE_TECHNIQUE.md`
-- API : `docs/API_DOCUMENTATION.md`
-- Composants : `docs/COMPOSANTS_GUIDE.md`
+### Logs et Monitoring
+
+#### Logs Frontend
+```typescript
+// Logger structuré pour le frontend
+const logger = {
+  info: (message: string, data?: any) => {
+    console.log(`[INFO] ${message}`, data);
+  },
+  error: (message: string, error?: any) => {
+    console.error(`[ERROR] ${message}`, error);
+    // Envoyer à un service de monitoring
+  }
+};
+```
+
+#### Logs Backend
+```javascript
+// Winston pour logs serveur
+const winston = require('winston');
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' })
+  ]
+});
+```
+
+### Base de Données et Migrations
+
+#### Sauvegarde Automatique
+```bash
+#!/bin/bash
+# Script de sauvegarde quotidienne
+DATE=$(date +%Y%m%d_%H%M%S)
+cp -r server/data/ backups/data_backup_$DATE/
+```
+
+#### Migration vers PostgreSQL
+```sql
+-- Script de migration exemple
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  stock INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 📞 Support et Documentation Technique
+
+### Ressources Développeur
+- **Architecture**: Voir `docs/Md/ARCHITECTURE_TECHNIQUE.md`
+- **API Reference**: Voir `docs/Md/API_DOCUMENTATION.md`
+- **Composants**: Voir `docs/Md/GUIDE_COMPOSANTS.md`
+- **Tests**: Voir `docs/Md/GUIDE_TESTS.md`
 
 ### Résolution de Problèmes
-1. Vérifier les logs console (F12)
-2. Consulter les logs serveur
-3. Vérifier la connectivité API
-4. Valider les données d'entrée
+1. **Erreurs de Build**: Vérifier les versions des dépendances
+2. **Erreurs de Runtime**: Consulter les logs browser et serveur
+3. **Problèmes de Performance**: Utiliser React DevTools Profiler
+4. **Problèmes de Sécurité**: Auditer avec `npm audit`
 
-### Contact Équipe
-- Email technique : dev@riziky-boutic.com
-- Documentation : docs@riziky-boutic.com
-- Support : support@riziky-boutic.com
+### Scripts Utiles
+```bash
+# Développement
+npm run dev              # Démarrer le dev serveur
+npm run build           # Build production
+npm run preview         # Prévisualiser le build
+npm run test           # Exécuter les tests
+npm run test:e2e       # Tests end-to-end
+npm run lint           # Linter le code
+npm run type-check     # Vérification TypeScript
+
+# Maintenance
+npm run analyze        # Analyser le bundle
+npm run update-deps    # Mettre à jour les dépendances
+npm run security-audit # Audit de sécurité
+```
 
 ---
 
-*Cette documentation constitue le guide principal pour comprendre, utiliser et maintenir la plateforme Riziky-Boutic. Elle doit être mise à jour à chaque modification importante du système.*
+## 🆕 Changelog et Versions
+
+### Version 2.0.0 (Actuelle)
+- ✅ Sélecteur de quantité avec validation de stock
+- ✅ Chat temps réel client-admin
+- ✅ Sécurité renforcée avec routes obfusquées
+- ✅ Tests unitaires et e2e complets
+- ✅ Documentation technique mise à jour
+- ✅ Performance optimisée
+- ✅ UI/UX améliorée
+
+### Roadmap Future
+- 🔄 Migration vers base de données relationnelle
+- 🔄 Système de paiement Stripe complet
+- 🔄 PWA avec notifications push
+- 🔄 Système de cache Redis
+- 🔄 API GraphQL
+- 🔄 Microservices architecture
+
+---
+
+*Cette documentation constitue le guide principal pour comprendre, utiliser et maintenir la plateforme Riziky-Boutic. Elle doit être mise à jour à chaque modification importante du système. Pour les développeurs : suivez toujours les bonnes pratiques énumérées et consultez la documentation technique spécialisée pour les détails d'implémentation.*
+
+**Version de la documentation**: 2.0.0  
+**Dernière mise à jour**: 2024  
+**Prochaine révision prévue**: Avec la prochaine version majeure
