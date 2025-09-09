@@ -59,7 +59,7 @@ export const useCart = () => {
       fetchCart();
       
       // Connexion Socket.IO pour synchronisation en temps réel
-      const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:10000');
+      const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000');
       
       // Authentifier l'utilisateur auprès du socket
       socket.emit('authenticate', user);
