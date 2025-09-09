@@ -67,8 +67,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         </Button>
         <Button 
           type="submit" 
-          className="bg-gradient-to-r from-green-500 via-emerald-500 to-blue-500 hover:from-green-600 hover:via-emerald-600 hover:to-blue-600 text-white px-10 py-4 h-14 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl hover:scale-105"
-          disabled={loading}
+          className="bg-gradient-to-r from-green-500 via-emerald-500 to-blue-500 hover:from-green-600 hover:via-emerald-600 hover:to-blue-600 text-white px-10 py-4 h-14 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading || !paymentMethod}
         >
           {loading ? (
             <>
