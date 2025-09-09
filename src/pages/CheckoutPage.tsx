@@ -50,7 +50,7 @@ const CheckoutPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Card');
   const [showCardForm, setShowCardForm] = useState(false);
   const [deliveryCity, setDeliveryCity] = useState<string>("");
   const [deliveryPrice, setDeliveryPrice] = useState<number>(0);
