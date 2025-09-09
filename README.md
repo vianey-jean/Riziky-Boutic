@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Bienvenur sur le projet e-commerce Riziky Boutic
 
 ## Pour connecté sur l'app:
 
