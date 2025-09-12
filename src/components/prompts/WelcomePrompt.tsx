@@ -90,7 +90,7 @@ const WelcomePrompt: React.FC<WelcomePromptProps> = ({
           
           <Button 
             onClick={handleClose}
-            className="w-full bg-green-100 text-neutral-900 font-bold hover:bg-green-200 dark:bg-green-800 dark:text-neutral-100 dark:hover:bg-green-700"
+            className="w-full bg-green-100 text-white font-bold hover:bg-green-200 dark:bg-green-800 dark:text-neutral-100 dark:hover:bg-green-700"
           >
             {buttonText}
           </Button>
