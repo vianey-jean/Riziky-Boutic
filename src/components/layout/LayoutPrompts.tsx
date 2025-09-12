@@ -10,12 +10,14 @@ interface LayoutPromptsProps {
   hidePrompts?: boolean;
   trendingProducts?: Product[];
   hasScrolled: boolean;
+  shouldShowTrendingPrompt?: boolean;
 }
 
 const LayoutPrompts: React.FC<LayoutPromptsProps> = ({ 
   hidePrompts = false, 
   trendingProducts, 
-  hasScrolled 
+  hasScrolled,
+  shouldShowTrendingPrompt = true
 }) => {
   if (hidePrompts) return null;
 
@@ -23,7 +25,7 @@ const LayoutPrompts: React.FC<LayoutPromptsProps> = ({
     <>
       <CookieConsent />
       <WelcomePrompt />
-      {trendingProducts && trendingProducts.length > 0 && hasScrolled && (
+      {trendingProducts && trendingProducts.length > 0 && hasScrolled && shouldShowTrendingPrompt && (
         <Suspense fallback={null}>
           <LazyTrendingPrompt products={trendingProducts} />
         </Suspense>

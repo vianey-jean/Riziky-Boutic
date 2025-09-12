@@ -57,7 +57,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
     refetchOnWindowFocus: true,
   });
 
-  const hasScrolled = useScrollDetection(200, hidePrompts);
+  const { hasScrolled, shouldShowTrendingPrompt } = useScrollDetection(200, hidePrompts);
 
   return (
     <div className="flex flex-col min-h-screen bg-neutral-50 dark:bg-neutral-950">
@@ -78,6 +78,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hidePrompts = false }) => {
         hidePrompts={hidePrompts}
         trendingProducts={trendingProducts}
         hasScrolled={hasScrolled}
+        shouldShowTrendingPrompt={shouldShowTrendingPrompt}
       />
 
       <ClientServiceChatWidget />
