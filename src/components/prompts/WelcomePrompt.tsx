@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { X, MessageSquareText } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { getSecureRoute } from '@/services/secureIds';
 
 interface WelcomePromptProps {
   title?: string;
@@ -22,24 +25,39 @@ const WelcomePrompt: React.FC<WelcomePromptProps> = ({
   delay = 3000
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
-    // Vérifier si le message a déjà été fermé
-    const isDismissed = localStorage.getItem(dismissKey) === 'true';
+    // Si l'utilisateur s'est déjà connecté une fois, ne plus jamais afficher le prompt
+    const hasEverLoggedIn = localStorage.getItem('user-has-logged-in') === 'true';
     
-    if (!isDismissed) {
-      // Afficher après un délai
+    if (isAuthenticated) {
+      // Si connecté maintenant, marquer dans localStorage et cacher
+      localStorage.setItem('user-has-logged-in', 'true');
+      setIsVisible(false);
+    } else if (!hasEverLoggedIn) {
+      // Si jamais connecté ET pas connecté maintenant, afficher après délai
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, delay);
       
       return () => clearTimeout(timer);
+    } else {
+      // Si déjà connecté avant mais pas maintenant, ne pas afficher
+      setIsVisible(false);
     }
-  }, [delay, dismissKey]);
+  }, [delay, isAuthenticated]);
   
   const handleClose = () => {
-    localStorage.setItem(dismissKey, 'true');
     setIsVisible(false);
+    
+    // Rediriger vers la page service client sécurisée
+    const secureServiceRoute = getSecureRoute('/service-client');
+    if (secureServiceRoute) {
+      navigate(secureServiceRoute);
+    }
+    
     if (onClose) onClose();
   };
   
