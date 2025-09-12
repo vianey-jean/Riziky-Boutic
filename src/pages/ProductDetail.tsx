@@ -411,8 +411,8 @@ const ProductDetail = () => {
                       <li className="flex items-start">
                         <Check className="h-5 w-5 mr-3 text-green-600 shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-semibold">Livraison gratuite</p>
-                          <p className="text-sm text-neutral-600 dark:text-neutral-400">Pour les commandes supérieures à 50€</p>
+                          <p className="font-semibold">Livraison: </p>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">Selon votre ville, la livraison peut être gratuite ou entraîner des frais.</p>
                         </div>
                       </li>
                     </ul>

@@ -113,7 +113,7 @@ const CategoryPage = () => {
               
               <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-300 mb-8 leading-relaxed">
                 Découvrez notre sélection de {categoryTitle.toLowerCase()} de qualité premium. 
-                Des produits soigneusement choisis pour sublimer votre beauté naturelle.
+                Des produits triés sur le volet pour apporter une touche d’exception à votre quotidien.
               </p>
               
               <div className="flex items-center justify-center space-x-8 text-sm text-neutral-500 dark:text-neutral-400">

@@ -7,7 +7,7 @@ const BenefitsSection = () => {
     {
       icon: Truck,
       title: "Livraison Gratuite",
-      description: "Livraison gratuite sur toute l'île de La Réunion de Saint-Paul à Saint-Suzanne",
+      description: "Livraison 100 % gratuite dans le Nord, de Saint-Paul à Sainte-Suzanne !",
       color: "from-blue-500 to-indigo-600"
     },
     {
