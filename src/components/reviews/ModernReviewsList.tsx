@@ -281,7 +281,13 @@ const ModernReviewsList: React.FC<ModernReviewsListProps> = ({ reviews, onReview
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setReplyingTo(review.id)}
+                    onClick={() => {
+                      if (!user) {
+                        toast.error('Vous ne pouvez pas ajouter une commentaire si vous n\'êtes pas connecté');
+                        return;
+                      }
+                      setReplyingTo(review.id);
+                    }}
                     className="text-gray-500 hover:text-red-600 transition-all duration-200 rounded-xl"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
