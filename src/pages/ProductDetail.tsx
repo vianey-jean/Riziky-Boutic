@@ -39,7 +39,7 @@ const ProductDetail = () => {
     if (!secureProductId) {
       setIsValidId(false);
       toast.error("Produit non trouvé");
-      navigate('/page/notfound', { replace: true });
+      navigate('/', { replace: true });
       return;
     }
     
@@ -49,7 +49,7 @@ const ProductDetail = () => {
     if (!isValid) {
       setIsValidId(false);
       toast.error("Ce lien n'est plus valide");
-      navigate('/page/notfound', { replace: true });
+      navigate('/', { replace: true });
     } else {
       const foundProduct = products.find(p => p.id === productId);
       if (foundProduct) {
@@ -58,7 +58,7 @@ const ProductDetail = () => {
       } else {
         setIsValidId(false);
         toast.error("Produit introuvable");
-        navigate('/page/notfound', { replace: true });
+        navigate('/', { replace: true });
       }
     }
     setIsLoading(false);

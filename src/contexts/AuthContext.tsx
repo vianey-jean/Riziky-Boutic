@@ -106,7 +106,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     // Navigation via window.location pour éviter les problèmes de hooks
-    window.location.href = '/login';
+    window.location.href = '/';
   };
 
   const register = async (nom: string, email: string, password: string) => {

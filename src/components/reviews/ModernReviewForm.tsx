@@ -7,6 +7,7 @@ import { Camera, X, Star, Upload, Sparkles } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface ModernReviewFormProps {
   productId: string;
@@ -39,6 +40,7 @@ const ModernReviewForm: React.FC<ModernReviewFormProps> = ({
   const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { isAuthenticated, setRedirectAfterLogin } = useAuth();
 
   // Pour l'édition, on supprime les anciennes photos et on commence avec un tableau vide
   React.useEffect(() => {
@@ -138,6 +140,17 @@ const ModernReviewForm: React.FC<ModernReviewFormProps> = ({
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isAuthenticated) {
+      setRedirectAfterLogin(window.location.pathname);
+      toast.error("Il faut être connecté pour poster une réponse", {
+        style: { backgroundColor: '#EF4444', color: 'white', fontWeight: 'bold' },
+        duration: 4000,
+        position: 'top-center',
+      });
+      window.location.href = '/login';
+      return;
+    }
     
     if (productRating === 0) {
       toast.error("Veuillez noter le produit.");

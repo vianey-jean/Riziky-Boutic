@@ -1,0 +1,59 @@
+[
+  {
+    "id": "1",
+    "nom": "Admin",
+    "email": "admin@example.com",
+    "password": "$2b$10$OkNajbgI5HIsKcudIY2h3.Cpy3T11UECwgtmXAyPP4FWe/xjpZMRu",
+    "role": "admin",
+    "dateCreation": "2025-04-26T10:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "nom": "Client Test",
+    "email": "client@example.com",
+    "password": "$2b$10$1M8MoXY.j3f93kTNj4qzV.Q7Icb9c1EAMxeEkl9A6sr.8O/x/DwIe",
+    "role": "client",
+    "dateCreation": "2025-04-26T11:00:00.000Z",
+    "passwordUnique": "Admin123@"
+  },
+  {
+    "id": "3",
+    "nom": "RABEMANALINA ",
+    "email": "vianey.jean@ymail.com",
+    "password": "$2b$10$2UdXJByd10OyRdUpr1Tq2OlC90XD3UtLeBWi0DekOyDG0D8fuaWNO",
+    "role": "admin",
+    "dateCreation": "2025-04-26T11:00:00.000Z",
+    "prenom": "Jean Marie",
+    "adresse": "21 rue de paris",
+    "ville": "St Denis",
+    "codePostal": "97400",
+    "pays": "La Réunion",
+    "telephone": "0692198701",
+    "genre": "homme",
+    "profileImage": "/uploads/profile-images/profile-3-1756052794639-135702829.JPG"
+  },
+  {
+    "id": "4",
+    "nom": "Bekoto",
+    "email": "bekotoj@yahoo.fr",
+    "password": "$2b$10$DwXfUsRT4Vp2o2PFQ6YtM.nHeJohZeINr9cAXATR5D8W/BF.kZjoS",
+    "role": "admin",
+    "dateCreation": "2025-04-26T10:00:00.000Z",
+    "prenom": "Jean",
+    "adresse": "21 rue de paris",
+    "ville": "St Denis",
+    "codePostal": "97400",
+    "pays": "La Réunion",
+    "telephone": "0692010101",
+    "genre": "homme"
+  },
+  {
+    "id": "5",
+    "nom": "Service Client",
+    "email": "service.client@example.com",
+    "password": "$2b$10$nzcvstehH8wpRt.lp7vAe.664TrgMe8m2wZGfAQeMvTQibAGpUezG",
+    "role": "admin",
+    "dateCreation": "2025-04-26T10:00:00.000Z",
+    "profileImage": "/uploads/profile-images/profile-5-1756053099195-189475308.webp"
+  }
+]

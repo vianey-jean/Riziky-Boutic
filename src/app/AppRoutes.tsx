@@ -412,7 +412,7 @@ const AppRoutes: React.FC = () => {
         } />
         <Route path="/admin/flash-sales" element={<Navigate to={secureRoutes.get('/admin/flash-sales') || '/'} replace />} />
         
-        <Route path="/page/notfound" element={<NotFound />} />
+        
         
         <Route path="/:secureOrderId" element={
           <MaintenanceChecker>
