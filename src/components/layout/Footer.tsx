@@ -36,6 +36,7 @@ const Footer = () => {
                 Tous droits réservés.
               </p>
               <div className="flex items-center space-x-2 text-gray-400 text-sm font-bold">
+                <span className= "text-red-900">V4.0 </span>
                 <span>Fait avec le</span>
                 <Heart className="h-3 w-3 text-red-400 animate-pulse" />
                 <span>à La Réunion</span>

@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { getSecureRoute } from '@/services/secureIds';
 
@@ -7,9 +6,9 @@ const FooterLinks = () => {
   const links = [
     { to: "/notre-histoire", text: "Notre Histoire" },
     { to: "/faq", text: "FAQ" },
-    { to: "/livraison", text: "Livraison" },
-    { to: "/retours", text: "Retours" },
-    { to: "/contact", text: "Contact" }
+    { to: "/livraison", text: "Service Livraison" },
+    { to: "/retours", text: "Sergvice Retours" },
+    { to: "/contact", text: "Nous Contacter" }
   ];
 
   return (
