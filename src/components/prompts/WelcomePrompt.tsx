@@ -17,8 +17,8 @@ interface WelcomePromptProps {
 }
 
 const WelcomePrompt: React.FC<WelcomePromptProps> = ({
-  title = "Bienvenue sur Riziky Boutique",
-  message = "Découvrez notre gamme de produits capillaires de luxe. Pour toute question, notre équipe est disponible pour vous aider via sur le Chat",
+  title = "Bienvenue sur Riziky Boutic",
+  message = "Découvrez notre gamme de produits capillaires de luxe. Pour toute question, notre équipe est disponible pour vous aider via le Chat",
   buttonText =" Vers Service Client, Chat",
   onClose,
   dismissKey = "welcome-prompt-dismissed",
@@ -90,7 +90,7 @@ const WelcomePrompt: React.FC<WelcomePromptProps> = ({
           
           <Button 
             onClick={handleClose}
-            className="w-full bg-neutral-100 text-neutral-900 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
+            className="w-full bg-neutral-100 text-green-900 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
           >
             {buttonText}
           </Button>
