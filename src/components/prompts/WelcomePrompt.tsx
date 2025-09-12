@@ -19,7 +19,7 @@ interface WelcomePromptProps {
 const WelcomePrompt: React.FC<WelcomePromptProps> = ({
   title = "Bienvenue sur Riziky Boutique",
   message = "Découvrez notre gamme de produits capillaires de luxe. Pour toute question, notre équipe est disponible pour vous aider via sur le Chat",
-  buttonText = "D'accord, merci",
+  buttonText =" Vers Service Client, Chat",
   onClose,
   dismissKey = "welcome-prompt-dismissed",
   delay = 3000
