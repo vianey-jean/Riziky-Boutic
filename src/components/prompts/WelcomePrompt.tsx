@@ -29,22 +29,22 @@ const WelcomePrompt: React.FC<WelcomePromptProps> = ({
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Si l'utilisateur s'est déjà connecté une fois, ne plus jamais afficher le prompt
-    const hasEverLoggedIn = localStorage.getItem('user-has-logged-in') === 'true';
+    // Ne pas afficher sur la page service-client
+    const currentPath = window.location.pathname;
+    const isServiceClientPage = currentPath.includes('/service-client');
     
     if (isAuthenticated) {
-      // Si connecté maintenant, marquer dans localStorage et cacher
-      localStorage.setItem('user-has-logged-in', 'true');
+      // Si connecté, ne jamais afficher le prompt
       setIsVisible(false);
-    } else if (!hasEverLoggedIn) {
-      // Si jamais connecté ET pas connecté maintenant, afficher après délai
+    } else if (!isServiceClientPage) {
+      // Si pas connecté ET pas sur la page service-client, afficher après délai
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, delay);
       
       return () => clearTimeout(timer);
     } else {
-      // Si déjà connecté avant mais pas maintenant, ne pas afficher
+      // Si pas connecté mais sur la page service-client, ne pas afficher
       setIsVisible(false);
     }
   }, [delay, isAuthenticated]);
