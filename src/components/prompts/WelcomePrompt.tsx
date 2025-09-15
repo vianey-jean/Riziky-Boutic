@@ -124,18 +124,27 @@ const WelcomePrompt: React.FC<WelcomePromptProps> = ({
         </motion.div>
       )}
 
-      {/* Version minimisée (petit bouton flottant) */}
+      {/* Version minimisée (petit bouton flottant avec texte rouge au-dessus) */}
       {isVisible && isMinimized && (
-        <motion.button
+        <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
           transition={{ duration: 0.3 }}
-          onClick={handleReopen}
-          className="fixed bottom-4 right-4 z-40 bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700"
+          className="fixed bottom-4 right-4 z-40 flex flex-col items-center"
         >
-          <MessageSquareText className="h-5 w-5" />
-        </motion.button>
+          {/* Texte en rouge 3D */}
+          <span className="mb-1 text-red-600 font-extrabold text-sm drop-shadow-[1px_1px_1px_black]">
+            Chat Service Client
+          </span>
+
+          <button
+            onClick={handleReopen}
+            className="bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700"
+          >
+            <MessageSquareText className="h-5 w-5" />
+          </button>
+        </motion.div>
       )}
     </AnimatePresence>
   );
