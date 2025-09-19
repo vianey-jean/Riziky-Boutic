@@ -41,6 +41,14 @@ const SalesNotification: React.FC = () => {
     year: 0
   });
   const [lastCheckTime, setLastCheckTime] = useState<string>(new Date().toISOString());
+  const [isStatsVisible, setIsStatsVisible] = useState(false);
+  const [hasNewSale, setHasNewSale] = useState(false);
+  const [previousStats, setPreviousStats] = useState<OrderStats>({
+    today: 0,
+    week: 0,
+    month: 0,
+    year: 0
+  });
 
   useEffect(() => {
     // Ne pas afficher si pas admin ou pas sur la page d'accueil
@@ -54,19 +62,42 @@ const SalesNotification: React.FC = () => {
         if (response.ok) {
           const data = await response.json();
           
-          // Mettre à jour les statistiques de commandes
+          // Vérifier si les statistiques ont changé
           if (data.orderStats) {
+            const statsChanged = 
+              data.orderStats.today !== previousStats.today ||
+              data.orderStats.week !== previousStats.week ||
+              data.orderStats.month !== previousStats.month ||
+              data.orderStats.year !== previousStats.year;
+
+            if (statsChanged && (previousStats.today > 0 || previousStats.week > 0 || previousStats.month > 0 || previousStats.year > 0)) {
+              console.log('Changement détecté dans les statistiques:', data.orderStats);
+              setHasNewSale(true);
+              setIsStatsVisible(true);
+              
+              // Masquer après 5 secondes
+              setTimeout(() => {
+                setHasNewSale(false);
+                setIsStatsVisible(false);
+              }, 5000);
+            }
+            
             setOrderStats(data.orderStats);
+            setPreviousStats(data.orderStats);
           }
           
           if (data.notification) {
             console.log('Nouvelle notification de vente reçue:', data.notification);
             setCurrentNotification(data.notification);
             setLastCheckTime(new Date().toISOString());
+            setHasNewSale(true);
+            setIsStatsVisible(true);
             
             // Afficher la notification pendant 5 secondes
             setTimeout(() => {
               setCurrentNotification(null);
+              setHasNewSale(false);
+              setIsStatsVisible(false);
             }, 5000);
           }
         }
@@ -75,14 +106,14 @@ const SalesNotification: React.FC = () => {
       }
     };
 
-    // Vérifier les nouvelles ventes toutes les secondes pour une réactivité maximale
-    const interval = setInterval(checkForNewSales, 1000);
+    // Vérifier les nouvelles ventes toutes les 2 secondes pour une synchronisation continue
+    const interval = setInterval(checkForNewSales, 2000);
 
     // Vérification initiale
     checkForNewSales();
 
     return () => clearInterval(interval);
-  }, [isAdmin, location.pathname, lastCheckTime]);
+  }, [isAdmin, location.pathname, lastCheckTime, previousStats.today, previousStats.week, previousStats.month, previousStats.year]);
 
   // Ne pas afficher si pas admin ou pas sur la page d'accueil
   if (!isAdmin || location.pathname !== '/') {
@@ -91,11 +122,16 @@ const SalesNotification: React.FC = () => {
 
   return (
     <>
-      {/* Statistiques de commandes - repositionnées pour mobile */}
-      <div
-  className="fixed right-4 z-40 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 p-3 max-w-xs lg:top-20"
-  style={{ marginTop: '100px' }}
->
+      {/* Statistiques de commandes - cachées à droite par défaut */}
+      <motion.div
+        initial={{ x: '100%' }}
+        animate={{ x: isStatsVisible ? 0 : '100%' }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="fixed right-4 z-40 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 p-3 max-w-xs lg:top-20"
+        style={{ marginTop: '100px' }}
+        onMouseEnter={() => setIsStatsVisible(true)}
+        onMouseLeave={() => !hasNewSale && setIsStatsVisible(false)}
+      >
         <div className="space-y-2">
 
           <div className="flex items-center space-x-2 text-center">
@@ -122,14 +158,14 @@ const SalesNotification: React.FC = () => {
               <div className="text-neutral-600 dark:text-neutral-400 text-xs">Mois</div>
             </div>
             
-            <div className="text-center">
-              <ShoppingBag className="h-3 w-3 text-red-600 mx-auto mb-1" />
-              <div className="font-bold text-red-600 text-sm">{orderStats.year}</div>
-              <div className="text-neutral-600 dark:text-neutral-400 text-xs">Année</div>
-            </div>
-          </div>
-        </div>
-      </div>
+             <div className="text-center">
+               <ShoppingBag className="h-3 w-3 text-red-600 mx-auto mb-1" />
+               <div className="font-bold text-red-600 text-sm">{orderStats.year}</div>
+               <div className="text-neutral-600 dark:text-neutral-400 text-xs">Année</div>
+             </div>
+           </div>
+         </div>
+       </motion.div>
 
       {/* Notification de vente - améliorée pour tous les écrans */}
       <AnimatePresence>
