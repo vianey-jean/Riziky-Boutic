@@ -1,3 +1,24 @@
+/**
+ * @fileoverview Composant ProductCard - Carte d'affichage produit moderne et interactive
+ * 
+ * Ce composant affiche un produit sous forme de carte avec toutes les informations
+ * essentielles : image, nom, prix, promotions, avis clients, actions rapides.
+ * 
+ * Fonctionnalités principales:
+ * - Affichage responsive avec plusieurs tailles (small, medium, large)
+ * - Carrousel d'images automatique au survol
+ * - Actions rapides : ajout panier, favoris, aperçu rapide, partage
+ * - Gestion des promotions avec timer dynamique
+ * - Système d'avis avec étoiles et moyenne
+ * - Animations fluides et micro-interactions
+ * - Mode featured pour mise en avant spéciale
+ * - Gestion des stocks et ruptures
+ * - IDs sécurisés pour les routes
+ * 
+ * @version 2.0.0
+ * @author Equipe Riziky-Boutic
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,13 +35,22 @@ import { notificationService } from '@/services/NotificationService';
 import QuickViewModal from '@/components/products/QuickViewModal';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
+/**
+ * Props du composant ProductCard
+ * @interface ProductCardProps
+ */
 interface ProductCardProps {
+  /** Produit à afficher */
   product: Product;
+  /** Taille de la carte (défaut: medium) */
   size?: 'small' | 'medium' | 'large';
+  /** Indique si le produit est mis en avant */
   featured?: boolean;
 }
 
+/** URL de base pour les images */
 const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+/** Image de placeholder par défaut */
 const PLACEHOLDER_IMAGE = '/placeholder.svg';
 
 const ProductCard: React.FC<ProductCardProps> = ({ 

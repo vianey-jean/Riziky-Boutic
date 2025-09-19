@@ -1,4 +1,24 @@
 
+/**
+ * @fileoverview Hook personnalisé pour la gestion des favoris utilisateur
+ * 
+ * Ce hook gère toute la logique liée aux produits favoris d'un utilisateur.
+ * Il inclut la récupération, l'ajout, la suppression et la vérification
+ * des produits favoris avec gestion d'état locale et synchronisation serveur.
+ * 
+ * Fonctionnalités:
+ * - Chargement automatique des favoris au login
+ * - Ajout/suppression avec feedback utilisateur
+ * - Vérification de statut favori pour un produit
+ * - Redirection après login pour accès favoris
+ * - Gestion d'erreurs avec notifications toast
+ * - État de chargement pour UX optimale
+ * - Compteur de favoris en temps réel
+ * 
+ * @version 2.0.0
+ * @author Equipe Riziky-Boutic
+ */
+
 import { useState, useEffect } from 'react';
 import { Product } from '@/types/product';
 import { favoritesAPI } from '@/services/favoritesAPI';

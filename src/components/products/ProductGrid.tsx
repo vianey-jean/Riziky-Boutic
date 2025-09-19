@@ -1,3 +1,25 @@
+/**
+ * @fileoverview Composant ProductGrid - Grille d'affichage des produits
+ * 
+ * Ce composant gère l'affichage des produits sous forme de grille ou de liste
+ * avec des fonctionnalités avancées de pagination, filtrage et tri.
+ * 
+ * Fonctionnalités principales:
+ * - Affichage en grille ou en liste (toggle)
+ * - Pagination intelligente (load more)
+ * - Système de filtres avancés (sidebar)
+ * - Animations d'apparition staggered
+ * - Gestion des états de chargement
+ * - Actions groupées (favoris, panier)
+ * - Compteur de produits dynamique
+ * - Responsive design complet
+ * - Intégration sélecteur de quantité
+ * - Routes sécurisées
+ * 
+ * @version 2.0.0
+ * @author Equipe Riziky-Boutic
+ */
+
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { Product, useStore } from '@/contexts/StoreContext';

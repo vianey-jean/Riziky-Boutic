@@ -1,4 +1,34 @@
 
+/**
+ * @fileoverview Composant Button universel avec variants avancés
+ * 
+ * Composant bouton basé sur Radix-UI avec système de variants CVA (Class Variance Authority).
+ * Inclut de nombreux styles prédéfinis et des animations 3D modernes.
+ * 
+ * Variants disponibles:
+ * - default : Style principal avec ombre 3D
+ * - destructive : Pour actions de suppression/danger
+ * - outline : Bordure avec fond transparent
+ * - secondary : Style secondaire subtil
+ * - ghost : Transparent avec hover subtil
+ * - link : Style de lien souligné
+ * - gradient : Dégradé de couleurs moderne
+ * - shine : Effet de brillance animé
+ * 
+ * Tailles disponibles:
+ * - sm, default, lg, xl : Différentes tailles
+ * - icon : Format carré pour icônes
+ * 
+ * Fonctionnalités:
+ * - Support asChild (Slot pattern)
+ * - Animations de translation et ombres
+ * - Focus management pour accessibilité
+ * - États disabled gérés automatiquement
+ * 
+ * @version 2.0.0
+ * @author Equipe UI Riziky-Boutic
+ */
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"

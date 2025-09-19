@@ -1,4 +1,27 @@
 
+/**
+ * @fileoverview Hook personnalisé pour la gestion des commandes utilisateur
+ * 
+ * Ce hook gère toute la logique liée aux commandes d'un utilisateur.
+ * Il inclut la récupération de l'historique, la création de nouvelles commandes
+ * et la synchronisation avec le panier.
+ * 
+ * Fonctionnalités principales:
+ * - Récupération automatique des commandes au login
+ * - Création de commandes avec validation complète
+ * - Gestion des codes promo et remises
+ * - Synchronisation panier après commande
+ * - Calcul automatique des totaux et sous-totaux
+ * - Gestion des adresses de livraison
+ * - Support multiple méthodes de paiement
+ * - Nettoyage automatique du panier post-commande
+ * - Notifications de succès/erreur
+ * - État de chargement pour UX
+ * 
+ * @version 2.0.0
+ * @author Equipe Riziky-Boutic
+ */
+
 import { useState, useEffect } from 'react';
 import { Order } from '@/types/order';
 import { ordersAPI, cartAPI } from '@/services/api';

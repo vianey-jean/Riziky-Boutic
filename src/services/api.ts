@@ -1,19 +1,80 @@
 
-// Main API exports with backward compatibility
+/**
+ * @fileoverview Point d'entrée principal pour toutes les APIs du projet Riziky-Boutic
+ * 
+ * Ce fichier centralise l'exportation de tous les services API et maintient
+ * la compatibilité avec l'ancien système d'API pour faciliter la migration.
+ * 
+ * Architecture:
+ * - Nouveaux services modulaires dans ./modules/
+ * - API client centralisé dans ./core/apiClient
+ * - APIs legacy maintenues pour compatibilité
+ * 
+ * @version 2.0.0
+ * @author Equipe Riziky-Boutic
+ */
+
+// ============================================================================
+// EXPORTS PRINCIPAUX - NOUVELLE ARCHITECTURE
+// ============================================================================
+
+/**
+ * Client API principal - point d'entrée pour toutes les requêtes HTTP
+ * Inclut la gestion des tokens, intercepteurs et configuration centralisée
+ */
 export { apiClient as API } from './core/apiClient';
 
-// Service exports
+// ============================================================================
+// SERVICES MODULAIRES - ARCHITECTURE MODERNE
+// ============================================================================
+
+/**
+ * Service d'authentification - gestion des utilisateurs, JWT, sessions
+ * @example const user = await authAPI.login(credentials)
+ */
 export { authService as authAPI } from './modules/auth.service';
+
+/**
+ * Service produits - catalogue, recherche, gestion stock
+ * @example const products = await productsAPI.getAll()
+ */
 export { productsService as productsAPI } from './modules/products.service';
+
+/**
+ * Service panier - ajout/suppression d'articles, calculs
+ * @example await cartAPI.addItem(userId, productId, quantity)
+ */
 export { cartService as cartAPI } from './modules/cart.service';
+
+/**
+ * Service commandes - création, suivi, historique
+ * @example const order = await ordersAPI.create(orderData)
+ */
 export { ordersService as ordersAPI } from './modules/orders.service';
+
+/**
+ * Service catégories - gestion des catégories produits
+ * @example const categories = await categoriesAPI.getActive()
+ */
 export { categoriesService as categoriesAPI } from './modules/categories.service';
+
+/**
+ * Service ventes flash - promotions temporaires, timers
+ * @example const flashSales = await flashSaleAPI.getActive()
+ */
 export { flashSaleService as flashSaleAPI } from './modules/flashSale.service';
 
-// Import cartService for legacy compatibility
+// Import pour compatibilité legacy
 import { cartService } from './modules/cart.service';
 
-// Legacy compatibility exports
+// ============================================================================
+// COMPATIBILITÉ LEGACY - À MAINTENIR POUR MIGRATION GRADUELLE
+// ============================================================================
+
+/**
+ * APIs legacy maintenues pour compatibilité avec l'ancien code
+ * Ces exports seront progressivement migrés vers les nouveaux services
+ */
 export { favoritesAPI } from './favoritesAPI';
 export { reviewsAPI } from './reviewsAPI';
 export { contactsAPI } from './contactsAPI';
@@ -21,19 +82,34 @@ export { adminChatAPI, clientChatAPI } from './chatAPI';
 export { codePromosAPI, codePromoAPI } from './codePromosAPI';
 export { remboursementsAPI } from './remboursementsAPI';
 
-// Legacy panier alias
+/**
+ * Alias legacy pour le panier - maintient la compatibilité avec l'ancien nom "panierAPI"
+ * @deprecated Utiliser cartAPI à la place
+ */
 export const panierAPI = {
+  /** Récupère le panier d'un utilisateur */
   get: (userId: string) => cartService.get(userId),
+  /** Ajoute un article au panier */
   addItem: (userId: string, productId: string, quantity: number = 1) => 
     cartService.addItem(userId, productId, quantity),
+  /** Met à jour la quantité d'un article */
   updateItem: (userId: string, productId: string, quantity: number) => 
     cartService.updateItem(userId, productId, quantity),
+  /** Supprime un article du panier */
   removeItem: (userId: string, productId: string) => 
     cartService.removeItem(userId, productId),
+  /** Vide complètement le panier */
   clear: (userId: string) => cartService.clear(userId),
 };
 
-// Default export for backward compatibility
+// ============================================================================
+// EXPORT PAR DÉFAUT
+// ============================================================================
+
+/**
+ * Export par défaut pour compatibilité avec les imports existants
+ * @deprecated Utiliser les exports nommés spécifiques
+ */
 import { apiClient } from './core/apiClient';
 export default apiClient;
 

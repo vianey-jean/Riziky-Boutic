@@ -1,4 +1,28 @@
 
+/**
+ * @fileoverview Composant Footer principal - Pied de page de l'application
+ * 
+ * Ce composant assemble tous les éléments du footer de manière modulaire
+ * et responsive. Il inclut les bénéfices, la marque, les liens, le légal
+ * et les informations de contact.
+ * 
+ * Structure modulaire:
+ * - FooterBenefits : Barre des avantages (livraison, sécurité, etc.)
+ * - FooterBrand : Logo et description de la marque
+ * - FooterLinks : Liens de navigation principaux
+ * - FooterLegal : Mentions légales et politique de confidentialité
+ * - FooterContact : Informations de contact et réseaux sociaux
+ * 
+ * Design:
+ * - Gradients modernes et éléments décoratifs
+ * - Responsive design complet
+ * - Copyright dynamique avec année actuelle
+ * - Signature de l'équipe avec animation
+ * 
+ * @version 4.0.0
+ * @author Equipe Riziky-Boutic (RJMV - La Réunion)
+ */
+
 import React from 'react';
 import { Heart } from 'lucide-react';
 import FooterBenefits from './footer/FooterBenefits';

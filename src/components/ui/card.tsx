@@ -1,3 +1,31 @@
+/**
+ * @fileoverview Composants Card modulaires basés sur Shadcn/UI
+ * 
+ * Ensemble de composants pour créer des cartes structurées et accessibles.
+ * Basés sur des éléments HTML sémantiques avec des styles cohérents.
+ * 
+ * Composants inclus:
+ * - Card : Conteneur principal avec bordure et ombre
+ * - CardHeader : En-tête avec espacement vertical
+ * - CardTitle : Titre principal (h3) avec tracking optimisé
+ * - CardDescription : Description secondaire avec couleur muted
+ * - CardContent : Contenu principal avec padding adapté
+ * - CardFooter : Pied de carte avec layout flex
+ * 
+ * Utilisation:
+ * <Card>
+ *   <CardHeader>
+ *     <CardTitle>Titre</CardTitle>
+ *     <CardDescription>Description</CardDescription>
+ *   </CardHeader>
+ *   <CardContent>Contenu principal</CardContent>
+ *   <CardFooter>Actions/boutons</CardFooter>
+ * </Card>
+ * 
+ * @version 1.0.0
+ * @author Shadcn/UI + Équipe Riziky-Boutic
+ */
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

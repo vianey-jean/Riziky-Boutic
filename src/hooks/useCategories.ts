@@ -1,4 +1,26 @@
 
+/**
+ * @fileoverview Hook personnalisé pour la gestion des catégories de produits
+ * 
+ * Ce hook gère la récupération et le cache des catégories de produits
+ * avec option de filtrage par statut actif/inactif.
+ * 
+ * Fonctionnalités:
+ * - Récupération automatique des catégories
+ * - Filtrage par statut actif (optionnel)
+ * - Gestion d'état de chargement
+ * - Validation du format des données
+ * - Gestion d'erreurs avec notifications
+ * - Fonction de rechargement manuel
+ * - Cache local des catégories
+ * 
+ * @param activeOnly - Si true, récupère seulement les catégories actives
+ * @returns Objet contenant categories, loading, fetchCategories
+ * 
+ * @version 2.0.0
+ * @author Equipe Riziky-Boutic
+ */
+
 import { useState, useEffect } from 'react';
 import { Category } from '@/types/category';
 import { categoriesAPI } from '@/services/api';
