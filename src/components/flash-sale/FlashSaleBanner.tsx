@@ -37,6 +37,7 @@ const FlashSaleBanner: React.FC = () => {
   const [activeFlashSales, setActiveFlashSales] = useState<FlashSale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState<'left' | 'right'>('right');
 
   // Référence pour stocker l’intervalle
   const autoSlideRef = useRef<NodeJS.Timeout | null>(null);
@@ -137,11 +138,13 @@ const FlashSaleBanner: React.FC = () => {
   }, [activeSales.length]);
 
   const handleDotClick = (index: number) => {
+    setDirection(index > currentIndex ? 'right' : 'left');
     setCurrentIndex(index);
     startAutoSlide(); // reset du timer
   };
 
   const handlePrev = () => {
+    setDirection('left');
     setCurrentIndex(
       (prevIndex) => (prevIndex - 1 + activeSales.length) % activeSales.length
     );
@@ -149,6 +152,7 @@ const FlashSaleBanner: React.FC = () => {
   };
 
   const handleNext = () => {
+    setDirection('right');
     setCurrentIndex((prevIndex) => (prevIndex + 1) % activeSales.length);
     startAutoSlide(); // reset du timer
   };
@@ -195,9 +199,9 @@ const FlashSaleBanner: React.FC = () => {
       <div className="relative overflow-hidden">
         <motion.div
           key={currentSale.id}
-          initial={{ x: '100%' }}
+          initial={{ x: direction === 'right' ? '100%' : '-100%' }}
           animate={{ x: 0 }}
-          exit={{ x: '-100%' }}
+          exit={{ x: direction === 'right' ? '-100%' : '100%' }}
           transition={{ duration: 0.5, ease: 'easeInOut' }}
         >
           <Card className="overflow-hidden relative border-0 shadow-xl">
