@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { PaymentSettings } from '@/types/siteSettings';
 import { CreditCard } from 'lucide-react';
+import { usePaymentModes } from '@/hooks/usePaymentModes';
+import { PaymentModes } from '@/services/paymentModesAPI';
 
 interface PaymentSettingsFormProps {
   settings: PaymentSettings;
@@ -20,9 +22,16 @@ const PaymentSettingsForm: React.FC<PaymentSettingsFormProps> = ({
   onSave, 
   loading = false 
 }) => {
-  const { register, handleSubmit, setValue, watch } = useForm<PaymentSettings>({
-    defaultValues: settings
+  const { paymentModes, updatePaymentModes, saving } = usePaymentModes();
+  const { register, handleSubmit, setValue, watch } = useForm<PaymentModes>({
+    defaultValues: paymentModes || settings
   });
+
+  const handleSavePaymentModes = async (data: PaymentModes) => {
+    await updatePaymentModes(data);
+    // Aussi appeler onSave pour maintenir la compatibilité avec l'ancien système
+    onSave(data as PaymentSettings);
+  };
 
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-yellow-50 to-orange-100">
@@ -42,7 +51,7 @@ const PaymentSettingsForm: React.FC<PaymentSettingsFormProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSave)} className="space-y-6">
+        <form onSubmit={handleSubmit(handleSavePaymentModes)} className="space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
@@ -85,6 +94,17 @@ const PaymentSettingsForm: React.FC<PaymentSettingsFormProps> = ({
               <Switch 
                 checked={watch('enableCash')}
                 onCheckedChange={(checked) => setValue('enableCash', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Apple Pay</Label>
+                <p className="text-sm text-yellow-600">Accepter les paiements Apple Pay</p>
+              </div>
+              <Switch 
+                checked={watch('enableApplePay')}
+                onCheckedChange={(checked) => setValue('enableApplePay', checked)}
               />
             </div>
           </div>
@@ -147,10 +167,10 @@ const PaymentSettingsForm: React.FC<PaymentSettingsFormProps> = ({
 
           <Button 
             type="submit" 
-            disabled={loading}
+            disabled={loading || saving}
             className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white shadow-lg"
           >
-            {loading ? 'Sauvegarde...' : 'Sauvegarder les paramètres de paiement'}
+            {(loading || saving) ? 'Sauvegarde...' : 'Sauvegarder les paramètres de paiement'}
           </Button>
         </form>
       </CardContent>

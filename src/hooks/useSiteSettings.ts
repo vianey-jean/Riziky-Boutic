@@ -43,6 +43,7 @@ export const useSiteSettings = () => {
       toast({
         title: "Succès",
         description: "Paramètres sauvegardés avec succès",
+        className: "bg-green-600 text-white", // 🔹 Fond vert + texte blanc
       });
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
