@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/layout/Layout';
+import PageDataLoader from '@/components/layout/PageDataLoader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,16 +30,12 @@ import { io } from 'socket.io-client';
 
 const PaiementRemboursementPage: React.FC = () => {
   const [paiements, setPaiements] = useState<PaiementRemboursement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Socket connection for real-time updates
   useEffect(() => {
-    if (user) {
-      loadPaiements();
-    }
-    
-    // Socket connection for real-time updates
     const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000');
     
     socket.on('paiement-remboursement-created', (newPaiement: PaiementRemboursement) => {
@@ -58,18 +55,16 @@ const PaiementRemboursementPage: React.FC = () => {
     };
   }, [user]);
 
-  const loadPaiements = async () => {
-    try {
-      const response = await paiementRemboursementAPI.getUserPaiements();
-      console.log('Paiements chargés:', response.data);
-      setPaiements(response.data);
-    } catch (error) {
-      console.error('Erreur chargement paiements:', error);
-      toast.error('Erreur lors du chargement des paiements');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchPaiements = useCallback(async () => {
+    const response = await paiementRemboursementAPI.getUserPaiements();
+    return response.data;
+  }, []);
+
+  const handleDataLoaded = useCallback((data: PaiementRemboursement[]) => {
+    console.log('Paiements chargés:', data);
+    setPaiements(data);
+    setDataLoaded(true);
+  }, []);
 
   const handleValidate = async (id: string) => {
     try {
@@ -146,18 +141,17 @@ const PaiementRemboursementPage: React.FC = () => {
     });
   };
 
-  if (loading) {
+  // Show PageDataLoader until data is loaded
+  if (!dataLoaded) {
     return (
       <Layout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary"></div>
-              <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-primary animate-pulse" />
-            </div>
-            <p className="text-muted-foreground animate-pulse">Chargement de vos remboursements...</p>
-          </div>
-        </div>
+        <PageDataLoader
+          fetchFunction={fetchPaiements}
+          onSuccess={handleDataLoaded}
+          loadingMessage="Chargement de vos remboursements..."
+          loadingSubmessage="Récupération des données en cours..."
+          errorMessage="Erreur lors du chargement des remboursements"
+        />
       </Layout>
     );
   }

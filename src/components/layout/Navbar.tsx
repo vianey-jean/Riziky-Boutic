@@ -9,6 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package, Menu, Banknote } from 'lucide-react';
+import { io } from 'socket.io-client';
 import { productsAPI, Product } from '@/services/api';
 import { categoriesAPI } from '@/services/categoriesAPI';
 import { paiementRemboursementAPI } from '@/services/paiementRemboursementAPI';
@@ -80,7 +81,7 @@ const Navbar = () => {
     loadCategories();
   }, []);
 
-  // Check for accepted refunds
+  // Check for accepted refunds with real-time sync
   useEffect(() => {
     const checkRefunds = async () => {
       if (isAuthenticated && user) {
@@ -95,6 +96,23 @@ const Navbar = () => {
       }
     };
     checkRefunds();
+
+    // Socket connection for real-time sync of refund status
+    const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000');
+    
+    socket.on('paiement-remboursement-updated', () => {
+      // Re-check refunds when any payment is updated
+      checkRefunds();
+    });
+
+    socket.on('paiement-remboursement-created', () => {
+      // Re-check refunds when a new payment is created
+      checkRefunds();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [isAuthenticated, user]);
 
   // Ferme les résultats si clic en dehors
