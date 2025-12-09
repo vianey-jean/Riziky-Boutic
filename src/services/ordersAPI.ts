@@ -19,7 +19,8 @@ export const ordersAPI = {
         : [],
       shippingAddress: orderData.shippingAddress,
       paymentMethod: orderData.paymentMethod,
-      codePromo: orderData.codePromo
+      codePromo: orderData.codePromo,
+      deliveryPrice: orderData.deliveryPrice !== undefined ? Number(orderData.deliveryPrice) : 0
     };
     
     return API.post<Order>('/orders', validatedData);

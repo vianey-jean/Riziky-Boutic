@@ -227,7 +227,8 @@ const CheckoutPage = () => {
           code: verifiedPromo.code,
           productId: verifiedPromo.productId,
           pourcentage: verifiedPromo.pourcentage
-        } : undefined
+        } : undefined,
+        deliveryPrice
       );
       
       if (order) {

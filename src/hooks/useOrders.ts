@@ -70,7 +70,8 @@ export const useOrders = () => {
     shippingAddress: any,
     paymentMethod: string,
     selectedCartItems: StoreCartItem[],
-    codePromo?: { code: string; productId: string; pourcentage: number }
+    codePromo?: { code: string; productId: string; pourcentage: number },
+    deliveryPrice?: number
   ): Promise<Order | null> => {
     if (!isAuthenticated || !user || selectedCartItems.length === 0) {
       toast.error('Impossible de créer la commande: utilisateur non connecté ou panier vide');
@@ -105,7 +106,8 @@ export const useOrders = () => {
         items: orderItems,
         shippingAddress,
         paymentMethod,
-        codePromo: codePromo || null
+        codePromo: codePromo || null,
+        deliveryPrice: deliveryPrice !== undefined ? deliveryPrice : 0
       };
 
       console.log('Sending order payload:', orderPayload);

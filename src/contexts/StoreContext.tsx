@@ -32,7 +32,8 @@ interface StoreContextType {
   createOrder: (
     shippingAddress: any, 
     paymentMethod: string, 
-    codePromo?: {code: string, productId: string, pourcentage: number}
+    codePromo?: {code: string, productId: string, pourcentage: number},
+    deliveryPrice?: number
   ) => Promise<Order | null>;
   setSelectedCartItems: (items: StoreCartItem[]) => void;
   fetchCart: () => Promise<void>;
@@ -83,9 +84,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const createOrder = async (
     shippingAddress: any,
     paymentMethod: string,
-    codePromo?: { code: string; productId: string; pourcentage: number }
+    codePromo?: { code: string; productId: string; pourcentage: number },
+    deliveryPrice?: number
   ): Promise<Order | null> => {
-    const result = await createNewOrder(shippingAddress, paymentMethod, selectedCartItems, codePromo);
+    const result = await createNewOrder(shippingAddress, paymentMethod, selectedCartItems, codePromo, deliveryPrice);
     
     if (result) {
       // Recharger le panier pour refléter les suppressions
