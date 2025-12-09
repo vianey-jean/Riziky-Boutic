@@ -16,7 +16,8 @@ import {
   Zap,
   FolderOpen,
   Menu,
-  X
+  X,
+  Banknote
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSecureRoute } from '@/services/secureIds';
@@ -48,6 +49,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     parametres: getSecureRoute('/admin/parametres'),
     pubLayout: getSecureRoute('/admin/pub-layout'),
     remboursements: getSecureRoute('/admin/remboursements'),
+    paiementRemboursement: getSecureRoute('/admin/paiement-remboursement'),
     flashSales: getSecureRoute('/admin/flash-sales'),
     categories: getSecureRoute('/admin/categories'),
   };
@@ -61,6 +63,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: 'CodePromo', path: secureRoutes.codePromo, realPath: '/admin/code-promos', icon: Percent, color: 'from-pink-500 to-rose-500' },
     { name: 'Publicités', path: secureRoutes.pubLayout, realPath: '/admin/pub-layout', icon: Megaphone, color: 'from-cyan-500 to-cyan-600' },
     { name: 'Remboursements', path: secureRoutes.remboursements, realPath: '/admin/remboursements', icon: RefreshCw, color: 'from-red-500 to-red-600' },
+    { name: 'Paiement Remb.', path: secureRoutes.paiementRemboursement, realPath: '/admin/paiement-remboursement', icon: Banknote, color: 'from-emerald-500 to-green-600' },
     { name: 'Ventes Flash', path: secureRoutes.flashSales, realPath: '/admin/flash-sales', icon: Zap, color: 'from-amber-500 to-yellow-500' },
     { name: 'Chat Admin', path: secureRoutes.chat, realPath: '/admin', icon: ShoppingBag, color: 'from-emerald-500 to-emerald-600' },
     ...(isServiceAdmin ? [{ 

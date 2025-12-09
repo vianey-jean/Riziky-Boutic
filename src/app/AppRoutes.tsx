@@ -56,6 +56,8 @@ const AdminPubLayoutPage = lazy(() => import('@/pages/admin/AdminPubLayoutPage')
 const AdminRemboursementsPage = lazy(() => import('@/pages/admin/AdminRemboursementsPage'));
 const AdminFlashSalesPage = lazy(() => import('@/pages/admin/AdminFlashSalesPage'));
 const AdminCategoriesPage = lazy(() => import('@/pages/admin/AdminCategoriesPage'));
+const AdminPaiementRemboursementPage = lazy(() => import('@/pages/admin/AdminPaiementRemboursementPage'));
+const PaiementRemboursementPage = lazy(() => import('@/pages/PaiementRemboursementPage'));
 
 // Initialiser les routes sécurisées
 const secureRoutes = initSecureRoutes();
@@ -411,6 +413,26 @@ const AppRoutes: React.FC = () => {
           </SecureRoute>
         } />
         <Route path="/admin/flash-sales" element={<Navigate to={secureRoutes.get('/admin/flash-sales') || '/'} replace />} />
+        
+        <Route path={secureRoutes.get('/admin/paiement-remboursement')?.substring(1)} element={
+          <SecureRoute>
+            <ProtectedRoute requireAdmin>
+              <AdminPaiementRemboursementPage />
+            </ProtectedRoute>
+          </SecureRoute>
+        } />
+        <Route path="/admin/paiement-remboursement" element={<Navigate to={secureRoutes.get('/admin/paiement-remboursement') || '/'} replace />} />
+        
+        <Route path={secureRoutes.get('/paiement-remboursement')?.substring(1)} element={
+          <MaintenanceChecker>
+            <SecureRoute>
+              <ProtectedRoute>
+                <PaiementRemboursementPage />
+              </ProtectedRoute>
+            </SecureRoute>
+          </MaintenanceChecker>
+        } />
+        <Route path="/paiement-remboursement" element={<Navigate to={secureRoutes.get('/paiement-remboursement') || '/'} replace />} />
         
         <Route path="/page/notfound" element={<NotFound />} />
         

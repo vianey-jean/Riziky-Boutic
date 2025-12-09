@@ -256,6 +256,51 @@ const AdminOrdersPage = () => {
                       </div>
                     </div>
 
+                    {/* Financial Summary */}
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 rounded-xl p-5 border border-emerald-200 dark:border-emerald-800">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                        <CreditCard className="h-5 w-5 mr-2 text-emerald-600" />
+                        Détails financiers
+                      </h3>
+                      <div className="space-y-3">
+                        {order.subtotalProduits !== undefined && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">Sous-total produits</span>
+                            <span className="font-medium">{(order.subtotalProduits || 0).toFixed(2)} €</span>
+                          </div>
+                        )}
+                        {order.discount !== undefined && order.discount > 0 && (
+                          <div className="flex justify-between text-sm text-emerald-600">
+                            <span>Remise appliquée</span>
+                            <span className="font-medium">-{order.discount.toFixed(2)} €</span>
+                          </div>
+                        )}
+                        {order.taxAmount !== undefined && order.taxAmount > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              TVA ({((order.taxRate || 0.2) * 100).toFixed(0)}%)
+                            </span>
+                            <span className="font-medium">{order.taxAmount.toFixed(2)} €</span>
+                          </div>
+                        )}
+                        {order.deliveryPrice !== undefined && order.deliveryPrice > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                              <Truck className="h-4 w-4" />
+                              Frais de livraison ({order.shippingAddress.ville})
+                            </span>
+                            <span className="font-medium">{order.deliveryPrice.toFixed(2)} €</span>
+                          </div>
+                        )}
+                        <div className="border-t border-emerald-200 dark:border-emerald-700 pt-3 mt-3">
+                          <div className="flex justify-between">
+                            <span className="text-lg font-bold text-gray-900 dark:text-gray-100">Total</span>
+                            <span className="text-lg font-bold text-emerald-600">{order.totalAmount.toFixed(2)} €</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Shipping Address */}
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">

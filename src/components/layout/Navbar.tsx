@@ -8,15 +8,17 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/s
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package, Menu } from 'lucide-react';
+import { ShoppingCart, Heart, Search, User, LogOut, Settings, Package, Menu, Banknote } from 'lucide-react';
 import { productsAPI, Product } from '@/services/api';
 import { categoriesAPI } from '@/services/categoriesAPI';
+import { paiementRemboursementAPI } from '@/services/paiementRemboursementAPI';
 import { Category } from '@/types/category';
 import { debounce } from 'lodash';
 import { useIsMobile } from '@/hooks/use-mobile';
 import logo from "@/assets/logo.png"; 
 import CategoriesDropdown from './CategoriesDropdown';
 import UserAvatar from '@/components/user/UserAvatar';
+import { getSecureRoute } from '@/services/secureIds';
 
 // Fonction améliorée pour normaliser les chaînes de caractères (supprime les accents et met en minuscule)
 const normalizeString = (str: string) => {
@@ -49,6 +51,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [hasAcceptedRefunds, setHasAcceptedRefunds] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,6 +79,23 @@ const Navbar = () => {
     };
     loadCategories();
   }, []);
+
+  // Check for accepted refunds
+  useEffect(() => {
+    const checkRefunds = async () => {
+      if (isAuthenticated && user) {
+        try {
+          const response = await paiementRemboursementAPI.hasAcceptedRefunds();
+          setHasAcceptedRefunds(response.data.hasAcceptedRefunds);
+        } catch (error) {
+          console.error('Erreur vérification remboursements:', error);
+        }
+      } else {
+        setHasAcceptedRefunds(false);
+      }
+    };
+    checkRefunds();
+  }, [isAuthenticated, user]);
 
   // Ferme les résultats si clic en dehors
   useEffect(() => {
@@ -307,6 +327,17 @@ const Navbar = () => {
                       <span className="font-medium">Mes commandes</span>
                     </Link>
                   </DropdownMenuItem>
+                  {hasAcceptedRefunds && (
+                    <DropdownMenuItem asChild className="rounded-xl hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/20 dark:hover:to-teal-900/20 transition-all duration-200">
+                      <Link to={getSecureRoute('/paiement-remboursement')} className="flex items-center px-4 py-3">
+                        <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center mr-3">
+                          <Banknote className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <span className="font-medium">Paiement Remboursement</span>
+                        <Badge variant="destructive" className="ml-2 text-xs">Nouveau</Badge>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator className="my-2" />
@@ -409,6 +440,17 @@ const Navbar = () => {
                                 </Link>
                               </SheetClose>
                             </li>
+                            {hasAcceptedRefunds && (
+                              <li>
+                                <SheetClose asChild>
+                                  <Link to={getSecureRoute('/paiement-remboursement')} className="flex items-center text-sm hover:text-primary">
+                                    <Banknote className="mr-2 h-6 w-6 text-emerald-600" />
+                                    <span>Paiement Remboursement</span>
+                                    <Badge variant="destructive" className="ml-2 text-xs">Nouveau</Badge>
+                                  </Link>
+                                </SheetClose>
+                              </li>
+                            )}
                             {isAdmin && (
                               <li>
                                 <SheetClose asChild>

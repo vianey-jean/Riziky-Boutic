@@ -28,6 +28,7 @@ const ROUTES_TO_SECURE = [
   '/admin/flash-sales',
   '/admin/categories',
   '/admin/code-promos',
+  '/admin/paiement-remboursement',
 
   // Routes utilisateur protégées
   '/profil',
@@ -36,6 +37,7 @@ const ROUTES_TO_SECURE = [
   '/favoris',
   '/paiement',
   '/commande/:orderId',
+  '/paiement-remboursement',
 
   // Routes d'authentification
   '/login',
