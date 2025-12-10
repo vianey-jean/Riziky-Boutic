@@ -1,16 +1,17 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useStore } from '@/contexts/StoreContext';
-import { Check, Truck, Package, ShoppingBag, ArrowLeft, MapPin, Phone, Mail, Calendar, CreditCard } from 'lucide-react';
+import { Check, Truck, Package, ShoppingBag, ArrowLeft, MapPin, Phone, Mail, Calendar, CreditCard, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getRealId, getSecureRoute } from '@/services/secureIds';
 
 const OrderPage = () => {
   const { secureOrderId } = useParams<{ secureOrderId: string }>();
   const { orders } = useStore();
+  const navigate = useNavigate();
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   console.log('OrderPage - Secure ID:', secureOrderId);
@@ -256,22 +257,47 @@ const OrderPage = () => {
 
                 <div className="p-8">
                   <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6">
+                    {/* Sous-total produits */}
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-gray-700 font-medium">Sous-total</span>
-                      <span className="font-semibold text-lg">{order.totalAmount.toFixed(2)} €</span>
+                      <span className="text-gray-700 font-medium">Sous-total produits</span>
+                      <span className="font-semibold text-lg">
+                        {(order.subtotalProduits || order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)).toFixed(2)} €
+                      </span>
                     </div>
+
+                    {/* Réduction si applicable */}
+                    {order.discount && order.discount > 0 && (
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-gray-700 font-medium">Réduction</span>
+                        <span className="font-semibold text-lg text-green-600">-{order.discount.toFixed(2)} €</span>
+                      </div>
+                    )}
+
+                    {/* TVA */}
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-gray-700 font-medium">TVA ({((order.taxRate || 0.20) * 100).toFixed(0)}%)</span>
+                      <span className="font-semibold text-lg">
+                        {(order.taxAmount || ((order.subtotalApresPromo || order.totalAmount) * (order.taxRate || 0.20))).toFixed(2)} €
+                      </span>
+                    </div>
+
+                    {/* Frais de livraison */}
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-gray-700 font-medium flex items-center">
                         <Truck className="h-4 w-4 mr-2" />
-                        Livraison
+                        Frais de livraison
                       </span>
-                      <span className="font-semibold text-lg text-green-600">Gratuit</span>
+                      <span className="font-semibold text-lg">
+                        {order.deliveryPrice && order.deliveryPrice > 0 
+                          ? `${order.deliveryPrice.toFixed(2)} €` 
+                          : <span className="text-green-600">Gratuit</span>}
+                      </span>
                     </div>
 
                     <Separator className="my-4" />
 
                     <div className="flex justify-between items-center">
-                      <span className="text-xl font-bold text-gray-900">Total</span>
+                      <span className="text-xl font-bold text-gray-900">Total TTC</span>
                       <span className="text-2xl font-bold text-red-600">
                         {order.totalAmount.toFixed(2)} €
                       </span>
@@ -334,18 +360,11 @@ const OrderPage = () => {
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Besoin d'aide?</h2>
                 <div className="space-y-3">
                   <Button 
-                    variant="outline" 
-                    className="w-full border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400 h-12"
+                    onClick={() => navigate('/chat')}
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white h-12"
                   >
-                    <Mail className="h-4 w-4 mr-2" />
+                    <MessageCircle className="h-4 w-4 mr-2" />
                     Contacter le support
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-green-300 text-green-600 hover:bg-green-50 hover:border-green-400 h-12"
-                  >
-                    <Truck className="h-4 w-4 mr-2" />
-                    Suivre la livraison
                   </Button>
                 </div>
               </div>

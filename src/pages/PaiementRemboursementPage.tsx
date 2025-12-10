@@ -497,6 +497,17 @@ const PaiementRemboursementPage: React.FC = () => {
                       Mis à jour: {formatDate(paiement.updatedAt)}
                     </div>
                   </div>
+
+                  {/* Contact Support Button */}
+                  <div className="pt-4">
+                    <Button 
+                      onClick={() => navigate('/chat')}
+                      className="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg"
+                    >
+                      <Phone className="h-4 w-4 mr-2" />
+                      Contacter le support
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
