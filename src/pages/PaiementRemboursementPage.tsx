@@ -24,13 +24,16 @@ import {
   Shield,
   BadgePercent,
   Banknote,
-  ArrowRight
+  ArrowRight,
+  Bell,
+  X
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 
 const PaiementRemboursementPage: React.FC = () => {
   const [paiements, setPaiements] = useState<PaiementRemboursement[]>([]);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [notifications, setNotifications] = useState<PaiementRemboursement[]>([]);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -48,12 +51,29 @@ const PaiementRemboursementPage: React.FC = () => {
       setPaiements(prev => prev.map(p => 
         p.id === updatedPaiement.id ? updatedPaiement : p
       ));
+      // Ajouter notification si le statut passe à "payé"
+      if (updatedPaiement.status === 'payé' && !updatedPaiement.clientValidated && 
+          user && updatedPaiement.userId === String(user.id)) {
+        setNotifications(prev => {
+          const exists = prev.find(n => n.id === updatedPaiement.id);
+          if (!exists) {
+            return [...prev, updatedPaiement];
+          }
+          return prev;
+        });
+      }
     });
 
     return () => {
       socket.disconnect();
     };
   }, [user]);
+
+  // Mettre à jour les notifications pour les paiements "payé" non confirmés
+  useEffect(() => {
+    const paidNotConfirmed = paiements.filter(p => p.status === 'payé' && !p.clientValidated);
+    setNotifications(paidNotConfirmed);
+  }, [paiements]);
 
   const fetchPaiements = useCallback(async () => {
     const response = await paiementRemboursementAPI.getUserPaiements();
@@ -71,13 +91,19 @@ const PaiementRemboursementPage: React.FC = () => {
       await paiementRemboursementAPI.validatePayment(id);
       toast.success('Paiement validé avec succès');
       setPaiements(prev => prev.filter(p => p.id !== id));
+      // Supprimer la notification
+      setNotifications(prev => prev.filter(n => n.id !== id));
     } catch (error) {
       console.error('Erreur validation:', error);
       toast.error('Erreur lors de la validation');
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const dismissNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const getStatusBadge = (status: string, isPaid: boolean = false) => {
     switch (status) {
       case 'debut':
         return (
@@ -95,7 +121,7 @@ const PaiementRemboursementPage: React.FC = () => {
         );
       case 'payé':
         return (
-          <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 shadow-lg shadow-emerald-500/30">
+          <Badge className={`bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 shadow-lg shadow-emerald-500/30 ${isPaid ? 'animate-pulse' : ''}`}>
             <CheckCircle className="w-3 h-3 mr-1" />
             Payé
           </Badge>
@@ -184,6 +210,42 @@ const PaiementRemboursementPage: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
+        {/* Notifications flottantes pour les paiements "payé" */}
+        {notifications.length > 0 && (
+          <div className="fixed top-20 right-4 z-50 space-y-3 max-w-sm">
+            {notifications.map((notif) => (
+              <div
+                key={notif.id}
+                className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white p-4 rounded-2xl shadow-2xl animate-bounce border-2 border-white/30 backdrop-blur-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="bg-white/20 p-2 rounded-full">
+                    <Bell className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">🎉 Remboursement payé !</p>
+                    <p className="text-xs mt-1 text-white/90">
+                      Remboursement #{notif.id}
+                    </p>
+                    <p className="text-xs text-white/90">
+                      Commande: {notif.orderId}
+                    </p>
+                    <p className="text-xs mt-2 font-semibold text-yellow-200">
+                      ⚡ Veuillez confirmer la réception du paiement
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => dismissNotification(notif.id)}
+                    className="text-white/70 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="container mx-auto px-4 py-8">
           {/* Premium Header */}
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-8 mb-10 shadow-2xl">
@@ -232,11 +294,11 @@ const PaiementRemboursementPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
-                      {getStatusBadge(paiement.status)}
+                      {getStatusBadge(paiement.status, paiement.status === 'payé' && !paiement.clientValidated)}
                       {paiement.status === 'payé' && !paiement.clientValidated && (
                         <Button 
                           onClick={() => handleValidate(paiement.id)}
-                          className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg shadow-emerald-500/30"
+                          className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg shadow-emerald-500/30 animate-pulse hover:animate-none"
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
                           Confirmer réception
@@ -247,6 +309,25 @@ const PaiementRemboursementPage: React.FC = () => {
                 </CardHeader>
                 
                 <CardContent className="p-6 space-y-6">
+                  {/* Alerte si payé mais non confirmé */}
+                  {paiement.status === 'payé' && !paiement.clientValidated && (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-2 border-green-300 dark:border-green-800 rounded-2xl p-5 animate-pulse">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-green-500 p-2 rounded-full">
+                          <Bell className="h-5 w-5 text-white animate-bounce" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-green-700 dark:text-green-400">
+                            🎉 Votre remboursement a été payé !
+                          </p>
+                          <p className="text-sm text-green-600 dark:text-green-500">
+                            Veuillez confirmer la réception du paiement en cliquant sur le bouton ci-dessus.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Progress Bar Premium */}
                   <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50 p-6 rounded-2xl">
                     <div className="flex justify-between items-center mb-4">
