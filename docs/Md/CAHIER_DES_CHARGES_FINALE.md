@@ -2730,6 +2730,172 @@ module.exports = {
 
 ---
 
+## 💰 Système de Paiement de Remboursement
+
+### Vue d'Ensemble
+
+Le système de **Paiement de Remboursement** gère le suivi et le traitement des remboursements acceptés. Il comprend deux interfaces principales :
+
+1. **Interface Client** (`/paiement-remboursement`) : Suivi des remboursements en cours
+2. **Interface Admin** (`/admin/paiement-remboursement`) : Gestion et traitement des paiements
+
+### Flux de Traitement
+
+```
+Demande de remboursement acceptée
+         ↓
+Création automatique du paiement (status: "debut")
+         ↓
+Admin passe en "en cours" → traitement
+         ↓
+Admin passe en "payé" → notification client
+         ↓
+Client confirme réception → disparition de la liste
+```
+
+### Architecture des Composants
+
+**Localisation :** `src/components/refund-payment/`
+
+| Composant | Description |
+|-----------|-------------|
+| `PaymentStatusBadge` | Badge coloré pour le statut (debut/en cours/payé) |
+| `PaymentMethodDisplay` | Affichage du mode de paiement avec icône |
+| `RefundProgressBar` | Barre de progression 3 étapes |
+| `RefundNotification` | Notification flottante animée |
+| `RefundOrderDetails` | Détails complets de la commande |
+| `RefundEmptyState` | État vide avec design premium |
+| `RefundPageHeader` | En-tête avec gradient et compteur |
+| `RefundPaidAlert` | Alerte de paiement effectué |
+
+### API Endpoints
+
+```typescript
+// Service API
+const paiementRemboursementAPI = {
+  // Vérifier si l'utilisateur a des remboursements acceptés
+  hasAcceptedRefunds: () => API.get('/paiement-remboursement/check'),
+  
+  // Récupérer les remboursements de l'utilisateur connecté
+  getUserPaiements: () => API.get('/paiement-remboursement/user'),
+  
+  // Récupérer tous les remboursements (admin)
+  getAll: () => API.get('/paiement-remboursement'),
+  
+  // Récupérer un remboursement par ID
+  getById: (id) => API.get(`/paiement-remboursement/${id}`),
+  
+  // Modifier le statut (admin)
+  updateStatus: (id, status) => API.put(`/paiement-remboursement/${id}/status`, { status }),
+  
+  // Confirmer la réception du paiement (client)
+  validatePayment: (id) => API.put(`/paiement-remboursement/${id}/validate`)
+}
+```
+
+### Types de Données
+
+```typescript
+interface PaiementRemboursement {
+  id: string;                    // Format: "PR-{timestamp}"
+  remboursementId: string;       // ID de la demande originale
+  orderId: string;               // ID de la commande
+  userId: string;
+  userName: string;
+  userEmail: string;
+  order: {
+    id: string;
+    totalAmount: number;         // Montant total à rembourser
+    originalAmount: number;
+    discount: number;
+    subtotalProduits?: number;
+    taxRate?: number;
+    taxAmount?: number;
+    deliveryPrice?: number;      // Frais de livraison
+    shippingAddress: ShippingAddress;
+    paymentMethod: string;
+    items: OrderItem[];
+    createdAt: string;
+  };
+  reason: string;                // Raison du remboursement
+  customReason?: string;
+  status: 'debut' | 'en cours' | 'payé';
+  decision: 'accepté' | 'refusé';
+  clientValidated: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+### Communication Temps Réel
+
+Le système utilise **Socket.IO** pour la synchronisation en temps réel :
+
+```javascript
+// Événements émis par le serveur
+socket.emit('paiement-remboursement-created', newPaiement);
+socket.emit('paiement-remboursement-updated', updatedPaiement);
+
+// Écoute côté client
+socket.on('paiement-remboursement-updated', (updatedPaiement) => {
+  // Mise à jour de l'interface
+  if (updatedPaiement.status === 'payé') {
+    // Afficher notification
+  }
+});
+```
+
+### Fonctionnalités Client
+
+1. **Liste des remboursements actifs**
+   - Affichage uniquement des remboursements acceptés non validés
+   - Barre de progression visuelle
+   - Détails financiers complets (sous-total, TVA, livraison)
+
+2. **Notifications temps réel**
+   - Alerte flottante quand statut = "payé"
+   - Animation pulse pour attirer l'attention
+
+3. **Confirmation de réception**
+   - Bouton visible uniquement quand status = "payé"
+   - Disparition après confirmation
+
+4. **Contact support**
+   - Redirection vers `/chat` pour contacter le service client
+
+### Fonctionnalités Admin
+
+1. **Tableau de bord**
+   - Statistiques : actifs, en attente, en cours, confirmés
+   - Montant total à rembourser
+
+2. **Gestion des statuts**
+   - Select dropdown pour changer le statut
+   - Transitions : debut → en cours → payé
+
+3. **Recherche avancée**
+   - Par ID, commande, nom ou email
+   - Min. 3 caractères pour activer
+
+4. **Modal de détails**
+   - Vue complète du remboursement
+   - Informations client et produits
+   - Historique des dates
+
+### Sécurité
+
+- Routes protégées par authentification JWT
+- Vérification du propriétaire pour les actions client
+- Rôle admin requis pour modifier les statuts
+
+### Base de Données
+
+**Fichier :** `server/data/paiement-remboursement.json`
+
+Création automatique d'une entrée lors de l'acceptation d'une demande de remboursement.
+
+---
+
 Ce cahier des charges final constitue la documentation technique complète de la plateforme Riziky-Boutic. Il détaille l'ensemble des spécifications, composants, logiques métier et processus nécessaires pour comprendre, utiliser, maintenir et faire évoluer la solution e-commerce.
 
 **Résumé des Livrables :**
@@ -2740,5 +2906,6 @@ Ce cahier des charges final constitue la documentation technique complète de la
 - ✅ Procédures de maintenance et monitoring
 - ✅ Standards de sécurité et bonnes pratiques
 - ✅ Instructions de déploiement et mise en production
+- ✅ Système de paiement de remboursement documenté
 
 Cette documentation permet à toute équipe technique de reprendre, maintenir et faire évoluer la plateforme en toute autonomie.
