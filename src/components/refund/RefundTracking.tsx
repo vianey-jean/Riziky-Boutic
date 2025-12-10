@@ -212,18 +212,17 @@ const RefundTracking = () => {
             <CardContent>
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <p className="font-medium">Commande #{refund.order.id.split('-')[1]}</p>
+                  <p className="font-medium">Commande #{refund.order.id?.split('-')[1] || refund.orderId?.split('-')[1]}</p>
                   <p className="text-sm text-muted-foreground">
                     {formatDate(refund.order.createdAt)}
                   </p>
                 </div>
-                <p className="font-bold">{refund.order.totalAmount.toFixed(2)} €</p>
               </div>
 
-              <div className="space-y-2">
-                {refund.order.items.map((item) => (
-                  <div key={item.productId} className="flex items-center">
-                    <div className="w-12 h-12 rounded overflow-hidden mr-3">
+              <div className="space-y-2 mb-4">
+                {refund.order.items?.map((item) => (
+                  <div key={item.productId} className="flex items-center bg-muted/50 p-3 rounded-lg">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden mr-4">
                       {item.image ? (
                         <img
                           src={getImageUrl(item.image)}
@@ -237,13 +236,49 @@ const RefundTracking = () => {
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.quantity} × {item.price.toFixed(2)} €
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.quantity} × {(item.price || 0).toFixed(2)} €
                       </p>
                     </div>
+                    <p className="font-bold">{(item.subtotal || item.price * item.quantity).toFixed(2)} €</p>
                   </div>
                 ))}
+              </div>
+
+              {/* Détails financiers */}
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                <h4 className="font-semibold mb-3 text-emerald-700 dark:text-emerald-300">Détails financiers</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Sous-total produits:</span>
+                    <span className="font-medium">{(refund.order.subtotalProduits || refund.order.originalAmount || 0).toFixed(2)} €</span>
+                  </div>
+                  {refund.order.discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Réduction:</span>
+                      <span>-{(refund.order.discount || 0).toFixed(2)} €</span>
+                    </div>
+                  )}
+                  {refund.order.taxAmount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">TVA ({((refund.order.taxRate || 0) * 100).toFixed(0)}%):</span>
+                      <span className="font-medium">{(refund.order.taxAmount || 0).toFixed(2)} €</span>
+                    </div>
+                  )}
+                  {refund.order.deliveryPrice > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Frais de livraison:</span>
+                      <span className="font-medium">{(refund.order.deliveryPrice || 0).toFixed(2)} €</span>
+                    </div>
+                  )}
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between text-lg">
+                      <span className="font-bold">Total:</span>
+                      <span className="font-bold text-emerald-600">{(refund.order.totalAmount || 0).toFixed(2)} €</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

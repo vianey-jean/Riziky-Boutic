@@ -393,6 +393,72 @@ const AdminRemboursementsPage = () => {
                   </div>
                 </div>
 
+                {/* Détails de la commande et produits */}
+                {selectedRemboursement.order && (
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-2xl border border-emerald-100">
+                    <h3 className="font-bold text-emerald-800 mb-4 text-lg">Détails de la commande</h3>
+                    
+                    {/* Liste des produits */}
+                    <div className="space-y-3 mb-4">
+                      {selectedRemboursement.order.items?.map((item, index) => (
+                        <div key={index} className="flex items-center bg-white p-3 rounded-xl shadow-sm">
+                          {item.image && (
+                            <img 
+                              src={getImageUrl(item.image)}
+                              alt={item.name}
+                              className="w-16 h-16 object-cover rounded-lg mr-4"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{item.name}</p>
+                            <p className="text-sm text-gray-600">
+                              {item.quantity} × {(item.price || 0).toFixed(2)} €
+                            </p>
+                          </div>
+                          <p className="font-bold text-emerald-700">
+                            {(item.subtotal || (item.price * item.quantity)).toFixed(2)} €
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Récapitulatif financier */}
+                    <div className="bg-white p-4 rounded-xl border border-emerald-200">
+                      <h4 className="font-semibold text-emerald-700 mb-3">Récapitulatif financier</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Sous-total produits:</span>
+                          <span className="font-medium">{(selectedRemboursement.order.subtotalProduits || selectedRemboursement.order.originalAmount || 0).toFixed(2)} €</span>
+                        </div>
+                        {(selectedRemboursement.order.discount || 0) > 0 && (
+                          <div className="flex justify-between text-green-600">
+                            <span>Réduction:</span>
+                            <span>-{(selectedRemboursement.order.discount || 0).toFixed(2)} €</span>
+                          </div>
+                        )}
+                        {(selectedRemboursement.order.taxAmount || 0) > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">TVA ({((selectedRemboursement.order.taxRate || 0) * 100).toFixed(0)}%):</span>
+                            <span className="font-medium">{(selectedRemboursement.order.taxAmount || 0).toFixed(2)} €</span>
+                          </div>
+                        )}
+                        {(selectedRemboursement.order.deliveryPrice || 0) > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Frais de livraison:</span>
+                            <span className="font-medium">{(selectedRemboursement.order.deliveryPrice || 0).toFixed(2)} €</span>
+                          </div>
+                        )}
+                        <div className="border-t pt-2 mt-2">
+                          <div className="flex justify-between text-lg">
+                            <span className="font-bold">Total commande:</span>
+                            <span className="font-bold text-emerald-700">{(selectedRemboursement.order.totalAmount || 0).toFixed(2)} €</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Photo justificative */}
                 {selectedRemboursement.photo && (
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-100">

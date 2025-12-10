@@ -17,13 +17,32 @@ export interface Remboursement {
   order?: {
     id: string;
     totalAmount: number;
+    originalAmount?: number;
+    subtotalProduits?: number;
+    subtotalApresPromo?: number;
+    discount?: number;
+    taxRate?: number;
+    taxAmount?: number;
+    deliveryPrice?: number;
+    shippingAddress?: {
+      nom: string;
+      prenom: string;
+      adresse: string;
+      ville: string;
+      codePostal: string;
+      pays: string;
+      telephone: string;
+    };
+    paymentMethod?: string;
     createdAt: string;
     items: Array<{
       productId: string;
       name: string;
       price: number;
+      originalPrice?: number;
       quantity: number;
       image?: string;
+      subtotal?: number;
     }>;
   };
   createdAt: string;
