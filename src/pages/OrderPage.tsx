@@ -266,12 +266,12 @@ const OrderPage = () => {
                     </div>
 
                     {/* Réduction si applicable */}
-                    {order.discount && order.discount > 0 && (
+                    {/* {order.discount && order.discount > 0 && (
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-gray-700 font-medium">Réduction</span>
                         <span className="font-semibold text-lg text-green-600">-{order.discount.toFixed(2)} €</span>
                       </div>
-                    )}
+                    )} */}
 
                     {/* TVA */}
                     <div className="flex justify-between items-center mb-4">
