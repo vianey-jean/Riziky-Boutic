@@ -290,7 +290,17 @@ const Navbar = () => {
 
           {/* Icônes utilisateur pour desktop améliorées */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/favoris" className="relative group">
+            <div 
+              className="relative group cursor-pointer"
+              onClick={() => {
+                if (isAuthenticated) {
+                  navigate(getSecureRoute('/favoris'));
+                } else {
+                  localStorage.setItem('redirectAfterLogin', '/favoris');
+                  navigate(getSecureRoute('/login'));
+                }
+              }}
+            >
               <Button variant="ghost" size="icon" className="nav-icon rounded-2xl bg-gradient-to-br from-teal-50 to-cyan-50 hover:from-teal-100 hover:to-cyan-100 dark:from-teal-900/20 dark:to-cyan-900/20 dark:hover:from-teal-900/40 dark:hover:to-cyan-900/40 h-12 w-12 transition-all duration-300 hover:scale-110 hover:shadow-lg border border-teal-200/50 dark:border-teal-700/50">
                 <Heart className="h-5 w-5 text-teal-600 dark:text-teal-400 transition-transform group-hover:scale-110" />
               </Button>
@@ -299,9 +309,19 @@ const Navbar = () => {
                   {favoriteCount}
                 </Badge>
               }
-            </Link>
+            </div>
 
-            <Link to="/panier" className="relative group">
+            <div 
+              className="relative group cursor-pointer"
+              onClick={() => {
+                if (isAuthenticated) {
+                  navigate(getSecureRoute('/panier'));
+                } else {
+                  localStorage.setItem('redirectAfterLogin', '/panier');
+                  navigate(getSecureRoute('/login'));
+                }
+              }}
+            >
               <Button variant="ghost" size="icon" className="nav-icon rounded-2xl bg-gradient-to-br from-violet-50 to-purple-50 hover:from-violet-100 hover:to-purple-100 dark:from-violet-900/20 dark:to-purple-900/20 dark:hover:from-violet-900/40 dark:hover:to-purple-900/40 h-12 w-12 transition-all duration-300 hover:scale-110 hover:shadow-lg border border-violet-200/50 dark:border-violet-700/50">
                 <ShoppingCart className="h-5 w-5 text-violet-600 dark:text-violet-400 transition-transform group-hover:scale-110" />
               </Button>
@@ -310,7 +330,7 @@ const Navbar = () => {
                   {cartItemsCount}
                 </Badge>
               }
-            </Link>
+            </div>
 
             {isAuthenticated ? (
               <DropdownMenu>
@@ -391,7 +411,17 @@ const Navbar = () => {
 
           {/* Menu mobile amélioré */}
           <div className="flex md:hidden items-center space-x-3">
-            <Link to="/panier" className="relative group">
+            <div 
+              className="relative group cursor-pointer"
+              onClick={() => {
+                if (isAuthenticated) {
+                  navigate(getSecureRoute('/panier'));
+                } else {
+                  localStorage.setItem('redirectAfterLogin', '/panier');
+                  navigate(getSecureRoute('/login'));
+                }
+              }}
+            >
               <Button variant="ghost" size="icon" className="nav-icon bg-violet-50 hover:bg-violet-100 dark:bg-violet-900/20 dark:hover:bg-violet-900/40 rounded-xl h-10 w-10 transition-all duration-300 hover:scale-105">
                 <ShoppingCart className="h-5 w-5 text-violet-600 dark:text-violet-400" />
               </Button>
@@ -400,7 +430,7 @@ const Navbar = () => {
                   {cartItemsCount}
                 </Badge>
               }
-            </Link>
+            </div>
 
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
@@ -425,7 +455,18 @@ const Navbar = () => {
                     <div className="space-y-6">    
                       <div>
                         <SheetClose asChild>
-                          <Link to="/favoris" className="flex items-center hover:text-primary">
+                          <div 
+                            className="flex items-center hover:text-primary cursor-pointer"
+                            onClick={() => {
+                              if (isAuthenticated) {
+                                navigate(getSecureRoute('/favoris'));
+                              } else {
+                                localStorage.setItem('redirectAfterLogin', '/favoris');
+                                navigate(getSecureRoute('/login'));
+                              }
+                              setIsOpen(false);
+                            }}
+                          >
                             <Heart className="mr-2 h-6 w-6 text-teal-600 dark:text-teal-400" />
                             <span>Mes favoris</span>
                             {favoriteCount > 0 && 
@@ -433,7 +474,7 @@ const Navbar = () => {
                                 {favoriteCount}
                               </Badge>
                             }
-                          </Link>
+                          </div>
                         </SheetClose>
                       </div>
                       {isAuthenticated && (

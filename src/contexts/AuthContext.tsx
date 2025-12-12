@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { authAPI, User } from '../services/api';
 import { UpdateProfileData } from '@/types/auth';
 import { useToast } from '@/hooks/use-toast';
+import { getSecureRoute } from '@/services/secureIds';
 
 interface AuthContextType {
   user: User | null;
@@ -77,7 +78,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const redirectPath = localStorage.getItem('redirectAfterLogin');
       if (redirectPath) {
         localStorage.removeItem('redirectAfterLogin');
-        window.location.href = redirectPath;
+        // Utiliser getSecureRoute pour obtenir la route sécurisée
+        window.location.href = getSecureRoute(redirectPath);
       } else {
         // Navigation via window.location pour éviter les problèmes de hooks
         window.location.href = '/';
@@ -123,7 +125,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const redirectPath = localStorage.getItem('redirectAfterLogin');
       if (redirectPath) {
         localStorage.removeItem('redirectAfterLogin');
-        window.location.href = redirectPath;
+        // Utiliser getSecureRoute pour obtenir la route sécurisée
+        window.location.href = getSecureRoute(redirectPath);
       } else {
         // Navigation via window.location pour éviter les problèmes de hooks
         window.location.href = '/';
