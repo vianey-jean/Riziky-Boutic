@@ -5,13 +5,13 @@ import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import PaymentMethodSelector from '@/components/checkout/PaymentMethodSelector';
 import CheckoutHeader from '@/components/checkout/CheckoutHeader';
 import CheckoutSteps from '@/components/checkout/CheckoutSteps';
 import ShippingForm from '@/components/checkout/ShippingForm';
 import PaymentForm from '@/components/checkout/PaymentForm';
 import OrderSummary from '@/components/checkout/OrderSummary';
 import LoadingOrderState from '@/components/checkout/LoadingOrderState';
+import StripePaymentModal from '@/components/checkout/StripePaymentModal';
 import { ShippingAddress, codePromosAPI } from '@/services/api';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Shield } from 'lucide-react';
@@ -189,6 +189,7 @@ const CheckoutPage = () => {
     e.preventDefault();
     
     if (paymentMethod === 'card') {
+      // Ouvrir directement le modal Stripe pour saisir les infos de carte
       setShowCardForm(true);
     } else {
       // Traiter les autres méthodes de paiement
@@ -324,33 +325,22 @@ const CheckoutPage = () => {
 
           <CheckoutSteps currentStep={step} />
         
-          {showCardForm ? (
-            <motion.div 
-              className="max-w-md mx-auto"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-            >
-              <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Shield className="h-8 w-8 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Paiement sécurisé</h2>
-                  <p className="text-gray-600">Vos données sont protégées par cryptage SSL</p>
-                </div>
-                <PaymentMethodSelector onPaymentSuccess={handlePaymentSuccess} />
-                <Button 
-                  variant="outline" 
-                  className="mt-6 w-full border-gray-300 hover:border-gray-400"
-                  onClick={() => setShowCardForm(false)}
-                >
-                  Retour aux options de paiement
-                </Button>
-              </div>
-            </motion.div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Modal Stripe pour paiement par carte */}
+          <StripePaymentModal
+            isOpen={showCardForm}
+            onClose={() => setShowCardForm(false)}
+            onPaymentSuccess={handlePaymentSuccess}
+            onPaymentFailed={() => setShowCardForm(false)}
+            cartItems={selectedCartItems}
+            shippingAddress={shippingData}
+            cardInfo={{ maskedNumber: '', cardType: '', cardName: '', expiryDate: '' }}
+            subtotal={discountedSubtotal}
+            taxAmount={taxAmount}
+            deliveryPrice={deliveryPrice}
+            orderTotal={orderTotal}
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <motion.div 
                 className="lg:col-span-8 space-y-6"
                 initial={{ opacity: 0, x: -20 }}
@@ -400,7 +390,6 @@ const CheckoutPage = () => {
                 onVerifyCodePromo={handleVerifyCodePromo}
               />
             </div>
-          )}
         </div>
       </div>
     </Layout>

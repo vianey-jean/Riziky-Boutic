@@ -5,11 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/sonner';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import { cardsAPI } from '@/services/cards';
+import { cardsAPI, CardData } from '@/services/cards';
 
 interface CreditCardFormProps {
   onSuccess: () => void;
-  onSaveCard?: (cardData: any) => void;
+  onSaveCard?: (cardData: CardData) => void;
+  onPayWithCard?: (cardData: CardData) => void;
 }
 
 const detectCardType = (number: string) => {
@@ -39,7 +40,7 @@ const isValidLuhn = (number: string) => {
   return sum % 10 === 0;
 };
 
-const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess, onSaveCard }) => {
+const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess, onSaveCard, onPayWithCard }) => {
   const [cardNumber, setCardNumber] = useState('');
   const [cardType, setCardType] = useState('Inconnue');
   const [cardName, setCardName] = useState('');
@@ -122,11 +123,29 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onSuccess, onSaveCard }
       toast.error("Veuillez corriger les erreurs avant de soumettre");
       return;
     }
+
+    const cardData: CardData = { cardNumber, cardName, expiryDate, cvv };
+
+    // Si onPayWithCard est fourni, ouvrir le modal de paiement
+    if (onPayWithCard) {
+      if (saveCard) {
+        try {
+          await cardsAPI.addCard(cardData);
+          toast.success("Carte sauvegardée");
+        } catch (error) {
+          console.error(error);
+        }
+      }
+      onPayWithCard(cardData);
+      return;
+    }
+
+    // Sinon, comportement par défaut
     setLoading(true);
 
     try {
       if (saveCard) {
-        await cardsAPI.addCard({ cardNumber, cardName, expiryDate, cvv });
+        await cardsAPI.addCard(cardData);
         toast.success("Carte sauvegardée");
       }
       setTimeout(() => {
