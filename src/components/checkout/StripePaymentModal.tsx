@@ -117,8 +117,30 @@ const PaymentForm: React.FC<{
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [cardComplete, setCardComplete] = useState(false);
+  const [cardholderName, setCardholderName] = useState('');
+  const [cardholderNameError, setCardholderNameError] = useState('');
+
+  // Validation du nom du titulaire
+  const validateCardholderName = (name: string): boolean => {
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2) {
+      setCardholderNameError('Le nom du titulaire est requis');
+      return false;
+    }
+    if (!/^[a-zA-ZÀ-ÿ\s\-']+$/.test(trimmedName)) {
+      setCardholderNameError('Le nom ne doit contenir que des lettres');
+      return false;
+    }
+    setCardholderNameError('');
+    return true;
+  };
 
   const processStripePayment = async () => {
+    // Valider le nom du titulaire
+    if (!validateCardholderName(cardholderName)) {
+      return;
+    }
+
     if (!stripe || !elements) {
       setErrorMessage('Stripe n\'est pas encore chargé. Veuillez patienter.');
       return;
@@ -184,7 +206,7 @@ const PaymentForm: React.FC<{
         payment_method: {
           card: cardElement,
           billing_details: {
-            name: `${shippingAddress.prenom} ${shippingAddress.nom}`,
+            name: cardholderName.trim(),
             email: undefined, // Optionnel
             phone: shippingAddress.telephone,
             address: {
@@ -298,13 +320,46 @@ const PaymentForm: React.FC<{
             <p className="text-indigo-100 text-sm mt-1">Saisissez vos informations de paiement sécurisé</p>
           </div>
           
-          <div className="p-6">
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <CardElement 
-                options={cardElementOptions}
-                onChange={(e) => setCardComplete(e.complete)}
+          <div className="p-6 space-y-4">
+            {/* Nom du titulaire */}
+            <div>
+              <label htmlFor="cardholderName" className="block text-sm font-medium text-gray-700 mb-2">
+                Nom du titulaire de la carte
+              </label>
+              <input
+                id="cardholderName"
+                type="text"
+                value={cardholderName}
+                onChange={(e) => {
+                  setCardholderName(e.target.value);
+                  if (cardholderNameError) {
+                    validateCardholderName(e.target.value);
+                  }
+                }}
+                onBlur={() => validateCardholderName(cardholderName)}
+                placeholder="Jean Dupont"
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
+                  cardholderNameError ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50'
+                }`}
               />
+              {cardholderNameError && (
+                <p className="text-red-500 text-sm mt-1">{cardholderNameError}</p>
+              )}
             </div>
+
+            {/* Carte bancaire (Stripe Elements) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Informations de carte
+              </label>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <CardElement 
+                  options={cardElementOptions}
+                  onChange={(e) => setCardComplete(e.complete)}
+                />
+              </div>
+            </div>
+
             <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
               <Lock className="h-3 w-3" />
               Vos données sont cryptées et sécurisées par Stripe
