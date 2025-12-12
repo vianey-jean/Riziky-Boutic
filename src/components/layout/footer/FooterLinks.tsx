@@ -7,7 +7,7 @@ const FooterLinks = () => {
     { to: "/notre-histoire", text: "Notre Histoire" },
     { to: "/faq", text: "FAQ" },
     { to: "/livraison", text: "Service Livraison" },
-    { to: "/retours", text: "Sergvice Retours" },
+    { to: "/retours", text: "Service Retours" },
     { to: "/contact", text: "Nous Contacter" }
   ];
 

@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +32,8 @@ const formSchema = z.object({
 
 const RegisterPage = () => {
   const { register } = useAuth();
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
@@ -82,6 +83,10 @@ const RegisterPage = () => {
     try {
       setIsLoading(true);
       await register(data.nom, data.email, data.password);
+
+      // ✅ Redirection après inscription
+      navigate('/');
+
     } catch (error) {
       console.error('Erreur d\'inscription:', error);
     } finally {
@@ -93,6 +98,7 @@ const RegisterPage = () => {
     <Layout>
       <div className="min-h-[90vh] bg-gradient-to-br from-red-50 via-white to-red-50 dark:from-red-950/20 dark:via-neutral-950 dark:to-red-950/20 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
+          
           {/* Header with Logo */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-600 to-red-700 rounded-2xl shadow-lg mb-4">
@@ -120,6 +126,8 @@ const RegisterPage = () => {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  
+                  {/* NOM */}
                   <FormField
                     control={form.control}
                     name="nom"
@@ -143,6 +151,7 @@ const RegisterPage = () => {
                     )}
                   />
 
+                  {/* EMAIL */}
                   <FormField
                     control={form.control}
                     name="email"
@@ -171,6 +180,7 @@ const RegisterPage = () => {
                     )}
                   />
 
+                  {/* PASSWORD */}
                   <FormField
                     control={form.control}
                     name="password"
@@ -209,6 +219,7 @@ const RegisterPage = () => {
                     )}
                   />
 
+                  {/* CONFIRM PASSWORD */}
                   <FormField
                     control={form.control}
                     name="confirmPassword"
@@ -246,6 +257,7 @@ const RegisterPage = () => {
                     )}
                   />
 
+                  {/* SUBMIT BUTTON */}
                   <Button 
                     type="submit" 
                     className="w-full h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]" 

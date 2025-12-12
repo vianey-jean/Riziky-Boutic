@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Card, CardContent, CardDescription, CardFooter,
   CardHeader, CardTitle
@@ -30,7 +30,6 @@ const passwordSchema = z.object({
 
 const LoginPage = () => {
   const { login } = useAuth();
-  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<'email' | 'password'>('email');
   const [userEmail, setUserEmail] = useState('');
