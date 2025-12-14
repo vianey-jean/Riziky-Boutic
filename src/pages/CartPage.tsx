@@ -194,10 +194,10 @@ const CartPage = () => {
                       </div>
                       <div>
                         <p className="text-blue-800 dark:text-blue-300 font-medium mb-1">
-                          Livraison offerte à partir de 50€ d'achat.
+                          Livraison offerte.
                         </p>
                         <p className="text-blue-700 dark:text-blue-400 text-sm">
-                          Les frais de livraison sont calculés à l'étape suivante.
+                        Livraison 100 % gratuite dans le Nord, de Saint-Paul à Sainte-Suzanne !
                         </p>
                       </div>
                     </div>
