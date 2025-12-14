@@ -273,13 +273,6 @@ const OrderPage = () => {
                       </div>
                     )} */}
 
-                    {/* TVA */}
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-gray-700 font-medium">TVA ({((order.taxRate || 0.20) * 100).toFixed(0)}%)</span>
-                      <span className="font-semibold text-lg">
-                        {(order.taxAmount || ((order.subtotalApresPromo || order.totalAmount) * (order.taxRate || 0.20))).toFixed(2)} €
-                      </span>
-                    </div>
 
                     {/* Frais de livraison */}
                     <div className="flex justify-between items-center mb-4">

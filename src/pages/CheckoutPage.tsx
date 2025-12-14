@@ -42,8 +42,6 @@ const DELIVERY_PRICES = {
   "Trois-Bassins": 20
 };
 
-// Constante pour le taux de taxe (20% de TVA)
-const TAX_RATE = 0.20;
 
 const CheckoutPage = () => {
   const { selectedCartItems, getCartTotal, createOrder } = useStore();
@@ -280,10 +278,7 @@ const CheckoutPage = () => {
   
   const hasPromoDiscount = subtotal !== discountedSubtotal;
   
-  // Calcul des taxes (20% de TVA)
-  const taxAmount = discountedSubtotal * TAX_RATE;
-  
-  const orderTotal = discountedSubtotal + deliveryPrice + taxAmount;
+  const orderTotal = discountedSubtotal + deliveryPrice;
   
   // URL de base pour les images
   const AUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -335,7 +330,7 @@ const CheckoutPage = () => {
             shippingAddress={shippingData}
             cardInfo={{ maskedNumber: '', cardType: '', cardName: '', expiryDate: '' }}
             subtotal={discountedSubtotal}
-            taxAmount={taxAmount}
+            taxAmount={0}
             deliveryPrice={deliveryPrice}
             orderTotal={orderTotal}
           />
@@ -375,7 +370,7 @@ const CheckoutPage = () => {
                 subtotal={subtotal}
                 discountedSubtotal={discountedSubtotal}
                 hasPromoDiscount={hasPromoDiscount}
-                taxAmount={taxAmount}
+                taxAmount={0}
                 deliveryPrice={deliveryPrice}
                 deliveryCity={deliveryCity}
                 orderTotal={orderTotal}

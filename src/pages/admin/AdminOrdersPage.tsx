@@ -275,14 +275,6 @@ const AdminOrdersPage = () => {
                             <span className="font-medium">-{order.discount.toFixed(2)} €</span>
                           </div>
                         )}
-                        {order.taxAmount !== undefined && order.taxAmount > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-400">
-                              TVA ({((order.taxRate || 0.2) * 100).toFixed(0)}%)
-                            </span>
-                            <span className="font-medium">{order.taxAmount.toFixed(2)} €</span>
-                          </div>
-                        )}
                         {order.deliveryPrice !== undefined && order.deliveryPrice > 0 && (
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">

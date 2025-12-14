@@ -20,9 +20,6 @@ export const ordersService = {
       shippingAddress: orderData.shippingAddress,
       paymentMethod: orderData.paymentMethod,
       codePromo: orderData.codePromo,
-      // Ajouter les informations de taxes
-      taxRate: orderData.taxRate || 0.20,
-      taxAmount: orderData.taxAmount || 0,
       deliveryPrice: orderData.deliveryPrice || 0
     };
     

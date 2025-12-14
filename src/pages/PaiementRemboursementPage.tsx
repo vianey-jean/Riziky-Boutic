@@ -444,13 +444,6 @@ const PaiementRemboursementPage: React.FC = () => {
                         </div>
                       )}
                       
-                      {/* TVA */}
-                      {paiement.order.taxAmount !== undefined && paiement.order.taxAmount > 0 && (
-                        <div className="flex justify-between items-center text-white/90">
-                          <span>TVA ({((paiement.order.taxRate || 0.2) * 100).toFixed(0)}%)</span>
-                          <span className="font-medium">{formatCurrency(paiement.order.taxAmount)}</span>
-                        </div>
-                      )}
                       
                       {/* Frais de livraison */}
                       {paiement.order.deliveryPrice !== undefined && paiement.order.deliveryPrice > 0 && (

@@ -293,13 +293,6 @@ const OrdersPage = () => {
                                                     <span className="font-bold text-gray-900">{(order.deliveryPrice || 0).toFixed(2)} €</span>
                                                   </div>
                                                   
-                                                  <div className="flex justify-between items-center">
-                                                    <span className="flex items-center text-gray-700 font-medium">
-                                                      <Percent className="h-4 w-4 mr-2" />
-                                                      TVA ({((order.taxRate || 0.20) * 100).toFixed(0)}%):
-                                                    </span>
-                                                    <span className="font-bold text-gray-900">{(order.taxAmount || 0).toFixed(2)} €</span>
-                                                  </div>
                                                   
                                                   <Separator className="my-2" />
                                                   

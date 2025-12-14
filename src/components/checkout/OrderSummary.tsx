@@ -137,10 +137,6 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             </motion.div>
           )}
 
-          <div className="flex justify-between text-gray-600">
-            <p className="font-medium">TVA (20%)</p>
-            <p className="font-semibold">{formatPrice(taxAmount)}</p>
-          </div>
 
           <div className="flex justify-between text-gray-600">
             <p className="flex items-center font-medium">

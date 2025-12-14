@@ -565,10 +565,6 @@ const AdminPaiementRemboursementPage: React.FC = () => {
                         <p className="font-bold text-lg">{formatCurrency(paiement.order.subtotalProduits || paiement.order.originalAmount)}</p>
                       </div>
                       <div className="bg-white/10 rounded-xl p-3">
-                        <p className="text-white/70 text-sm">TVA</p>
-                        <p className="font-bold text-lg">{formatCurrency(paiement.order.taxAmount || 0)}</p>
-                      </div>
-                      <div className="bg-white/10 rounded-xl p-3">
                         <p className="text-white/70 text-sm">Livraison</p>
                         <p className="font-bold text-lg">{formatCurrency(paiement.order.deliveryPrice || 0)}</p>
                       </div>
@@ -707,16 +703,16 @@ const AdminPaiementRemboursementPage: React.FC = () => {
                         <span className="text-muted-foreground">Sous-total produits:</span>
                         <span className="font-medium">{formatCurrency(selectedPaiement.order?.subtotalProduits || selectedPaiement.order?.originalAmount || 0)}</span>
                       </div>
-                      {selectedPaiement.order?.discount && selectedPaiement.order.discount > 0 && (
+                      {/* {selectedPaiement.order?.discount && selectedPaiement.order.discount > 0 && (
                         <div className="flex justify-between text-green-600">
                           <span>Réduction:</span>
                           <span>-{formatCurrency(selectedPaiement.order.discount)}</span>
                         </div>
-                      )}
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">TVA ({((selectedPaiement.order?.taxRate || 0) * 100).toFixed(0)}%):</span>
+                      )} */}
+                      {/* <div className="flex justify-between">
+                        {/* <span className="text-muted-foreground">TVA ({((selectedPaiement.order?.taxRate || 0) * 100).toFixed(0)}%):</span> 
                         <span className="font-medium">{formatCurrency(selectedPaiement.order?.taxAmount || 0)}</span>
-                      </div>
+                      </div> */}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Frais de livraison:</span>
                         <span className="font-medium">{formatCurrency(selectedPaiement.order?.deliveryPrice || 0)}</span>

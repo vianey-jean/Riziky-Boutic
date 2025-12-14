@@ -437,10 +437,6 @@ const PaymentForm: React.FC<{
                 <span>{subtotal.toFixed(2)} €</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>TVA (20%)</span>
-                <span>{taxAmount.toFixed(2)} €</span>
-              </div>
-              <div className="flex justify-between text-gray-600">
                 <span>Livraison</span>
                 <span>{deliveryPrice === 0 ? 'Gratuite' : `${deliveryPrice.toFixed(2)} €`}</span>
               </div>
