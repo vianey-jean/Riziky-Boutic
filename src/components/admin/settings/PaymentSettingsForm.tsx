@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,9 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { PaymentSettings } from '@/types/siteSettings';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Key, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { usePaymentModes } from '@/hooks/usePaymentModes';
 import { PaymentModes } from '@/services/paymentModesAPI';
+import { stripeKeysAPI } from '@/services/stripeKeysAPI';
+import { useToast } from '@/hooks/use-toast';
+import PageDataLoader from '@/components/layout/PageDataLoader';
 
 interface PaymentSettingsFormProps {
   settings: PaymentSettings;
@@ -23,15 +26,87 @@ const PaymentSettingsForm: React.FC<PaymentSettingsFormProps> = ({
   loading = false 
 }) => {
   const { paymentModes, updatePaymentModes, saving } = usePaymentModes();
+  const { toast } = useToast();
   const { register, handleSubmit, setValue, watch } = useForm<PaymentModes>({
     defaultValues: paymentModes || settings
   });
 
+  // États pour les clés Stripe
+  const [stripePublicKey, setStripePublicKey] = useState('');
+  const [stripeSecretKey, setStripeSecretKey] = useState('');
+  const [showPublicKey, setShowPublicKey] = useState(false);
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [hasPublicKey, setHasPublicKey] = useState(false);
+  const [hasSecretKey, setHasSecretKey] = useState(false);
+  const [savingKeys, setSavingKeys] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Charger le statut des clés
+  const loadKeysStatus = async () => {
+    const status = await stripeKeysAPI.getStatus();
+    setHasPublicKey(status.hasPublicKey);
+    setHasSecretKey(status.hasSecretKey);
+    return status;
+  };
+
+  const handleDataLoaded = (status: any) => {
+    setHasPublicKey(status.hasPublicKey);
+    setHasSecretKey(status.hasSecretKey);
+    setDataLoaded(true);
+  };
+
   const handleSavePaymentModes = async (data: PaymentModes) => {
     await updatePaymentModes(data);
-    // Aussi appeler onSave pour maintenir la compatibilité avec l'ancien système
+    
+    setSavingKeys(true);
+    try {
+      // Sauvegarder la clé publique si renseignée
+      if (stripePublicKey) {
+        await stripeKeysAPI.savePublicKey(stripePublicKey);
+        setHasPublicKey(true);
+        setStripePublicKey('');
+        toast({
+          title: "Succès",
+          description: "Clé publique Stripe sauvegardée et cryptée",
+          className: "bg-green-600 text-white",
+        });
+      }
+      
+      // Sauvegarder la clé secrète si renseignée
+      if (stripeSecretKey) {
+        await stripeKeysAPI.saveSecretKey(stripeSecretKey);
+        setHasSecretKey(true);
+        setStripeSecretKey('');
+        toast({
+          title: "Succès",
+          description: "Clé secrète Stripe sauvegardée et cryptée",
+          className: "bg-green-600 text-white",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder les clés Stripe",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingKeys(false);
+    }
+    
     onSave(data as PaymentSettings);
   };
+
+  if (!dataLoaded) {
+    return (
+      <PageDataLoader
+        fetchFunction={loadKeysStatus}
+        onSuccess={handleDataLoaded}
+        loadingMessage="Chargement des paramètres de paiement..."
+        loadingSubmessage="Vérification de la configuration Stripe..."
+        errorMessage="Erreur lors du chargement"
+      />
+    );
+  }
 
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-yellow-50 to-orange-100">
@@ -124,15 +199,85 @@ const PaymentSettingsForm: React.FC<PaymentSettingsFormProps> = ({
               </div>
 
               {watch('stripeEnabled') && (
-                <div className="space-y-2">
-                  <Label htmlFor="stripePublicKey">Clé publique Stripe</Label>
-                  <Input 
-                    id="stripePublicKey"
-                    {...register('stripePublicKey')} 
-                    placeholder="pk_test_..."
-                    className="border-yellow-200 focus:border-yellow-500"
-                  />
-                </div>
+                <>
+                  {/* Clé publique Stripe */}
+                  <div className="space-y-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Key className="h-4 w-4 text-blue-600" />
+                        <Label htmlFor="stripePublicKey" className="text-blue-800 font-medium">
+                          Clé publique Stripe
+                        </Label>
+                        {hasPublicKey && (
+                          <span className="flex items-center text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                            <Check className="h-3 w-3 mr-1" />
+                            Configurée
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowPublicKey(!showPublicKey)}
+                      >
+                        {showPublicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    <Input 
+                      id="stripePublicKey"
+                      type={showPublicKey ? "text" : "password"}
+                      value={stripePublicKey}
+                      onChange={(e) => setStripePublicKey(e.target.value)}
+                      placeholder={hasPublicKey ? "••••••••••••••••••••" : "pk_test_..."}
+                      className="border-blue-300 focus:border-blue-500 bg-white"
+                    />
+                    <p className="text-xs text-blue-700">
+                      Cette clé sera cryptée et stockée dans la base de données.
+                    </p>
+                  </div>
+
+                  {/* Clé secrète Stripe */}
+                  <div className="space-y-2 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Key className="h-4 w-4 text-yellow-600" />
+                        <Label htmlFor="stripeSecretKey" className="text-yellow-800 font-medium">
+                          Clé secrète Stripe
+                        </Label>
+                        {hasSecretKey && (
+                          <span className="flex items-center text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                            <Check className="h-3 w-3 mr-1" />
+                            Configurée
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowSecretKey(!showSecretKey)}
+                      >
+                        {showSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    <Input 
+                      id="stripeSecretKey"
+                      type={showSecretKey ? "text" : "password"}
+                      value={stripeSecretKey}
+                      onChange={(e) => setStripeSecretKey(e.target.value)}
+                      placeholder={hasSecretKey ? "••••••••••••••••••••" : "sk_test_..."}
+                      className="border-yellow-300 focus:border-yellow-500 bg-white"
+                    />
+                    <div className="flex items-start gap-2 mt-2">
+                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-yellow-700">
+                        Cette clé sera cryptée et stockée de manière sécurisée. 
+                        Elle ne sera jamais exposée côté client.
+                      </p>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -167,10 +312,10 @@ const PaymentSettingsForm: React.FC<PaymentSettingsFormProps> = ({
 
           <Button 
             type="submit" 
-            disabled={loading || saving}
+            disabled={loading || saving || savingKeys}
             className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white shadow-lg"
           >
-            {(loading || saving) ? 'Sauvegarde...' : 'Sauvegarder les paramètres de paiement'}
+            {(loading || saving || savingKeys) ? 'Sauvegarde...' : 'Sauvegarder les paramètres de paiement'}
           </Button>
         </form>
       </CardContent>

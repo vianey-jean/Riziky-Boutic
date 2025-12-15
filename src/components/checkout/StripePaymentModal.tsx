@@ -16,8 +16,9 @@ import {
   Lock
 } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { stripeKeysAPI } from '@/services/stripeKeysAPI';
 
 interface CartItem {
   product: {
@@ -63,10 +64,6 @@ interface StripePaymentModalProps {
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-
-// Charger Stripe une seule fois
-const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 
 // Style pour CardElement
 const cardElementOptions = {
@@ -471,20 +468,62 @@ const PaymentForm: React.FC<{
 
 const StripePaymentModal: React.FC<StripePaymentModalProps> = (props) => {
   const { isOpen, onClose, onPaymentFailed } = props;
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
   const [stripeLoaded, setStripeLoaded] = useState(false);
+  const [loadingKey, setLoadingKey] = useState(true);
+  const [hasPublicKey, setHasPublicKey] = useState(false);
+
+  // Charger la clé publique depuis la base de données
+  useEffect(() => {
+    const loadStripeKey = async () => {
+      if (!isOpen) return;
+      
+      setLoadingKey(true);
+      try {
+        const publicKey = await stripeKeysAPI.getPublicKey();
+        if (publicKey) {
+          setStripePromise(loadStripe(publicKey));
+          setHasPublicKey(true);
+        } else {
+          setHasPublicKey(false);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement de la clé Stripe:', error);
+        setHasPublicKey(false);
+      } finally {
+        setLoadingKey(false);
+      }
+    };
+
+    loadStripeKey();
+  }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen && stripePromise) {
+    if (stripePromise) {
       stripePromise.then(() => setStripeLoaded(true));
     }
-  }, [isOpen]);
+  }, [stripePromise]);
 
   const handleClose = () => {
     onClose();
   };
 
+  // Chargement en cours
+  if (loadingKey) {
+    return (
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="max-w-md bg-white">
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+            <p className="text-gray-600">Chargement du paiement sécurisé...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   // Si Stripe n'est pas configuré
-  if (!STRIPE_PUBLISHABLE_KEY) {
+  if (!hasPublicKey) {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="max-w-md bg-white">
